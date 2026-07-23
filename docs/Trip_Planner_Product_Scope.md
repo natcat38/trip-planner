@@ -17,6 +17,8 @@ For the portfolio it's the **full-stack + infrastructure showpiece**: real authe
 ---
 
 ## 2. Proposed Solution
+> ⚠️ **2026-07-23:** Phase 1 ships on Vercel + Neon ($0/month); the AWS deployment is a
+> deferred post-ship showcase — see `docs/adr/0001`.
 
 A **Next.js full-stack web app** where a signed-in user plans trips: a day-by-day itinerary with an integrated, multi-currency budget, places shown on a map, deployed to AWS via CI/CD.
 
@@ -139,6 +141,8 @@ Share a trip via a read-only link or invite a co-editor; export an itinerary to 
 ---
 
 ## 8. Rollout Plan
+> ⚠️ **2026-07-23:** Phase 1 ships on Vercel + Neon ($0/month); the AWS deployment is a
+> deferred post-ship showcase — see `docs/adr/0001`.
 
 - **Phase 1 — Trip Planner:** ~14 dev-days · target **early August 2026** · containerised, running on **AWS (ECS Fargate + RDS)**, shipped by a **GitHub Actions CI/CD pipeline**; README with architecture diagram + screenshots/GIF; MIT-licensed; public live URL.
 - **Phase 2 — Sharing & Export:** post-launch, effort TBD.

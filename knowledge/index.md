@@ -21,5 +21,7 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 
 ## Infra
 
+> ⚠️ Deferred to post-ship (2026-07-23): Phase 1 deploys on Vercel + Neon — see `docs/adr/0001`.
+
 - [ECS Fargate](/infra/ecs-fargate.md) — containerised runtime behind an ALB, RDS Postgres.
 - [Terraform & CI/CD](/infra/terraform.md) — IaC + GitHub OIDC deploy with gated migrations.

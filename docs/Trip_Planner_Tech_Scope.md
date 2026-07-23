@@ -3,6 +3,11 @@
 > **Audience:** engineers (you, building it). Code-level breakdown.
 > **Stack:** **Next.js (App Router) + TypeScript**, **Prisma + PostgreSQL**, **Auth.js** (OAuth), **Mapbox** maps, Tailwind. Containerised with **Docker**, deployed to **AWS (ECS Fargate + RDS)** via **GitHub Actions** CI/CD, infra in **Terraform**. MIT.
 > **Companion doc:** `Trip_Planner_Product_Scope.md`.
+>
+> ⚠️ **2026-07-23:** Deployment re-planned — Phase 1 ships on **Vercel + Neon** with
+> Actions-gated deploys; Tasks 8–9 defer to a post-ship showcase. See `docs/adr/0001` &
+> `docs/adr/0002`. Schema adds optimistic locking (`adr/0003`); FX + OAuth providers fixed
+> (`adr/0004`).
 
 ---
 
@@ -179,12 +184,14 @@ Mapbox GL map showing activity pins for the selected day/trip; two-way highlight
 > ⚠️ Trim point: if early-August tightens, Maps (Task 7) defers to Phase 2 (Product §3).
 
 ## Task 8 — Production Dockerfile
+> ⚠️ Superseded for Phase 1 — see `docs/adr/0001` (Tasks 8–9) / `docs/adr/0002` (Task 10).
 **File:** `Dockerfile`, `next.config.js` · **Effort:** 0.5 d
 
 ### Task 8.1 — Multi-stage build
 `output: 'standalone'` in `next.config.js`; multi-stage Dockerfile (deps → build → minimal runtime) producing a small image. Non-root user; `HEALTHCHECK`.
 
 ## Task 9 — AWS infrastructure (Terraform)
+> ⚠️ Superseded for Phase 1 — see `docs/adr/0001` (Tasks 8–9) / `docs/adr/0002` (Task 10).
 **File:** `infra/*.tf` · **Effort:** 2 d
 
 ### Task 9.1 — Networking + data
@@ -194,6 +201,7 @@ Terraform: VPC/subnets (or default), **RDS Postgres**, **ECR** repo, **Secrets M
 **ECS Fargate** service + task definition behind an **ALB**; security groups; task role pulls secrets at runtime. ⚠️ DB creds + tokens come from Secrets Manager — **never** baked into the image or committed.
 
 ## Task 10 — CI/CD pipeline
+> ⚠️ Superseded for Phase 1 — see `docs/adr/0001` (Tasks 8–9) / `docs/adr/0002` (Task 10).
 **File:** `.github/workflows/deploy.yml` · **Effort:** 1.5 d
 
 ### Task 10.1 — Build + push
