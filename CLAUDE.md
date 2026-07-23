@@ -8,6 +8,7 @@ The scope docs' AWS deployment is superseded for Phase 1 — see docs/adr/0001.
 ## Stack & deploy
 Next.js App Router + TS + Tailwind · Prisma · Postgres (docker-compose locally, Neon in prod)
 · Auth.js v5 (Google + GitHub) · Vitest + Playwright.
+See `AGENTS.md` for Next.js version-drift notes (this Next.js version may differ from training data).
 Prod deploys ONLY via the gated GitHub Actions pipeline (ADR-0002) — never deploy manually.
 $0/month constraint: no always-on paid infra (ADR-0001).
 
