@@ -1,0 +1,33 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports: ['3000:3000']
+    env_file: .env
+    environment:
+      # inside the compose network the DB host is `db` (overrides .env's localhost)
+      DATABASE_URL: postgresql://trip:trip@db:5432/trip_planner
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: trip
+      POSTGRES_PASSWORD: trip
+      POSTGRES_DB: trip_planner
+    ports: ['5432:5432']
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U trip -d trip_planner']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  dbdata:
+  node_modules:
