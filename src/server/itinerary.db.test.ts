@@ -7,6 +7,7 @@ import {
   deleteActivity,
   ensureDaysForTrip,
   moveActivity,
+  updateActivity,
 } from './itinerary';
 
 // Real Postgres, only next-auth's session lookup stubbed — same rationale as trips.db.test.ts.
@@ -39,6 +40,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await db.trip.deleteMany({ where: { userId } });
   await db.user.delete({ where: { id: userId } });
+  vi.unstubAllGlobals();
 });
 
 describe('itinerary against a real database', () => {
@@ -130,5 +132,38 @@ describe('itinerary against a real database', () => {
     expect(
       await db.activity.findMany({ where: { dayId: day.id } }),
     ).toHaveLength(0);
+  });
+
+  it('geocodes and persists real lat/lng when a placeName is set, and skips re-geocoding on an unrelated edit', async () => {
+    process.env.MAPBOX_TOKEN = 'test-token';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          features: [{ properties: { coordinates: { longitude: 139.7454, latitude: 35.6586 } } }],
+        }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const [day] = await ensureDaysForTrip(tripId);
+    const activity = await createActivity(tripId, day.id, {
+      title: 'Tokyo Tower',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+    });
+    expect(activity.lat).toBe(35.6586);
+    expect(activity.lng).toBe(139.7454);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await updateActivity(tripId, activity.id, {
+      title: 'Tokyo Tower (renamed)',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+    });
+
+    const reloaded = await db.activity.findUniqueOrThrow({ where: { id: activity.id } });
+    expect(reloaded.lat).toBe(35.6586);
+    expect(reloaded.lng).toBe(139.7454);
+    expect(fetchMock).toHaveBeenCalledTimes(1); // no re-fetch since placeName didn't change
   });
 });
