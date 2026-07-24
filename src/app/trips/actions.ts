@@ -42,9 +42,13 @@ export async function updateTripAction(
   formData: FormData,
 ): Promise<TripFormState> {
   try {
-    await updateTrip(tripId, { ...parseTripFormData(formData), updatedAt: new Date(updatedAt) });
+    await updateTrip(tripId, {
+      ...parseTripFormData(formData),
+      updatedAt: new Date(updatedAt),
+    });
   } catch (err) {
-    if (err instanceof ValidationError || err instanceof StaleWriteError) return { error: err.message };
+    if (err instanceof ValidationError || err instanceof StaleWriteError)
+      return { error: err.message };
     throw err;
   }
   redirect('/trips');

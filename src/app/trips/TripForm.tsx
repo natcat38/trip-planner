@@ -26,7 +26,10 @@ export function TripForm({
   defaults = emptyDefaults,
   submitLabel,
 }: {
-  action: (prevState: TripFormState, formData: FormData) => Promise<TripFormState>;
+  action: (
+    prevState: TripFormState,
+    formData: FormData,
+  ) => Promise<TripFormState>;
   defaults?: TripFormDefaults;
   submitLabel: string;
 }) {
@@ -41,7 +44,9 @@ export function TripForm({
       )}
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">Name</span>
+        <span className="text-sm font-medium text-black dark:text-zinc-50">
+          Name
+        </span>
         <input
           name="name"
           required
@@ -64,7 +69,9 @@ export function TripForm({
 
       <div className="flex gap-4">
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">Start date</span>
+          <span className="text-sm font-medium text-black dark:text-zinc-50">
+            Start date
+          </span>
           <input
             type="date"
             name="startDate"
@@ -74,7 +81,9 @@ export function TripForm({
           />
         </label>
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">End date</span>
+          <span className="text-sm font-medium text-black dark:text-zinc-50">
+            End date
+          </span>
           <input
             type="date"
             name="endDate"
@@ -87,7 +96,9 @@ export function TripForm({
 
       <div className="flex gap-4">
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">Base currency</span>
+          <span className="text-sm font-medium text-black dark:text-zinc-50">
+            Base currency
+          </span>
           <input
             name="baseCurrency"
             required
@@ -98,7 +109,9 @@ export function TripForm({
           />
         </label>
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">Budget amount</span>
+          <span className="text-sm font-medium text-black dark:text-zinc-50">
+            Budget amount
+          </span>
           <input
             type="number"
             name="budgetAmount"

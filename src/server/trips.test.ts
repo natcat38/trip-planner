@@ -4,7 +4,10 @@ import { currentUserId, requireTrip } from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
 import { createTrip, deleteTrip, listTrips, updateTrip } from './trips';
 
-vi.mock('./auth-scope', () => ({ currentUserId: vi.fn(), requireTrip: vi.fn() }));
+vi.mock('./auth-scope', () => ({
+  currentUserId: vi.fn(),
+  requireTrip: vi.fn(),
+}));
 vi.mock('../lib/db', () => ({
   db: {
     trip: {
@@ -72,7 +75,11 @@ describe('createTrip', () => {
     vi.mocked(currentUserId).mockResolvedValue('user-1');
 
     await expect(
-      createTrip({ ...validInput, startDate: new Date('2026-09-05'), endDate: new Date('2026-09-01') }),
+      createTrip({
+        ...validInput,
+        startDate: new Date('2026-09-05'),
+        endDate: new Date('2026-09-01'),
+      }),
     ).rejects.toThrow(ValidationError);
     expect(db.trip.create).not.toHaveBeenCalled();
   });
@@ -80,14 +87,18 @@ describe('createTrip', () => {
   it('rejects a negative budget amount', async () => {
     vi.mocked(currentUserId).mockResolvedValue('user-1');
 
-    await expect(createTrip({ ...validInput, budgetAmount: -1 })).rejects.toThrow(ValidationError);
+    await expect(
+      createTrip({ ...validInput, budgetAmount: -1 }),
+    ).rejects.toThrow(ValidationError);
     expect(db.trip.create).not.toHaveBeenCalled();
   });
 
   it('rejects a non-numeric budget amount', async () => {
     vi.mocked(currentUserId).mockResolvedValue('user-1');
 
-    await expect(createTrip({ ...validInput, budgetAmount: NaN })).rejects.toThrow(ValidationError);
+    await expect(
+      createTrip({ ...validInput, budgetAmount: NaN }),
+    ).rejects.toThrow(ValidationError);
     expect(db.trip.create).not.toHaveBeenCalled();
   });
 });
@@ -96,7 +107,10 @@ describe('updateTrip', () => {
   const lastSeenUpdatedAt = new Date('2026-07-01T00:00:00Z');
 
   it('updates the trip when the optimistic lock matches', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({ id: 'trip-1', userId: 'user-1' } as never);
+    vi.mocked(requireTrip).mockResolvedValue({
+      id: 'trip-1',
+      userId: 'user-1',
+    } as never);
     vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 1 } as never);
 
     await updateTrip('trip-1', { ...validInput, updatedAt: lastSeenUpdatedAt });
@@ -115,16 +129,22 @@ describe('updateTrip', () => {
   });
 
   it('throws StaleWriteError when the row changed since it was last read', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({ id: 'trip-1', userId: 'user-1' } as never);
+    vi.mocked(requireTrip).mockResolvedValue({
+      id: 'trip-1',
+      userId: 'user-1',
+    } as never);
     vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 0 } as never);
 
-    await expect(updateTrip('trip-1', { ...validInput, updatedAt: lastSeenUpdatedAt })).rejects.toThrow(
-      StaleWriteError,
-    );
+    await expect(
+      updateTrip('trip-1', { ...validInput, updatedAt: lastSeenUpdatedAt }),
+    ).rejects.toThrow(StaleWriteError);
   });
 
   it('rejects an end date before the start date without touching the db', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({ id: 'trip-1', userId: 'user-1' } as never);
+    vi.mocked(requireTrip).mockResolvedValue({
+      id: 'trip-1',
+      userId: 'user-1',
+    } as never);
 
     await expect(
       updateTrip('trip-1', {
@@ -140,7 +160,10 @@ describe('updateTrip', () => {
 
 describe('deleteTrip', () => {
   it('deletes the trip after authorization', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({ id: 'trip-1', userId: 'user-1' } as never);
+    vi.mocked(requireTrip).mockResolvedValue({
+      id: 'trip-1',
+      userId: 'user-1',
+    } as never);
     vi.mocked(db.trip.delete).mockResolvedValue({} as never);
 
     await deleteTrip('trip-1');
