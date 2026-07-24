@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { minorUnitExponent, toMinorUnits } from './money';
+import { formatMoney, minorUnitExponent, toMinorUnits } from './money';
 
 describe('minorUnitExponent', () => {
   it('returns 0 for JPY (no minor unit)', () => {
@@ -26,5 +26,15 @@ describe('toMinorUnits', () => {
 
   it('rounds to the nearest minor unit to avoid float drift', () => {
     expect(toMinorUnits(19.999, 'EUR')).toBe(2000);
+  });
+});
+
+describe('formatMoney', () => {
+  it('formats yen with no decimal places', () => {
+    expect(formatMoney(350000, 'JPY')).toBe('¥350,000');
+  });
+
+  it('formats euros with cents', () => {
+    expect(formatMoney(350050, 'EUR')).toBe('€3,500.50');
   });
 });
