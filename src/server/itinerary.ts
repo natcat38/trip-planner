@@ -12,7 +12,7 @@ async function requireDay(tripId: string, dayId: string) {
   return day;
 }
 
-async function requireActivity(tripId: string, activityId: string) {
+export async function requireActivity(tripId: string, activityId: string) {
   const trip = await requireTrip(tripId);
   const activity = await db.activity.findFirst({
     where: { id: activityId, day: { tripId: trip.id } },
