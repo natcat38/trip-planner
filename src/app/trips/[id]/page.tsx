@@ -8,6 +8,7 @@ import {
   moveActivityAction,
 } from './actions';
 import { ActivityForm } from './ActivityForm';
+import { BudgetPanel } from './BudgetPanel';
 
 function formatDay(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
@@ -54,6 +55,8 @@ export default async function TripItineraryPage({
             Edit trip
           </Link>
         </div>
+
+        <BudgetPanel tripId={trip.id} />
 
         <div className="flex flex-col gap-8">
           {days.map((day) => (

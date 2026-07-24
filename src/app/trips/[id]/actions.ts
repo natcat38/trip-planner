@@ -8,9 +8,14 @@ import {
   moveActivity,
   updateActivity,
 } from '@/server/itinerary';
+import { createExpense, deleteExpense } from '@/server/expenses';
 import { ValidationError } from '@/server/errors';
 
 export interface ActivityFormState {
+  error?: string;
+}
+
+export interface ExpenseFormState {
   error?: string;
 }
 
@@ -76,5 +81,37 @@ export async function moveActivityAction(
   direction: 'up' | 'down',
 ): Promise<void> {
   await moveActivity(tripId, activityId, direction);
+  revalidatePath(`/trips/${tripId}`);
+}
+
+function parseExpenseFormData(formData: FormData) {
+  return {
+    label: String(formData.get('label') ?? ''),
+    category: String(formData.get('category') ?? ''),
+    costAmount: Number(formData.get('costAmount')),
+    costCurrency: String(formData.get('costCurrency') ?? '').toUpperCase(),
+  };
+}
+
+export async function addExpenseAction(
+  tripId: string,
+  _prevState: ExpenseFormState,
+  formData: FormData,
+): Promise<ExpenseFormState> {
+  try {
+    await createExpense(tripId, parseExpenseFormData(formData));
+  } catch (err) {
+    if (err instanceof ValidationError) return { error: err.message };
+    throw err;
+  }
+  revalidatePath(`/trips/${tripId}`);
+  return {};
+}
+
+export async function deleteExpenseAction(
+  tripId: string,
+  expenseId: string,
+): Promise<void> {
+  await deleteExpense(tripId, expenseId);
   revalidatePath(`/trips/${tripId}`);
 }

@@ -14,7 +14,9 @@ beforeEach(async () => {
   process.env.EXCHANGE_RATE_API_KEY = 'test-key';
   __resetFxCacheForTests();
 
-  const user = await db.user.create({ data: { email: `budget-db-test-${crypto.randomUUID()}@example.com` } });
+  const user = await db.user.create({
+    data: { email: `budget-db-test-${crypto.randomUUID()}@example.com` },
+  });
   userId = user.id;
   vi.mocked(auth).mockResolvedValue({ user: { id: userId } } as never);
 
@@ -30,9 +32,18 @@ beforeEach(async () => {
     },
   });
   tripId = trip.id;
-  const day = await db.day.create({ data: { tripId, date: new Date('2026-09-01') } });
+  const day = await db.day.create({
+    data: { tripId, date: new Date('2026-09-01') },
+  });
   await db.activity.create({
-    data: { dayId: day.id, title: 'Lunch', category: 'Food', sortOrder: 0, costMinor: 1500, costCurrency: 'JPY' },
+    data: {
+      dayId: day.id,
+      title: 'Lunch',
+      category: 'Food',
+      sortOrder: 0,
+      costMinor: 1500,
+      costCurrency: 'JPY',
+    },
   });
 });
 
@@ -56,13 +67,24 @@ describe('getBudgetSummary against a real database', () => {
 
   it('converts a cross-currency expense using the real fx.ts pipeline against a real trip', async () => {
     await db.expense.create({
-      data: { tripId, label: 'Flights', category: 'Transport', costMinor: 6000, costCurrency: 'EUR' },
+      data: {
+        tripId,
+        label: 'Flights',
+        category: 'Transport',
+        costMinor: 6000,
+        costCurrency: 'EUR',
+      },
     });
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ result: 'success', base_code: 'EUR', conversion_rates: { JPY: 165 } }),
+        json: () =>
+          Promise.resolve({
+            result: 'success',
+            base_code: 'EUR',
+            conversion_rates: { JPY: 165 },
+          }),
       }),
     );
 
@@ -77,7 +99,13 @@ describe('getBudgetSummary against a real database', () => {
 
   it('excludes an item from the total and lists it as unconverted when the rate fetch fails', async () => {
     await db.expense.create({
-      data: { tripId, label: 'Souvenir', category: 'Other', costMinor: 500, costCurrency: 'GBP' },
+      data: {
+        tripId,
+        label: 'Souvenir',
+        category: 'Other',
+        costMinor: 500,
+        costCurrency: 'GBP',
+      },
     });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
 
@@ -85,7 +113,13 @@ describe('getBudgetSummary against a real database', () => {
 
     expect(summary.spentMinor).toBe(1500); // only the JPY lunch counted
     expect(summary.unconvertedItems).toEqual([
-      { id: expect.any(String), label: 'Souvenir', category: 'Other', originalMinor: 500, originalCurrency: 'GBP' },
+      {
+        id: expect.any(String),
+        label: 'Souvenir',
+        category: 'Other',
+        originalMinor: 500,
+        originalCurrency: 'GBP',
+      },
     ]);
   });
 });

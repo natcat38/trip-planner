@@ -13,7 +13,9 @@ export function __resetFxCacheForTests() {
   cache = new Map();
 }
 
-async function fetchRates(base: string): Promise<Record<string, number> | null> {
+async function fetchRates(
+  base: string,
+): Promise<Record<string, number> | null> {
   const res = await fetch(
     `https://v6.exchangerate-api.com/v6/${requireEnv('EXCHANGE_RATE_API_KEY')}/latest/${base}`,
   );
@@ -25,7 +27,8 @@ async function fetchRates(base: string): Promise<Record<string, number> | null> 
 
 async function getRates(base: string): Promise<Record<string, number> | null> {
   const cached = cache.get(base);
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) return cached.rates;
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS)
+    return cached.rates;
 
   const rates = await fetchRates(base);
   if (!rates) return null;
@@ -36,7 +39,11 @@ async function getRates(base: string): Promise<Record<string, number> | null> {
 // Converts a cost from its original currency into a trip's base currency, in minor units.
 // Returns null (never throws) when no rate is available — per Tech Scope §2.3, callers
 // should show the original amount and retry on next refresh rather than blocking the UI.
-export async function convertMinor(amountMinor: number, from: string, to: string): Promise<number | null> {
+export async function convertMinor(
+  amountMinor: number,
+  from: string,
+  to: string,
+): Promise<number | null> {
   if (from === to) return amountMinor;
 
   try {
