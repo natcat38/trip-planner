@@ -14,6 +14,7 @@ Confirmed drift: Next 16 renamed `middleware.ts` -> `proxy.ts` (`export const pr
 route protection lives in `src/proxy.ts`.
 Prod deploys ONLY via the gated GitHub Actions pipeline (ADR-0002) — never deploy manually.
 $0/month constraint: no always-on paid infra (ADR-0001).
+One-time account-side setup (Vercel/Neon projects, secrets): `docs/deploy-setup.md`.
 
 ## Commands
 
