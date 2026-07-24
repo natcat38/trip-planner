@@ -33,4 +33,25 @@ jobs:
       - run: npm run lint
       - run: npx prisma migrate deploy
       - run: npm run test
-      # e2e (Playwright) joins CI once the dashboard/forms exist (Milestone 4)
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  deploy:
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      # ADR-0002: migration runs before the deploy hook fires, so a bad migration
+      # blocks the release instead of leaving Neon half-applied.
+      - name: Apply pending migrations to production (Neon)
+        run: npx prisma migrate deploy
+      - name: Trigger Vercel deploy
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
