@@ -22,7 +22,9 @@ function validateTripInput(input: TripInput) {
   if (input.endDate < input.startDate) {
     throw new ValidationError('End date must be on or after the start date.');
   }
-  if (input.budgetAmount < 0) {
+  if (!(input.budgetAmount >= 0)) {
+    // catches negative amounts and NaN in one guard (NaN < 0 is false, so a plain
+    // "< 0" check would silently let a non-numeric amount through to the database)
     throw new ValidationError('Enter an amount of 0 or more.');
   }
 }

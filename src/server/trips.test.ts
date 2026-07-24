@@ -83,6 +83,13 @@ describe('createTrip', () => {
     await expect(createTrip({ ...validInput, budgetAmount: -1 })).rejects.toThrow(ValidationError);
     expect(db.trip.create).not.toHaveBeenCalled();
   });
+
+  it('rejects a non-numeric budget amount', async () => {
+    vi.mocked(currentUserId).mockResolvedValue('user-1');
+
+    await expect(createTrip({ ...validInput, budgetAmount: NaN })).rejects.toThrow(ValidationError);
+    expect(db.trip.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('updateTrip', () => {
