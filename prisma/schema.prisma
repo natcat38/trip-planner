@@ -1,7 +1,8 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+//
+// Models per Tech Scope §2.1, plus updatedAt on every mutable model per ADR-0003
+// (optimistic locking) and cascade deletes Trip -> Day -> Activity / Trip -> Expense.
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +11,72 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+  trips Trip[]
+}
+
+model Trip {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String
+  destinations String[]
+  startDate    DateTime
+  endDate      DateTime
+  baseCurrency String // ISO 4217, e.g. "JPY"
+  budgetMinor  Int // budget in base currency MINOR units
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id])
+  days         Day[]
+  expenses     Expense[]
+
+  @@index([userId])
+}
+
+model Day {
+  id         String     @id @default(cuid())
+  tripId     String
+  date       DateTime
+  updatedAt  DateTime   @updatedAt
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities Activity[]
+
+  @@index([tripId])
+}
+
+model Activity {
+  id           String   @id @default(cuid())
+  dayId        String
+  title        String
+  placeName    String?
+  lat          Float?
+  lng          Float?
+  startTime    String? // "09:30"
+  endTime      String?
+  category     String // Food | Transport | Lodging | Sightseeing | Other
+  notes        String?
+  costMinor    Int? // in costCurrency MINOR units
+  costCurrency String? // ISO 4217 of the original cost
+  sortOrder    Int
+  updatedAt    DateTime @updatedAt
+  day          Day      @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  @@index([dayId])
+}
+
+model Expense {
+  // big-ticket items not tied to a day (flights, hotels)
+  id           String   @id @default(cuid())
+  tripId       String
+  label        String
+  category     String
+  costMinor    Int
+  costCurrency String
+  updatedAt    DateTime @updatedAt
+  trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
 }
