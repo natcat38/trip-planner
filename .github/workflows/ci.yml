@@ -7,6 +7,21 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trip
+          POSTGRES_PASSWORD: trip
+          POSTGRES_DB: trip_planner
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U trip -d trip_planner"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://trip:trip@localhost:5432/trip_planner
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,5 +31,6 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run lint
+      - run: npx prisma migrate deploy
       - run: npm run test
-      # e2e (Playwright) joins CI in Milestone 2 once there is real UI to smoke-test
+      # e2e (Playwright) joins CI once the dashboard/forms exist (Milestone 4)
