@@ -17,7 +17,12 @@ beforeEach(() => {
   vi.mocked(convertMinor).mockReset();
 });
 
-const trip = { id: 'trip-1', userId: 'user-1', budgetMinor: 350000, baseCurrency: 'JPY' };
+const trip = {
+  id: 'trip-1',
+  userId: 'user-1',
+  budgetMinor: 350000,
+  baseCurrency: 'JPY',
+};
 
 describe('getBudgetSummary', () => {
   it('sums converted activity and expense costs, computing remaining and over-budget status', async () => {
@@ -33,9 +38,17 @@ describe('getBudgetSummary', () => {
       },
     ] as never);
     vi.mocked(db.expense.findMany).mockResolvedValue([
-      { id: 'e1', label: 'Flights', category: 'Transport', costMinor: 12000000, costCurrency: 'JPY' },
+      {
+        id: 'e1',
+        label: 'Flights',
+        category: 'Transport',
+        costMinor: 12000000,
+        costCurrency: 'JPY',
+      },
     ] as never);
-    vi.mocked(convertMinor).mockImplementation(async (amount, from) => (from === 'EUR' ? 990000 : amount));
+    vi.mocked(convertMinor).mockImplementation(async (amount, from) =>
+      from === 'EUR' ? 990000 : amount,
+    );
 
     const summary = await getBudgetSummary('trip-1');
 
@@ -66,7 +79,9 @@ describe('getBudgetSummary', () => {
       },
     ] as never);
     vi.mocked(db.expense.findMany).mockResolvedValue([] as never);
-    vi.mocked(convertMinor).mockImplementation(async (amount) => amount as number);
+    vi.mocked(convertMinor).mockImplementation(
+      async (amount) => amount as number,
+    );
 
     const summary = await getBudgetSummary('trip-1');
 
@@ -94,7 +109,13 @@ describe('getBudgetSummary', () => {
     expect(summary.spentMinor).toBe(0);
     expect(summary.byCategory).toEqual({});
     expect(summary.unconvertedItems).toEqual([
-      { id: 'a1', label: 'Souvenir', category: 'Other', originalMinor: 500, originalCurrency: 'GBP' },
+      {
+        id: 'a1',
+        label: 'Souvenir',
+        category: 'Other',
+        originalMinor: 500,
+        originalCurrency: 'GBP',
+      },
     ]);
   });
 });

@@ -25,17 +25,27 @@ describe('convertMinor', () => {
   });
 
   it('fetches rates from the source currency and converts to the target', async () => {
-    mockFetchOnce({ result: 'success', base_code: 'EUR', conversion_rates: { JPY: 165 } });
+    mockFetchOnce({
+      result: 'success',
+      base_code: 'EUR',
+      conversion_rates: { JPY: 165 },
+    });
 
     const result = await convertMinor(6000, 'EUR', 'JPY'); // €60.00 -> ¥9,900
     expect(result).toBe(9900);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('https://v6.exchangerate-api.com/v6/test-key/latest/EUR'),
+      expect.stringContaining(
+        'https://v6.exchangerate-api.com/v6/test-key/latest/EUR',
+      ),
     );
   });
 
   it('caches rates for the same source currency across calls', async () => {
-    mockFetchOnce({ result: 'success', base_code: 'EUR', conversion_rates: { JPY: 165 } });
+    mockFetchOnce({
+      result: 'success',
+      base_code: 'EUR',
+      conversion_rates: { JPY: 165 },
+    });
 
     await convertMinor(1000, 'EUR', 'JPY');
     await convertMinor(2000, 'EUR', 'JPY');
@@ -54,7 +64,11 @@ describe('convertMinor', () => {
   });
 
   it('returns null when the target currency has no rate yet', async () => {
-    mockFetchOnce({ result: 'success', base_code: 'EUR', conversion_rates: { USD: 1.08 } });
+    mockFetchOnce({
+      result: 'success',
+      base_code: 'EUR',
+      conversion_rates: { USD: 1.08 },
+    });
     expect(await convertMinor(1000, 'EUR', 'JPY')).toBeNull();
   });
 });

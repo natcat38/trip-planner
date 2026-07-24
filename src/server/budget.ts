@@ -41,7 +41,11 @@ export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
 
   for (const activity of activities) {
     if (activity.costMinor == null || !activity.costCurrency) continue;
-    const convertedMinor = await convertMinor(activity.costMinor, activity.costCurrency, trip.baseCurrency);
+    const convertedMinor = await convertMinor(
+      activity.costMinor,
+      activity.costCurrency,
+      trip.baseCurrency,
+    );
     if (convertedMinor == null) {
       unconvertedItems.push({
         id: activity.id,
@@ -53,13 +57,18 @@ export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
       continue;
     }
     spentMinor += convertedMinor;
-    byCategory[activity.category] = (byCategory[activity.category] ?? 0) + convertedMinor;
+    byCategory[activity.category] =
+      (byCategory[activity.category] ?? 0) + convertedMinor;
     const date = activity.day.date.toISOString().slice(0, 10);
     byDay[date] = (byDay[date] ?? 0) + convertedMinor;
   }
 
   for (const expense of expenses) {
-    const convertedMinor = await convertMinor(expense.costMinor, expense.costCurrency, trip.baseCurrency);
+    const convertedMinor = await convertMinor(
+      expense.costMinor,
+      expense.costCurrency,
+      trip.baseCurrency,
+    );
     if (convertedMinor == null) {
       unconvertedItems.push({
         id: expense.id,
@@ -71,7 +80,8 @@ export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
       continue;
     }
     spentMinor += convertedMinor;
-    byCategory[expense.category] = (byCategory[expense.category] ?? 0) + convertedMinor;
+    byCategory[expense.category] =
+      (byCategory[expense.category] ?? 0) + convertedMinor;
   }
 
   return {
