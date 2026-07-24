@@ -1,6 +1,7 @@
 'use server';
 
 import { db } from '../lib/db';
+import { geocode } from '../lib/geocode';
 import { toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTrip } from './auth-scope';
 import { ValidationError } from './errors';
@@ -79,10 +80,31 @@ function validateActivityInput(input: ActivityInput) {
   }
 }
 
-function activityData(input: ActivityInput) {
+interface ExistingPlace {
+  placeName: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
+// Re-geocodes only when placeName actually changed, so editing an activity's
+// other fields doesn't waste a Mapbox call or risk clobbering a good pin with
+// a failed lookup.
+async function resolveActivityData(input: ActivityInput, existing?: ExistingPlace) {
+  const placeName = input.placeName || null;
+  let lat = existing?.lat ?? null;
+  let lng = existing?.lng ?? null;
+
+  if (placeName !== (existing?.placeName ?? null)) {
+    const result = placeName ? await geocode(placeName) : null;
+    lat = result?.lat ?? null;
+    lng = result?.lng ?? null;
+  }
+
   return {
     title: input.title,
-    placeName: input.placeName || null,
+    placeName,
+    lat,
+    lng,
     startTime: input.startTime || null,
     endTime: input.endTime || null,
     category: input.category,
@@ -104,9 +126,8 @@ export async function createActivity(
   const day = await requireDay(tripId, dayId);
   validateActivityInput(input);
   const sortOrder = await db.activity.count({ where: { dayId: day.id } });
-  return db.activity.create({
-    data: { dayId: day.id, ...activityData(input), sortOrder },
-  });
+  const data = await resolveActivityData(input);
+  return db.activity.create({ data: { dayId: day.id, ...data, sortOrder } });
 }
 
 export async function updateActivity(
@@ -116,10 +137,8 @@ export async function updateActivity(
 ) {
   const activity = await requireActivity(tripId, activityId);
   validateActivityInput(input);
-  return db.activity.update({
-    where: { id: activity.id },
-    data: activityData(input),
-  });
+  const data = await resolveActivityData(input, activity);
+  return db.activity.update({ where: { id: activity.id }, data });
 }
 
 export async function deleteActivity(tripId: string, activityId: string) {

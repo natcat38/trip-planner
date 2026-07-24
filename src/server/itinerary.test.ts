@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
+import { geocode } from '../lib/geocode';
 import { ForbiddenOrNotFoundError, requireTrip } from './auth-scope';
 import { ValidationError } from './errors';
 import {
@@ -35,6 +36,7 @@ vi.mock('../lib/db', () => ({
     $transaction: vi.fn(),
   },
 }));
+vi.mock('../lib/geocode', () => ({ geocode: vi.fn() }));
 
 beforeEach(() => {
   vi.mocked(requireTrip).mockReset();
@@ -48,6 +50,7 @@ beforeEach(() => {
   vi.mocked(db.activity.delete).mockReset();
   vi.mocked(db.activity.count).mockReset();
   vi.mocked(db.$transaction).mockReset();
+  vi.mocked(geocode).mockReset();
 });
 
 const trip = {
@@ -111,6 +114,8 @@ describe('createActivity', () => {
         dayId: 'day-1',
         title: 'Lunch',
         placeName: null,
+        lat: null,
+        lng: null,
         startTime: null,
         endTime: null,
         category: 'Food',
@@ -120,6 +125,44 @@ describe('createActivity', () => {
         sortOrder: 2,
       },
     });
+    expect(geocode).not.toHaveBeenCalled();
+  });
+
+  it('geocodes a provided placeName and stores the resulting lat/lng', async () => {
+    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.count).mockResolvedValue(0);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+    vi.mocked(geocode).mockResolvedValue({ lat: 35.6586, lng: 139.7454 });
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Tokyo Tower',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+    });
+
+    expect(geocode).toHaveBeenCalledWith('Tokyo Tower');
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }) }),
+    );
+  });
+
+  it('stores null lat/lng when geocoding finds nothing, without throwing', async () => {
+    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.count).mockResolvedValue(0);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+    vi.mocked(geocode).mockResolvedValue(null);
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Somewhere',
+      category: 'Other',
+      placeName: 'asdkjfhaslkdjfh',
+    });
+
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ lat: null, lng: null }) }),
+    );
   });
 
   it('converts an optional cost to minor units', async () => {
@@ -168,7 +211,7 @@ describe('createActivity', () => {
 });
 
 describe('updateActivity and deleteActivity', () => {
-  const activity = { id: 'activity-1', dayId: 'day-1' };
+  const activity = { id: 'activity-1', dayId: 'day-1', placeName: null, lat: null, lng: null };
 
   it('updates the activity after authorization', async () => {
     vi.mocked(requireTrip).mockResolvedValue(trip as never);
@@ -187,6 +230,43 @@ describe('updateActivity and deleteActivity', () => {
         category: 'Sightseeing',
       }),
     });
+  });
+
+  it('does not re-geocode when placeName is unchanged, keeping the existing lat/lng', async () => {
+    const withPlace = { id: 'activity-1', dayId: 'day-1', placeName: 'Tokyo Tower', lat: 35.6586, lng: 139.7454 };
+    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
+    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+
+    await updateActivity('trip-1', 'activity-1', {
+      title: 'Renamed',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+    });
+
+    expect(geocode).not.toHaveBeenCalled();
+    expect(db.activity.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }) }),
+    );
+  });
+
+  it('re-geocodes when placeName changes', async () => {
+    const withPlace = { id: 'activity-1', dayId: 'day-1', placeName: 'Tokyo Tower', lat: 35.6586, lng: 139.7454 };
+    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
+    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(geocode).mockResolvedValue({ lat: 35.71, lng: 139.81 });
+
+    await updateActivity('trip-1', 'activity-1', {
+      title: 'Renamed',
+      category: 'Sightseeing',
+      placeName: 'Senso-ji',
+    });
+
+    expect(geocode).toHaveBeenCalledWith('Senso-ji');
+    expect(db.activity.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ lat: 35.71, lng: 139.81 }) }),
+    );
   });
 
   it('deletes the activity after authorization', async () => {
