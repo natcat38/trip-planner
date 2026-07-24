@@ -47,7 +47,14 @@ const trip = await db.trip.create({
       ],
     },
     expenses: {
-      create: [{ label: 'Flights', category: 'Transport', costMinor: 12000000, costCurrency: 'JPY' }],
+      create: [
+        {
+          label: 'Flights',
+          category: 'Transport',
+          costMinor: 12000000,
+          costCurrency: 'JPY',
+        },
+      ],
     },
   },
 });

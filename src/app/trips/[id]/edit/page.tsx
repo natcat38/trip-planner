@@ -7,7 +7,11 @@ function toDateInputValue(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-export default async function EditTripPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditTripPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
 
   let trip;
@@ -24,13 +28,19 @@ export default async function EditTripPage({ params }: { params: Promise<{ id: s
     throw err;
   }
 
-  const boundUpdate = updateTripAction.bind(null, trip.id, trip.updatedAt.toISOString());
+  const boundUpdate = updateTripAction.bind(
+    null,
+    trip.id,
+    trip.updatedAt.toISOString(),
+  );
   const boundDelete = deleteTripAction.bind(null, trip.id);
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
       <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">Edit trip</h1>
+        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">
+          Edit trip
+        </h1>
         <TripForm
           action={boundUpdate}
           submitLabel="Save changes"
@@ -40,11 +50,16 @@ export default async function EditTripPage({ params }: { params: Promise<{ id: s
             startDate: toDateInputValue(trip.startDate),
             endDate: toDateInputValue(trip.endDate),
             baseCurrency: trip.baseCurrency,
-            budgetAmount: String(trip.budgetMinor / 10 ** minorUnitExponent(trip.baseCurrency)),
+            budgetAmount: String(
+              trip.budgetMinor / 10 ** minorUnitExponent(trip.baseCurrency),
+            ),
           }}
         />
         <form action={boundDelete} className="mt-8">
-          <button type="submit" className="text-sm text-red-600 dark:text-red-400 underline">
+          <button
+            type="submit"
+            className="text-sm text-red-600 dark:text-red-400 underline"
+          >
             Delete trip
           </button>
         </form>

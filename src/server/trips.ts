@@ -31,7 +31,10 @@ function validateTripInput(input: TripInput) {
 
 export async function listTrips() {
   const userId = await currentUserId();
-  return db.trip.findMany({ where: { userId }, orderBy: { startDate: 'desc' } });
+  return db.trip.findMany({
+    where: { userId },
+    orderBy: { startDate: 'desc' },
+  });
 }
 
 export async function createTrip(input: TripInput) {
