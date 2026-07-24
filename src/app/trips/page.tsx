@@ -46,7 +46,7 @@ export default async function TripsPage() {
             {trips.map((trip) => (
               <li key={trip.id}>
                 <Link
-                  href={`/trips/${trip.id}/edit`}
+                  href={`/trips/${trip.id}`}
                   className="block rounded-lg border border-black/[.08] p-5 hover:bg-black/[.02] dark:border-white/[.145] dark:hover:bg-white/[.03]"
                 >
                   <div className="flex items-baseline justify-between gap-4">

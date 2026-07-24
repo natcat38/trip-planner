@@ -1,0 +1,59 @@
+import { minorUnitExponent } from '@/lib/money';
+import { ForbiddenOrNotFoundError } from '@/server/auth-scope';
+import { requireActivity } from '@/server/itinerary';
+import { updateActivityAction } from '../../../actions';
+import { ActivityForm } from '../../../ActivityForm';
+
+export default async function EditActivityPage({
+  params,
+}: {
+  params: Promise<{ id: string; activityId: string }>;
+}) {
+  const { id: tripId, activityId } = await params;
+
+  let activity;
+  try {
+    activity = await requireActivity(tripId, activityId);
+  } catch (err) {
+    if (err instanceof ForbiddenOrNotFoundError) {
+      return (
+        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
+          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
+        </div>
+      );
+    }
+    throw err;
+  }
+
+  const boundUpdate = updateActivityAction.bind(null, tripId, activity.id);
+
+  return (
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">
+          Edit activity
+        </h1>
+        <ActivityForm
+          action={boundUpdate}
+          submitLabel="Save changes"
+          defaults={{
+            title: activity.title,
+            placeName: activity.placeName ?? '',
+            startTime: activity.startTime ?? '',
+            endTime: activity.endTime ?? '',
+            category: activity.category,
+            notes: activity.notes ?? '',
+            costAmount:
+              activity.costMinor != null && activity.costCurrency
+                ? String(
+                    activity.costMinor /
+                      10 ** minorUnitExponent(activity.costCurrency),
+                  )
+                : '',
+            costCurrency: activity.costCurrency ?? '',
+          }}
+        />
+      </main>
+    </div>
+  );
+}
