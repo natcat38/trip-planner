@@ -17,10 +17,15 @@ agent session should do on your behalf).
 1. Import this GitHub repo as a new Vercel project (free/Hobby tier).
 2. **Disable automatic git deploys on push to `main`.** ADR-0002's whole point is that GitHub
    Actions — not Vercel's own git integration — decides when a deploy happens, so a bad
-   migration blocks the release instead of Vercel deploying ahead of a half-applied DB. Find
-   the current control for this under the project's Git settings in the Vercel dashboard (the
-   exact wording has shifted across Vercel versions — look for anything disabling automatic
-   production deployments for the connected branch).
+   migration blocks the release instead of Vercel deploying ahead of a half-applied DB. This is
+   already handled by `vercel.json` in this repo (`git.deploymentEnabled.main = false`) — nothing
+   to do here once the project is imported.
+
+   **Do not** use the dashboard's "Ignored Build Step" setting for this instead — it was tried
+   first and reverted. Ignored Build Step applies to *every* trigger, including Deploy Hooks, so
+   it silently canceled the CI-triggered production deploy along with git-push deploys, breaking
+   the pipeline in step 4. `git.deploymentEnabled` only gates git-push-triggered builds and
+   leaves Deploy Hooks working.
 3. Create a **Deploy Hook** for the production branch (Vercel dashboard → Project Settings →
    Git → Deploy Hooks). Copy the resulting URL — this is what Actions calls to trigger a deploy.
 4. In Project Settings → Environment Variables, set every runtime var the app needs (same names
