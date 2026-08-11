@@ -17,7 +17,7 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 
 ## Integrations
 
-- [Auth & authorization](/integrations/auth.md) — Auth.js OAuth + the `requireTrip` no-bypass rule.
+- [Auth & authorization](/integrations/auth.md) — Auth.js OAuth + the `requireTripAccess`/`requireTripOwner` no-bypass rule.
 - [Mapbox](/integrations/mapbox.md) — geocoding + map view, token kept server-side.
 
 ## Infra

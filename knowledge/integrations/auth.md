@@ -1,7 +1,7 @@
 ---
 type: Integration
 title: Auth & authorization
-description: Auth.js OAuth for identity plus the single requireTrip rule that gates every nested resource.
+description: Auth.js OAuth for identity plus requireTripAccess/requireTripOwner, the rules that gate every nested resource.
 resource: ../../docs/Trip_Planner_Tech_Scope.md
 tags: [integration, auth, security]
 timestamp: 2026-06-15T00:00:00Z
