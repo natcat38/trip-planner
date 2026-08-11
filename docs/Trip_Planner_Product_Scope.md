@@ -32,7 +32,7 @@ A **Next.js full-stack web app** where a signed-in user plans trips: a day-by-da
 - Deployed: **Dockerised → AWS (ECS Fargate + RDS Postgres) → via a GitHub Actions CI/CD pipeline**.
 
 **Phase 2 — Sharing & Export (later):**
-- **Share/collaborate** on a trip (read-only link or co-editor) and **export** an itinerary (e.g. PDF). Deferred.
+- **Share/collaborate** on a trip (read-only link or Collaborator) and **export** an itinerary (e.g. PDF). Deferred.
 
 ### Core principle: the plan *is* the budget
 > Costs aren't tracked in a separate ledger — they live on the itinerary items themselves. The budget is a **live roll-up of the plan**, converted into one base currency, so the answer to "can I afford this trip as planned?" is always current.
@@ -61,7 +61,7 @@ A **Next.js full-stack web app** where a signed-in user plans trips: a day-by-da
 
 | Layer | Task | Effort | Component |
 |-------|------|--------|-----------|
-| App | Trip sharing (read-only link + co-editor) | TBD | Sharing |
+| App | Trip sharing (read-only link + Collaborator) | TBD | Sharing |
 | App | Itinerary export (PDF) | TBD | Export |
 
 **Total estimated effort (Phase 1): ~14 developer-days.**
@@ -125,7 +125,7 @@ A **Next.js full-stack web app** where a signed-in user plans trips: a day-by-da
 
 ## 6. Sharing & Export *(Phase 2 — deferred)*
 
-Share a trip via a read-only link or invite a co-editor; export an itinerary to PDF. Out of scope for the early-August launch; captured so the roadmap is explicit.
+Share a trip via a read-only link or invite a Collaborator; export an itinerary to PDF. Out of scope for the early-August launch; captured so the roadmap is explicit.
 
 ---
 

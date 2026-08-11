@@ -8,7 +8,7 @@
 
 Two independent features, sharing first:
 
-- **Sharing:** a public read-only link (token-based, no login) plus named co-editors
+- **Sharing:** a public read-only link (token-based, no login) plus named Collaborators
   (invite by email, accept/decline, full edit rights once accepted).
 - **Export:** a dedicated print-friendly page per trip; an "Export PDF" button triggers
   the browser's native print-to-PDF. No new dependencies, no server-side rendering

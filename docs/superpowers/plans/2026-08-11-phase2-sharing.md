@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let a trip owner share a trip via a public read-only link and invite named co-editors (accept/decline, full edit rights once accepted), per `docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md`.
+**Goal:** Let a trip owner share a trip via a public read-only link and invite named Collaborators (accept/decline, full edit rights once accepted), per `docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md`.
 
 **Architecture:** Extend the existing `requireTrip`-style authorization chain in `src/server/auth-scope.ts` into `requireTripAccess` (owner or accepted collaborator) and `requireTripOwner` (owner only) — every existing nested-resource call site swaps to one of these two, so itinerary/budget/expense CRUD opens to collaborators for free. A new `TripCollaborator` model (email-matched, no `userId` FK) backs invites; a new `shareToken` column on `Trip` backs the public link. A new `src/server/sharing.ts` module owns everything sharing-specific: link management, invite/accept/decline, and the public (session-less) read path.
 
@@ -35,11 +35,15 @@ Add a new model after `model Expense { ... }`:
 model TripCollaborator {
   // Invited by email, matched against the signed-in session's verified OAuth
   // email at access time — no userId FK, no separate invite-acceptance table.
+  // updatedAt is present per CLAUDE.md's blanket "every mutable model carries
+  // updatedAt" rule (ADR-0003), though this model has no field-level edits to
+  // stale-write-protect — its mutations are create/status-transition/delete.
   id        String   @id @default(cuid())
   tripId    String
   email     String
   status    String   @default("PENDING") // PENDING | ACCEPTED
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, email])
@@ -431,7 +435,7 @@ git commit -m "test: cover requireTripAccess/requireTripOwner against real Postg
 - Modify: `src/app/trips/[id]/edit/page.tsx`
 - Modify: `src/server/trips.db.test.ts` (comment only)
 
-Everywhere `requireTrip` currently means "the caller may read and write this trip's data" the correct replacement is `requireTripAccess` (owner or accepted collaborator, per the design's "co-editors get full edit rights on itinerary/budget/trip details" decision) — **except** `deleteTrip`, which stays owner-only.
+Everywhere `requireTrip` currently means "the caller may read and write this trip's data" the correct replacement is `requireTripAccess` (owner or accepted collaborator, per the design's "Collaborators get full edit rights on itinerary/budget/trip details" decision) — **except** `deleteTrip`, which stays owner-only.
 
 - [ ] **Step 1: `src/server/expenses.ts` — plain rename**
 
@@ -703,7 +707,24 @@ Finally, wrap the delete form (was lines 64-71) so it only renders for the owner
 
 Change the comment on line 10 from `// currentUserId/requireTrip run for real against the real db.` to `// currentUserId/requireTripAccess/requireTripOwner run for real against the real db.` — no code changes.
 
-- [ ] **Step 12: Run the full suite, verify everything is still green**
+- [ ] **Step 12: `knowledge/integrations/auth.md` — update the stale glossary entry**
+
+This CI-validated glossary entry currently documents the single `requireTrip(tripId)` rule this
+task just replaced. Replace its "Authorization (the single rule)" bullet and the paragraph below
+it:
+
+```markdown
+- **Authorization** — every read is filtered by the authenticated user or an accepted
+  [Collaborator](/domain/sharing.md); every mutation re-checks this via `requireTripAccess(tripId)`.
+  Owner-only actions (deleting the trip, managing sharing) instead use `requireTripOwner(tripId)`,
+  which skips the collaborator check entirely.
+
+⚠️ Nested resources (Day / Activity / Expense) are **always** reached through `requireTripAccess` —
+never queried by their own id alone. This is the no-bypass guarantee that prevents the classic
+IDOR vulnerability.
+```
+
+- [ ] **Step 13: Run the full suite, verify everything is still green**
 
 ```bash
 npx tsc --noEmit
@@ -714,10 +735,10 @@ npm run test
 
 Expected: no type errors, no lint errors, all tests PASS (mocked + `.db.test.ts`).
 
-- [ ] **Step 13: Commit**
+- [ ] **Step 14: Commit**
 
 ```bash
-git add src/server src/app/trips
+git add src/server src/app/trips knowledge/integrations/auth.md
 git commit -m "refactor: rewire existing trip/itinerary/budget/expense code onto requireTripAccess/requireTripOwner"
 ```
 
@@ -875,7 +896,7 @@ Create `src/server/sharing.ts`:
 
 /**
  * Trip sharing: a public read-only link (Trip.shareToken) and named
- * co-editors (TripCollaborator, invited by email, explicitly accepted or
+ * Collaborators (TripCollaborator, invited by email, explicitly accepted or
  * declined — no separate accept/decline table, just a status column).
  * @packageDocumentation
  */
@@ -2222,7 +2243,7 @@ Expected: everything green.
 
 ```bash
 git push -u origin feat/phase2-sharing
-gh pr create --title "feat: Phase 2 trip sharing (public link + co-editors)" --body "Implements docs/superpowers/plans/2026-08-11-phase2-sharing.md per docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md. Adds requireTripAccess/requireTripOwner authorization split, TripCollaborator model, public read-only share link, and invite/accept/decline collaborator flow."
+gh pr create --title "feat: Phase 2 trip sharing (public link + Collaborators)" --body "Implements docs/superpowers/plans/2026-08-11-phase2-sharing.md per docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md. Adds requireTripAccess/requireTripOwner authorization split, TripCollaborator model, public read-only share link, and invite/accept/decline collaborator flow."
 gh pr checks --watch
 ```
 

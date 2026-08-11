@@ -29,7 +29,7 @@
 | 10 | CI/CD pipeline | Ops | `.github/workflows/deploy.yml` | 1.5 d |
 | | **Phase 1 total** | | | **~14 d** |
 
-> **Phase 2 — Sharing & Export (deferred):** trip sharing (link + co-editor) and PDF export. Reuses schema + auth. Not detailed here.
+> **Phase 2 — Sharing & Export (deferred):** trip sharing (link + Collaborator) and PDF export. Reuses schema + auth. Not detailed here.
 
 ---
 
