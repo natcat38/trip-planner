@@ -66,10 +66,12 @@ model Trip {
   endDate      DateTime
   baseCurrency String // ISO 4217, e.g. "JPY"
   budgetMinor  Int // budget in base currency MINOR units
+  shareToken   String?   @unique // set = public read-only link enabled; null = disabled
   updatedAt    DateTime  @updatedAt
   user         User      @relation(fields: [userId], references: [id])
   days         Day[]
   expenses     Expense[]
+  collaborators TripCollaborator[]
 
   @@index([userId])
 }
@@ -117,4 +119,23 @@ model Expense {
   trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
+}
+
+model TripCollaborator {
+  // Invited by email, matched against the signed-in session's verified OAuth
+  // email at access time — no userId FK, no separate invite-acceptance table.
+  // updatedAt is present per CLAUDE.md's blanket "every mutable model carries
+  // updatedAt" rule (ADR-0003), though this model has no field-level edits to
+  // stale-write-protect — its mutations are create/status-transition/delete.
+  id        String   @id @default(cuid())
+  tripId    String
+  email     String
+  status    String   @default("PENDING") // PENDING | ACCEPTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, email])
+  @@index([tripId])
+  @@index([email])
 }
