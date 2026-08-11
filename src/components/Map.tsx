@@ -37,7 +37,9 @@ export function Map({
     onSelectPinRef.current = onSelectPin;
   });
 
-  const pinsKey = pins.map((p) => `${p.id}:${p.lat}:${p.lng}:${p.title}`).join('|');
+  const pinsKey = pins
+    .map((p) => `${p.id}:${p.lat}:${p.lng}:${p.title}`)
+    .join('|');
 
   useEffect(() => {
     if (!containerRef.current || pins.length === 0) return;
@@ -74,7 +76,8 @@ export function Map({
         el.style.border = '2px solid white';
         el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
         el.style.cursor = 'pointer';
-        el.style.background = pin.id === selectedId ? SELECTED_PIN_COLOR : PIN_COLOR;
+        el.style.background =
+          pin.id === selectedId ? SELECTED_PIN_COLOR : PIN_COLOR;
         el.addEventListener('click', () => onSelectPinRef.current?.(pin.id));
 
         const marker = new mapboxgl.Marker({ element: el })
@@ -98,7 +101,8 @@ export function Map({
 
   useEffect(() => {
     markersRef.current.forEach((marker, id) => {
-      marker.getElement().style.background = id === selectedId ? SELECTED_PIN_COLOR : PIN_COLOR;
+      marker.getElement().style.background =
+        id === selectedId ? SELECTED_PIN_COLOR : PIN_COLOR;
     });
     const pin = pins.find((p) => p.id === selectedId);
     if (pin) mapRef.current?.flyTo({ center: [pin.lng, pin.lat], zoom: 15 });
@@ -109,7 +113,8 @@ export function Map({
   if (pins.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/[.145] dark:text-zinc-400">
-        No geocoded places yet — add a place to an activity to see it on the map.
+        No geocoded places yet — add a place to an activity to see it on the
+        map.
       </div>
     );
   }

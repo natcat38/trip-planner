@@ -38,8 +38,13 @@ export default async function TripItineraryPage({
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
       <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">{trip.name}</h1>
-          <Link href={`/trips/${trip.id}/edit`} className="text-sm text-zinc-600 dark:text-zinc-400 underline">
+          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+            {trip.name}
+          </h1>
+          <Link
+            href={`/trips/${trip.id}/edit`}
+            className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+          >
             Edit trip
           </Link>
         </div>

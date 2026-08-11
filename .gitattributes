@@ -1,0 +1,12 @@
+# Normalize line endings: store and check out text as LF on every platform.
+# Without this, a Windows checkout (core.autocrlf=true) writes CRLF into the
+# working tree while the committed blobs stay LF, so `npm run format:check`
+# fails locally on files that CI considers clean. Matches the sibling repos.
+* text=auto eol=lf
+
+# Binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

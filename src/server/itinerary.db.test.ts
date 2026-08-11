@@ -140,7 +140,13 @@ describe('itinerary against a real database', () => {
       ok: true,
       json: () =>
         Promise.resolve({
-          features: [{ properties: { coordinates: { longitude: 139.7454, latitude: 35.6586 } } }],
+          features: [
+            {
+              properties: {
+                coordinates: { longitude: 139.7454, latitude: 35.6586 },
+              },
+            },
+          ],
         }),
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -161,7 +167,9 @@ describe('itinerary against a real database', () => {
       placeName: 'Tokyo Tower',
     });
 
-    const reloaded = await db.activity.findUniqueOrThrow({ where: { id: activity.id } });
+    const reloaded = await db.activity.findUniqueOrThrow({
+      where: { id: activity.id },
+    });
     expect(reloaded.lat).toBe(35.6586);
     expect(reloaded.lng).toBe(139.7454);
     expect(fetchMock).toHaveBeenCalledTimes(1); // no re-fetch since placeName didn't change

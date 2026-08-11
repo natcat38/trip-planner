@@ -89,7 +89,10 @@ interface ExistingPlace {
 // Re-geocodes only when placeName actually changed, so editing an activity's
 // other fields doesn't waste a Mapbox call or risk clobbering a good pin with
 // a failed lookup.
-async function resolveActivityData(input: ActivityInput, existing?: ExistingPlace) {
+async function resolveActivityData(
+  input: ActivityInput,
+  existing?: ExistingPlace,
+) {
   const placeName = input.placeName || null;
   let lat = existing?.lat ?? null;
   let lng = existing?.lng ?? null;

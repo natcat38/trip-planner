@@ -5,30 +5,57 @@ import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { formatMoney } from '@/lib/money';
 import type { ensureDaysForTrip } from '@/server/itinerary';
-import { addActivityAction, deleteActivityAction, moveActivityAction } from './actions';
+import {
+  addActivityAction,
+  deleteActivityAction,
+  moveActivityAction,
+} from './actions';
 import { ActivityForm } from './ActivityForm';
 
 type Days = Awaited<ReturnType<typeof ensureDaysForTrip>>;
 
 function formatDay(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
 }
 
-export function ItineraryDays({ tripId, days }: { tripId: string; days: Days }) {
-  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+export function ItineraryDays({
+  tripId,
+  days,
+}: {
+  tripId: string;
+  days: Days;
+}) {
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
+    null,
+  );
 
   const pins = days
     .flatMap((day) => day.activities)
     .filter((activity) => activity.lat != null && activity.lng != null)
-    .map((activity) => ({ id: activity.id, lat: activity.lat!, lng: activity.lng!, title: activity.title }));
+    .map((activity) => ({
+      id: activity.id,
+      lat: activity.lat!,
+      lng: activity.lng!,
+      title: activity.title,
+    }));
 
   return (
     <div className="flex flex-col gap-8">
-      <Map pins={pins} selectedId={selectedActivityId} onSelectPin={setSelectedActivityId} />
+      <Map
+        pins={pins}
+        selectedId={selectedActivityId}
+        onSelectPin={setSelectedActivityId}
+      />
 
       {days.map((day) => (
         <section key={day.id}>
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-3">{formatDay(day.date)}</h2>
+          <h2 className="font-medium text-black dark:text-zinc-50 mb-3">
+            {formatDay(day.date)}
+          </h2>
 
           {day.activities.length > 0 && (
             <ul className="flex flex-col gap-2 mb-4">
@@ -49,7 +76,9 @@ export function ItineraryDays({ tripId, days }: { tripId: string; days: Days }) 
                   >
                     <p className="font-medium text-black dark:text-zinc-50">
                       {activity.title}{' '}
-                      <span className="font-normal text-zinc-500 dark:text-zinc-400">({activity.category})</span>
+                      <span className="font-normal text-zinc-500 dark:text-zinc-400">
+                        ({activity.category})
+                      </span>
                     </p>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
                       {[
@@ -58,18 +87,30 @@ export function ItineraryDays({ tripId, days }: { tripId: string; days: Days }) 
                           : activity.startTime,
                         activity.placeName,
                         activity.costMinor != null && activity.costCurrency
-                          ? formatMoney(activity.costMinor, activity.costCurrency)
+                          ? formatMoney(
+                              activity.costMinor,
+                              activity.costCurrency,
+                            )
                           : null,
                       ]
                         .filter(Boolean)
                         .join(' · ')}
                     </p>
                     {activity.notes && (
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{activity.notes}</p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                        {activity.notes}
+                      </p>
                     )}
                   </button>
                   <div className="flex items-center gap-2 shrink-0">
-                    <form action={moveActivityAction.bind(null, tripId, activity.id, 'up')}>
+                    <form
+                      action={moveActivityAction.bind(
+                        null,
+                        tripId,
+                        activity.id,
+                        'up',
+                      )}
+                    >
                       <button
                         type="submit"
                         disabled={index === 0}
@@ -79,7 +120,14 @@ export function ItineraryDays({ tripId, days }: { tripId: string; days: Days }) 
                         ↑
                       </button>
                     </form>
-                    <form action={moveActivityAction.bind(null, tripId, activity.id, 'down')}>
+                    <form
+                      action={moveActivityAction.bind(
+                        null,
+                        tripId,
+                        activity.id,
+                        'down',
+                      )}
+                    >
                       <button
                         type="submit"
                         disabled={index === day.activities.length - 1}
@@ -95,8 +143,17 @@ export function ItineraryDays({ tripId, days }: { tripId: string; days: Days }) 
                     >
                       Edit
                     </Link>
-                    <form action={deleteActivityAction.bind(null, tripId, activity.id)}>
-                      <button type="submit" className="text-sm text-red-600 dark:text-red-400 underline">
+                    <form
+                      action={deleteActivityAction.bind(
+                        null,
+                        tripId,
+                        activity.id,
+                      )}
+                    >
+                      <button
+                        type="submit"
+                        className="text-sm text-red-600 dark:text-red-400 underline"
+                      >
                         Delete
                       </button>
                     </form>
@@ -111,7 +168,10 @@ export function ItineraryDays({ tripId, days }: { tripId: string; days: Days }) 
               Add activity
             </summary>
             <div className="mt-4">
-              <ActivityForm action={addActivityAction.bind(null, tripId, day.id)} submitLabel="Add activity" />
+              <ActivityForm
+                action={addActivityAction.bind(null, tripId, day.id)}
+                submitLabel="Add activity"
+              />
             </div>
           </details>
         </section>
