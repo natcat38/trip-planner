@@ -64,6 +64,8 @@ describe('share link against a real database', () => {
 
     const { trip } = await getSharedTrip(token);
     expect(trip.id).toBe(tripId);
+    expect(trip).not.toHaveProperty('userId');
+    expect(trip).not.toHaveProperty('shareToken');
 
     signInAsOwner();
     await revokeShareLink(tripId);
