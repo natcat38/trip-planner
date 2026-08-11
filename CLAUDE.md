@@ -4,6 +4,7 @@ Multi-user Japan/Europe trip planner: itinerary + multi-currency budget + maps.
 Read `docs/Trip_Planner_Tech_Scope.md` (§2 core logic), `docs/adr/` (decisions),
 and `knowledge/index.md` (glossary) before implementing anything.
 The scope docs' AWS deployment is superseded for Phase 1 — see docs/adr/0001.
+New decisions → docs/adr/.
 
 ## Stack & deploy
 
@@ -30,8 +31,3 @@ One-time account-side setup (Vercel/Neon projects, secrets): `docs/deploy-setup.
   never by their own id alone.
 - **Concurrency:** mutations carry `updatedAt`, reject stale writes (ADR-0003).
 - **Secrets:** `.env` (gitignored) / Vercel env only. `.env.example` = names only.
-
-## Workflow
-
-All changes via branch → PR → green CI → merge (branch protection on main).
-Conventional Commits. New decisions → docs/adr/. Glossary lives in knowledge/ (CI-validated).
