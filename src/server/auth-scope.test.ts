@@ -89,6 +89,17 @@ describe('requireTripAccess', () => {
     );
     expect(db.trip.findFirst).not.toHaveBeenCalled();
   });
+
+  it('omits the collaborator clause when the session has no email', async () => {
+    vi.mocked(auth).mockResolvedValue({ user: { id: 'user-1' } } as never);
+    const trip = { id: 'trip-1', userId: 'user-1' };
+    vi.mocked(db.trip.findFirst).mockResolvedValue(trip as never);
+
+    await expect(requireTripAccess('trip-1')).resolves.toBe(trip);
+    expect(db.trip.findFirst).toHaveBeenCalledWith({
+      where: { id: 'trip-1', OR: [{ userId: 'user-1' }] },
+    });
+  });
 });
 
 describe('requireTripOwner', () => {
