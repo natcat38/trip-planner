@@ -14,7 +14,8 @@ import {
   ForbiddenOrNotFoundError,
   requireTripOwner,
 } from './auth-scope';
-import { ValidationError } from './errors';
+import { InvalidShareLinkError, ValidationError } from './errors';
+import { summarizeBudget } from './budget';
 
 export interface CollaboratorSummary {
   id: string;
@@ -132,4 +133,30 @@ export async function acceptInvite(tripId: string): Promise<void> {
 export async function declineInvite(tripId: string): Promise<void> {
   const invite = await requireOwnPendingInvite(tripId);
   await db.tripCollaborator.delete({ where: { id: invite.id } });
+}
+
+async function requireShareToken(token: string) {
+  const trip = await db.trip.findUnique({ where: { shareToken: token } });
+  if (!trip) throw new InvalidShareLinkError();
+  return trip;
+}
+
+export async function getSharedTrip(token: string) {
+  const trip = await requireShareToken(token);
+  const days = await db.day.findMany({
+    where: { tripId: trip.id },
+    orderBy: { date: 'asc' },
+    include: { activities: { orderBy: { sortOrder: 'asc' } } },
+  });
+  return { trip, days };
+}
+
+export async function getSharedBudgetSummary(token: string) {
+  const trip = await requireShareToken(token);
+  return summarizeBudget(trip);
+}
+
+export async function listSharedExpenses(token: string) {
+  const trip = await requireShareToken(token);
+  return db.expense.findMany({ where: { tripId: trip.id } });
 }

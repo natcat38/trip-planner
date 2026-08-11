@@ -17,7 +17,9 @@ vi.mock('./auth-scope', () => {
 });
 vi.mock('../lib/db', () => ({
   db: {
-    trip: { update: vi.fn() },
+    trip: { update: vi.fn(), findUnique: vi.fn() },
+    day: { findMany: vi.fn() },
+    expense: { findMany: vi.fn() },
     tripCollaborator: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -28,6 +30,7 @@ vi.mock('../lib/db', () => ({
     },
   },
 }));
+vi.mock('./budget', () => ({ summarizeBudget: vi.fn() }));
 
 const trip = { id: 'trip-1', userId: 'user-1', shareToken: null };
 
@@ -256,5 +259,81 @@ describe('declineInvite', () => {
     await expect(declineInvite('trip-1')).rejects.toBeInstanceOf(
       ForbiddenOrNotFoundError,
     );
+  });
+});
+
+import {
+  getSharedBudgetSummary,
+  getSharedTrip,
+  listSharedExpenses,
+} from './sharing';
+import { InvalidShareLinkError } from './errors';
+import { summarizeBudget } from './budget';
+
+const sharedTrip = {
+  id: 'trip-1',
+  name: 'Japan Trip',
+  budgetMinor: 350000,
+  baseCurrency: 'JPY',
+  shareToken: 'abc123',
+};
+
+describe('getSharedTrip', () => {
+  it('returns the trip and its days/activities for a valid token', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(sharedTrip as never);
+    vi.mocked(db.day.findMany).mockResolvedValue([] as never);
+
+    const result = await getSharedTrip('abc123');
+
+    expect(result.trip).toBe(sharedTrip);
+    expect(db.day.findMany).toHaveBeenCalledWith({
+      where: { tripId: 'trip-1' },
+      orderBy: { date: 'asc' },
+      include: { activities: { orderBy: { sortOrder: 'asc' } } },
+    });
+  });
+
+  it('throws InvalidShareLinkError for an unknown token', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(null);
+
+    await expect(getSharedTrip('bad-token')).rejects.toBeInstanceOf(
+      InvalidShareLinkError,
+    );
+  });
+});
+
+describe('getSharedBudgetSummary', () => {
+  it('delegates to summarizeBudget for a valid token', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(sharedTrip as never);
+    vi.mocked(summarizeBudget).mockResolvedValue({
+      budgetMinor: 350000,
+    } as never);
+
+    const summary = await getSharedBudgetSummary('abc123');
+
+    expect(summarizeBudget).toHaveBeenCalledWith(sharedTrip);
+    expect(summary).toEqual({ budgetMinor: 350000 });
+  });
+
+  it('throws InvalidShareLinkError for an unknown token', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(null);
+
+    await expect(getSharedBudgetSummary('bad-token')).rejects.toBeInstanceOf(
+      InvalidShareLinkError,
+    );
+  });
+});
+
+describe('listSharedExpenses', () => {
+  it('returns the expenses for a valid token', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(sharedTrip as never);
+    vi.mocked(db.expense.findMany).mockResolvedValue([{ id: 'e1' }] as never);
+
+    const expenses = await listSharedExpenses('abc123');
+
+    expect(expenses).toEqual([{ id: 'e1' }]);
+    expect(db.expense.findMany).toHaveBeenCalledWith({
+      where: { tripId: 'trip-1' },
+    });
   });
 });
