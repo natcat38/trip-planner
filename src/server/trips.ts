@@ -1,5 +1,12 @@
 'use server';
 
+/**
+ * The server-side domain layer: Trip/Day/Activity/Expense/Budget business
+ * logic and the `requireTrip`/`requireActivity` authorization gate that
+ * every nested-resource lookup must go through, never a bare id.
+ * @packageDocumentation
+ */
+
 import { db } from '../lib/db';
 import { toMinorUnits } from '../lib/money';
 import { currentUserId, requireTrip } from './auth-scope';

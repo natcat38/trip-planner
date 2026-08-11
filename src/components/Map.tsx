@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * Shared presentational components used across trip pages: currently the
+ * Mapbox pin map that plots an itinerary's geocoded activity places.
+ * @packageDocumentation
+ */
+
 import { useEffect, useRef } from 'react';
 import type { Map as MapboxMap, Marker } from 'mapbox-gl';
 

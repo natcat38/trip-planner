@@ -1,3 +1,9 @@
+/**
+ * Framework-agnostic helpers shared across app and server code: money as
+ * integer minor units + ISO 4217 currency (this file), env var validation,
+ * currency-conversion (fx), geocoding, and the Prisma client instance.
+ * @packageDocumentation
+ */
 export function minorUnitExponent(currency: string): number {
   // maximumFractionDigits is always resolved for style: 'currency'; TS types it as optional
   // because the field is shared with the (sometimes-unset) decimal-style case.

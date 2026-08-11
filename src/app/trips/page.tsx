@@ -1,3 +1,8 @@
+/**
+ * The trips list route: the signed-in user's trips overview and create/edit
+ * entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself.
+ * @packageDocumentation
+ */
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
 import { listTrips } from '@/server/trips';
