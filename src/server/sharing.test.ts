@@ -18,7 +18,14 @@ vi.mock('./auth-scope', () => {
 vi.mock('../lib/db', () => ({
   db: {
     trip: { update: vi.fn() },
-    tripCollaborator: { findMany: vi.fn() },
+    tripCollaborator: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
   },
 }));
 
@@ -26,8 +33,14 @@ const trip = { id: 'trip-1', userId: 'user-1', shareToken: null };
 
 beforeEach(() => {
   vi.mocked(requireTripOwner).mockReset();
+  vi.mocked(currentUserEmail).mockReset();
   vi.mocked(db.trip.update).mockReset();
   vi.mocked(db.tripCollaborator.findMany).mockReset();
+  vi.mocked(db.tripCollaborator.findUnique).mockReset();
+  vi.mocked(db.tripCollaborator.findFirst).mockReset();
+  vi.mocked(db.tripCollaborator.create).mockReset();
+  vi.mocked(db.tripCollaborator.update).mockReset();
+  vi.mocked(db.tripCollaborator.delete).mockReset();
 });
 
 describe('getShareStatus', () => {
@@ -97,5 +110,151 @@ describe('revokeShareLink', () => {
       where: { id: 'trip-1' },
       data: { shareToken: null },
     });
+  });
+});
+
+import {
+  acceptInvite,
+  declineInvite,
+  inviteCollaborator,
+  listPendingInvites,
+  removeCollaborator,
+} from './sharing';
+import { currentUserEmail, ForbiddenOrNotFoundError } from './auth-scope';
+import { ValidationError } from './errors';
+
+describe('inviteCollaborator', () => {
+  it('creates a PENDING collaborator row after owner authorization', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+    vi.mocked(db.tripCollaborator.findUnique).mockResolvedValue(null);
+    vi.mocked(db.tripCollaborator.create).mockResolvedValue({} as never);
+
+    await inviteCollaborator('trip-1', 'friend@example.com');
+
+    expect(db.tripCollaborator.create).toHaveBeenCalledWith({
+      data: {
+        tripId: 'trip-1',
+        email: 'friend@example.com',
+        status: 'PENDING',
+      },
+    });
+  });
+
+  it('rejects an email that is already invited or already a collaborator', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+    vi.mocked(db.tripCollaborator.findUnique).mockResolvedValue({
+      id: 'c1',
+    } as never);
+
+    await expect(
+      inviteCollaborator('trip-1', 'friend@example.com'),
+    ).rejects.toThrow(ValidationError);
+    expect(db.tripCollaborator.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid email', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+
+    await expect(inviteCollaborator('trip-1', 'not-an-email')).rejects.toThrow(
+      ValidationError,
+    );
+    expect(db.tripCollaborator.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('removeCollaborator', () => {
+  it('deletes the collaborator row after owner authorization', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+    vi.mocked(db.tripCollaborator.findFirst).mockResolvedValue({
+      id: 'c1',
+      tripId: 'trip-1',
+    } as never);
+    vi.mocked(db.tripCollaborator.delete).mockResolvedValue({} as never);
+
+    await removeCollaborator('trip-1', 'c1');
+
+    expect(db.tripCollaborator.delete).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+    });
+  });
+
+  it("throws ForbiddenOrNotFoundError when the collaborator isn't scoped to the trip", async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+    vi.mocked(db.tripCollaborator.findFirst).mockResolvedValue(null);
+
+    await expect(removeCollaborator('trip-1', 'c1')).rejects.toBeInstanceOf(
+      ForbiddenOrNotFoundError,
+    );
+  });
+});
+
+describe('listPendingInvites', () => {
+  it("lists the current user's pending invites with trip names", async () => {
+    vi.mocked(currentUserEmail).mockResolvedValue('me@example.com');
+    vi.mocked(db.tripCollaborator.findMany).mockResolvedValue([
+      { trip: { id: 'trip-1', name: 'Japan Trip' } },
+    ] as never);
+
+    const invites = await listPendingInvites();
+
+    expect(invites).toEqual([{ tripId: 'trip-1', tripName: 'Japan Trip' }]);
+    expect(db.tripCollaborator.findMany).toHaveBeenCalledWith({
+      where: { email: 'me@example.com', status: 'PENDING' },
+      include: { trip: { select: { id: true, name: true } } },
+    });
+  });
+});
+
+describe('acceptInvite', () => {
+  it('flips a matching pending invite to ACCEPTED', async () => {
+    vi.mocked(currentUserEmail).mockResolvedValue('me@example.com');
+    vi.mocked(db.tripCollaborator.findFirst).mockResolvedValue({
+      id: 'c1',
+    } as never);
+    vi.mocked(db.tripCollaborator.update).mockResolvedValue({} as never);
+
+    await acceptInvite('trip-1');
+
+    expect(db.tripCollaborator.findFirst).toHaveBeenCalledWith({
+      where: { tripId: 'trip-1', email: 'me@example.com', status: 'PENDING' },
+    });
+    expect(db.tripCollaborator.update).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      data: { status: 'ACCEPTED' },
+    });
+  });
+
+  it('throws ForbiddenOrNotFoundError when there is no matching pending invite', async () => {
+    vi.mocked(currentUserEmail).mockResolvedValue('me@example.com');
+    vi.mocked(db.tripCollaborator.findFirst).mockResolvedValue(null);
+
+    await expect(acceptInvite('trip-1')).rejects.toBeInstanceOf(
+      ForbiddenOrNotFoundError,
+    );
+  });
+});
+
+describe('declineInvite', () => {
+  it('deletes a matching pending invite', async () => {
+    vi.mocked(currentUserEmail).mockResolvedValue('me@example.com');
+    vi.mocked(db.tripCollaborator.findFirst).mockResolvedValue({
+      id: 'c1',
+    } as never);
+    vi.mocked(db.tripCollaborator.delete).mockResolvedValue({} as never);
+
+    await declineInvite('trip-1');
+
+    expect(db.tripCollaborator.delete).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+    });
+  });
+
+  it('throws ForbiddenOrNotFoundError when there is no matching pending invite', async () => {
+    vi.mocked(currentUserEmail).mockResolvedValue('me@example.com');
+    vi.mocked(db.tripCollaborator.findFirst).mockResolvedValue(null);
+
+    await expect(declineInvite('trip-1')).rejects.toBeInstanceOf(
+      ForbiddenOrNotFoundError,
+    );
   });
 });

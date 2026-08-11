@@ -9,7 +9,12 @@
 
 import { randomBytes } from 'node:crypto';
 import { db } from '../lib/db';
-import { requireTripOwner } from './auth-scope';
+import {
+  currentUserEmail,
+  ForbiddenOrNotFoundError,
+  requireTripOwner,
+} from './auth-scope';
+import { ValidationError } from './errors';
 
 export interface CollaboratorSummary {
   id: string;
@@ -51,4 +56,80 @@ export async function revokeShareLink(tripId: string): Promise<void> {
     where: { id: trip.id },
     data: { shareToken: null },
   });
+}
+
+function validateEmail(email: string) {
+  if (!email.includes('@')) {
+    throw new ValidationError('Enter a valid email address.');
+  }
+}
+
+export async function inviteCollaborator(
+  tripId: string,
+  email: string,
+): Promise<void> {
+  const trip = await requireTripOwner(tripId);
+  validateEmail(email);
+  const existing = await db.tripCollaborator.findUnique({
+    where: { tripId_email: { tripId: trip.id, email } },
+  });
+  if (existing) {
+    throw new ValidationError(
+      'This person is already invited or already a collaborator.',
+    );
+  }
+  await db.tripCollaborator.create({
+    data: { tripId: trip.id, email, status: 'PENDING' },
+  });
+}
+
+export async function removeCollaborator(
+  tripId: string,
+  collaboratorId: string,
+): Promise<void> {
+  const trip = await requireTripOwner(tripId);
+  const collaborator = await db.tripCollaborator.findFirst({
+    where: { id: collaboratorId, tripId: trip.id },
+  });
+  if (!collaborator) throw new ForbiddenOrNotFoundError();
+  await db.tripCollaborator.delete({ where: { id: collaborator.id } });
+}
+
+export interface PendingInvite {
+  tripId: string;
+  tripName: string;
+}
+
+export async function listPendingInvites(): Promise<PendingInvite[]> {
+  const email = await currentUserEmail();
+  const invites = await db.tripCollaborator.findMany({
+    where: { email, status: 'PENDING' },
+    include: { trip: { select: { id: true, name: true } } },
+  });
+  return invites.map((invite) => ({
+    tripId: invite.trip.id,
+    tripName: invite.trip.name,
+  }));
+}
+
+async function requireOwnPendingInvite(tripId: string) {
+  const email = await currentUserEmail();
+  const invite = await db.tripCollaborator.findFirst({
+    where: { tripId, email, status: 'PENDING' },
+  });
+  if (!invite) throw new ForbiddenOrNotFoundError();
+  return invite;
+}
+
+export async function acceptInvite(tripId: string): Promise<void> {
+  const invite = await requireOwnPendingInvite(tripId);
+  await db.tripCollaborator.update({
+    where: { id: invite.id },
+    data: { status: 'ACCEPTED' },
+  });
+}
+
+export async function declineInvite(tripId: string): Promise<void> {
+  const invite = await requireOwnPendingInvite(tripId);
+  await db.tripCollaborator.delete({ where: { id: invite.id } });
 }
