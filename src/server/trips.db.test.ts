@@ -7,7 +7,7 @@ import { createTrip, listTrips, updateTrip } from './trips';
 // Hits the real local Postgres (docker-compose) to verify behavior a mocked
 // db can't: Postgres's actual optimistic-lock semantics, cascade deletes,
 // and unique/FK constraints. Only next-auth's session lookup is stubbed —
-// currentUserId/requireTrip run for real against the real db.
+// currentUserId/requireTripAccess/requireTripOwner run for real against the real db.
 vi.mock('../auth', () => ({ auth: vi.fn() }));
 
 let userId: string;

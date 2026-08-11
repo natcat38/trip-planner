@@ -1,11 +1,15 @@
 /**
- * The trip edit/delete route: loads a trip via `requireTrip`, then binds its
- * `updatedAt` into the update action so a stale-write attempt is rejected
- * per the optimistic-locking rule (ADR-0003).
+ * The trip edit/delete route: loads a trip via `requireTripAccess`, then
+ * binds its `updatedAt` into the update action so a stale-write attempt is
+ * rejected per the optimistic-locking rule (ADR-0003).
  * @packageDocumentation
  */
 import { minorUnitExponent } from '@/lib/money';
-import { ForbiddenOrNotFoundError, requireTrip } from '@/server/auth-scope';
+import {
+  currentUserId,
+  ForbiddenOrNotFoundError,
+  requireTripAccess,
+} from '@/server/auth-scope';
 import { deleteTripAction, updateTripAction } from '../../actions';
 import { TripForm } from '../../TripForm';
 
@@ -22,7 +26,7 @@ export default async function EditTripPage({
 
   let trip;
   try {
-    trip = await requireTrip(id);
+    trip = await requireTripAccess(id);
   } catch (err) {
     if (err instanceof ForbiddenOrNotFoundError) {
       return (
@@ -33,6 +37,8 @@ export default async function EditTripPage({
     }
     throw err;
   }
+
+  const isOwner = trip.userId === (await currentUserId());
 
   const boundUpdate = updateTripAction.bind(
     null,
@@ -61,14 +67,16 @@ export default async function EditTripPage({
             ),
           }}
         />
-        <form action={boundDelete} className="mt-8">
-          <button
-            type="submit"
-            className="text-sm text-red-600 dark:text-red-400 underline"
-          >
-            Delete trip
-          </button>
-        </form>
+        {isOwner && (
+          <form action={boundDelete} className="mt-8">
+            <button
+              type="submit"
+              className="text-sm text-red-600 dark:text-red-400 underline"
+            >
+              Delete trip
+            </button>
+          </form>
+        )}
       </main>
     </div>
   );

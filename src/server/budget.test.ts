@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { convertMinor } from '../lib/fx';
 import { db } from '../lib/db';
-import { requireTrip } from './auth-scope';
+import { requireTripAccess } from './auth-scope';
 import { getBudgetSummary } from './budget';
 
-vi.mock('./auth-scope', () => ({ requireTrip: vi.fn() }));
+vi.mock('./auth-scope', () => ({ requireTripAccess: vi.fn() }));
 vi.mock('../lib/db', () => ({
   db: { activity: { findMany: vi.fn() }, expense: { findMany: vi.fn() } },
 }));
 vi.mock('../lib/fx', () => ({ convertMinor: vi.fn() }));
 
 beforeEach(() => {
-  vi.mocked(requireTrip).mockReset();
+  vi.mocked(requireTripAccess).mockReset();
   vi.mocked(db.activity.findMany).mockReset();
   vi.mocked(db.expense.findMany).mockReset();
   vi.mocked(convertMinor).mockReset();
@@ -26,7 +26,7 @@ const trip = {
 
 describe('getBudgetSummary', () => {
   it('sums converted activity and expense costs, computing remaining and over-budget status', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findMany).mockResolvedValue([
       {
         id: 'a1',
@@ -59,7 +59,7 @@ describe('getBudgetSummary', () => {
   });
 
   it('groups converted amounts by category and by day (activities only)', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findMany).mockResolvedValue([
       {
         id: 'a1',
@@ -90,7 +90,7 @@ describe('getBudgetSummary', () => {
   });
 
   it('excludes items with no available rate from totals and lists them as unconverted', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findMany).mockResolvedValue([
       {
         id: 'a1',

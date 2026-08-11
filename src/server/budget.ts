@@ -2,7 +2,7 @@
 
 import { convertMinor } from '../lib/fx';
 import { db } from '../lib/db';
-import { requireTrip } from './auth-scope';
+import { requireTripAccess } from './auth-scope';
 
 export interface UnconvertedItem {
   id: string;
@@ -23,9 +23,16 @@ export interface BudgetSummary {
   unconvertedItems: UnconvertedItem[];
 }
 
-export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
-  const trip = await requireTrip(tripId);
+interface BudgetTrip {
+  id: string;
+  budgetMinor: number;
+  baseCurrency: string;
+}
 
+// Extracted from getBudgetSummary so the public share-link path (sharing.ts,
+// token-gated instead of session-gated) can reuse the same roll-up math
+// without going through requireTripAccess.
+export async function summarizeBudget(trip: BudgetTrip): Promise<BudgetSummary> {
   const [activities, expenses] = await Promise.all([
     db.activity.findMany({
       where: { day: { tripId: trip.id }, costMinor: { not: null } },
@@ -94,4 +101,9 @@ export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
     byDay,
     unconvertedItems,
   };
+}
+
+export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
+  const trip = await requireTripAccess(tripId);
+  return summarizeBudget(trip);
 }
