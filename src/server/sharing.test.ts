@@ -272,6 +272,7 @@ import { summarizeBudget } from './budget';
 
 const sharedTrip = {
   id: 'trip-1',
+  userId: 'user-1',
   name: 'Japan Trip',
   budgetMinor: 350000,
   baseCurrency: 'JPY',
@@ -285,12 +286,27 @@ describe('getSharedTrip', () => {
 
     const result = await getSharedTrip('abc123');
 
-    expect(result.trip).toBe(sharedTrip);
+    expect(result.trip).toEqual({
+      id: 'trip-1',
+      name: 'Japan Trip',
+      budgetMinor: 350000,
+      baseCurrency: 'JPY',
+    });
     expect(db.day.findMany).toHaveBeenCalledWith({
       where: { tripId: 'trip-1' },
       orderBy: { date: 'asc' },
       include: { activities: { orderBy: { sortOrder: 'asc' } } },
     });
+  });
+
+  it('strips userId and shareToken from the returned trip', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(sharedTrip as never);
+    vi.mocked(db.day.findMany).mockResolvedValue([] as never);
+
+    const result = await getSharedTrip('abc123');
+
+    expect(result.trip).not.toHaveProperty('userId');
+    expect(result.trip).not.toHaveProperty('shareToken');
   });
 
   it('throws InvalidShareLinkError for an unknown token', async () => {

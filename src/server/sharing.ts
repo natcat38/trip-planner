@@ -8,6 +8,7 @@
  */
 
 import { randomBytes } from 'node:crypto';
+import type { Activity, Day, Expense, Trip } from '../generated/prisma/client';
 import { db } from '../lib/db';
 import {
   currentUserEmail,
@@ -15,7 +16,7 @@ import {
   requireTripOwner,
 } from './auth-scope';
 import { InvalidShareLinkError, ValidationError } from './errors';
-import { summarizeBudget } from './budget';
+import { summarizeBudget, type BudgetSummary } from './budget';
 
 export interface CollaboratorSummary {
   id: string;
@@ -141,22 +142,34 @@ async function requireShareToken(token: string) {
   return trip;
 }
 
-export async function getSharedTrip(token: string) {
+export async function getSharedTrip(token: string): Promise<{
+  trip: Omit<Trip, 'userId' | 'shareToken'>;
+  days: (Day & { activities: Activity[] })[];
+}> {
   const trip = await requireShareToken(token);
   const days = await db.day.findMany({
     where: { tripId: trip.id },
     orderBy: { date: 'asc' },
     include: { activities: { orderBy: { sortOrder: 'asc' } } },
   });
-  return { trip, days };
+  // This is the one read path with no session/auth gate at all, so its
+  // return shape IS the public API surface — strip owner/token fields here
+  // rather than relying on callers (today: a Server Component) to not leak
+  // them. Don't narrow requireShareToken's own query: getSharedBudgetSummary
+  // and listSharedExpenses need the full trip row.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit fields from the response, not to use them
+  const { userId, shareToken, ...publicTrip } = trip;
+  return { trip: publicTrip, days };
 }
 
-export async function getSharedBudgetSummary(token: string) {
+export async function getSharedBudgetSummary(
+  token: string,
+): Promise<BudgetSummary> {
   const trip = await requireShareToken(token);
   return summarizeBudget(trip);
 }
 
-export async function listSharedExpenses(token: string) {
+export async function listSharedExpenses(token: string): Promise<Expense[]> {
   const trip = await requireShareToken(token);
   return db.expense.findMany({ where: { tripId: trip.id } });
 }
