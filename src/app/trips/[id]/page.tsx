@@ -6,10 +6,12 @@
  * @packageDocumentation
  */
 import Link from 'next/link';
-import { ForbiddenOrNotFoundError, requireTripAccess } from '@/server/auth-scope';
+import { currentUserId, ForbiddenOrNotFoundError, requireTripAccess } from '@/server/auth-scope';
 import { ensureDaysForTrip } from '@/server/itinerary';
+import { getShareStatus } from '@/server/sharing';
 import { BudgetPanel } from './BudgetPanel';
 import { ItineraryDays } from './ItineraryDays';
+import { SharingPanel } from './SharingPanel';
 
 export default async function TripItineraryPage({
   params,
@@ -20,9 +22,11 @@ export default async function TripItineraryPage({
 
   let trip;
   let days;
+  let isOwner = false;
   try {
     trip = await requireTripAccess(id);
     days = await ensureDaysForTrip(id);
+    isOwner = trip.userId === (await currentUserId());
   } catch (err) {
     if (err instanceof ForbiddenOrNotFoundError) {
       return (
@@ -50,6 +54,8 @@ export default async function TripItineraryPage({
         </div>
 
         <BudgetPanel tripId={trip.id} />
+
+        {isOwner && <SharingPanel tripId={trip.id} status={await getShareStatus(trip.id)} />}
 
         <ItineraryDays tripId={trip.id} days={days} />
       </main>
