@@ -1,3 +1,10 @@
+/**
+ * The single-trip route: itinerary days/activities and the multi-currency
+ * budget roll-up for one trip, every page here reached only via
+ * `requireTrip(tripId)` so a trip's nested resources can't be accessed by
+ * their own id alone.
+ * @packageDocumentation
+ */
 import Link from 'next/link';
 import { ForbiddenOrNotFoundError, requireTrip } from '@/server/auth-scope';
 import { ensureDaysForTrip } from '@/server/itinerary';

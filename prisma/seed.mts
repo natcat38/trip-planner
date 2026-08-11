@@ -1,3 +1,9 @@
+/**
+ * Prisma schema and local dev seed data: `schema.prisma` defines the Trip/
+ * Day/Activity/Expense models, this script populates a demo trip for
+ * `npm run db:seed` against the local Postgres container.
+ * @packageDocumentation
+ */
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';

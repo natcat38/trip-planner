@@ -1,3 +1,9 @@
+/**
+ * The activity edit route: loads one itinerary activity scoped to its trip
+ * via `requireActivity(tripId, activityId)` and pre-fills the shared
+ * ActivityForm, including its optional minor-units cost/currency fields.
+ * @packageDocumentation
+ */
 import { minorUnitExponent } from '@/lib/money';
 import { ForbiddenOrNotFoundError } from '@/server/auth-scope';
 import { requireActivity } from '@/server/itinerary';

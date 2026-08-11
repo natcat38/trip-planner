@@ -1,3 +1,8 @@
+/**
+ * The App Router route tree: the root HTML shell/fonts in this file, and the
+ * trips list, trip detail, and trip/activity create-edit pages nested below it.
+ * @packageDocumentation
+ */
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';

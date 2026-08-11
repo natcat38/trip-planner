@@ -1,3 +1,8 @@
+/**
+ * The trip creation route: renders the shared TripForm bound to
+ * `createTripAction`, the entry point for starting a new Trip aggregate.
+ * @packageDocumentation
+ */
 import { createTripAction } from '../actions';
 import { TripForm } from '../TripForm';
 
