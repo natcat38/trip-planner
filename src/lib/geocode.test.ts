@@ -17,7 +17,14 @@ describe('geocode', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            features: [{ properties: { name: 'Tokyo Tower', coordinates: { longitude: 139.7454, latitude: 35.6586 } } }],
+            features: [
+              {
+                properties: {
+                  name: 'Tokyo Tower',
+                  coordinates: { longitude: 139.7454, latitude: 35.6586 },
+                },
+              },
+            ],
           }),
       }),
     );
@@ -26,12 +33,20 @@ describe('geocode', () => {
 
     expect(result).toEqual({ lat: 35.6586, lng: 139.7454 });
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('https://api.mapbox.com/search/geocode/v6/forward?q=Tokyo%20Tower'),
+      expect.stringContaining(
+        'https://api.mapbox.com/search/geocode/v6/forward?q=Tokyo%20Tower',
+      ),
     );
   });
 
   it('returns null when there are no matching features', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ features: [] }) }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ features: [] }),
+      }),
+    );
     expect(await geocode('asdkjfhaslkdjfh')).toBeNull();
   });
 
@@ -41,7 +56,10 @@ describe('geocode', () => {
   });
 
   it('returns null (not throw) on a network error', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('network down')),
+    );
     expect(await geocode('Tokyo Tower')).toBeNull();
   });
 });
