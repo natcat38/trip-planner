@@ -1,7 +1,9 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createTrip, deleteTrip, updateTrip } from '@/server/trips';
+import { acceptInvite, declineInvite } from '@/server/sharing';
 import { StaleWriteError, ValidationError } from '@/server/errors';
 
 export interface TripFormState {
@@ -57,4 +59,14 @@ export async function updateTripAction(
 export async function deleteTripAction(tripId: string): Promise<void> {
   await deleteTrip(tripId);
   redirect('/trips');
+}
+
+export async function acceptInviteAction(tripId: string): Promise<void> {
+  await acceptInvite(tripId);
+  revalidatePath('/trips');
+}
+
+export async function declineInviteAction(tripId: string): Promise<void> {
+  await declineInvite(tripId);
+  revalidatePath('/trips');
 }
