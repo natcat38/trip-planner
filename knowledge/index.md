@@ -13,6 +13,7 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 - [Trip](/domain/trip.md) — the owned aggregate: destinations, dates, base currency, budget.
 - [Itinerary](/domain/itinerary.md) — days and activities under a trip.
 - [Budget](/domain/budget.md) — minor-unit money + convert-on-read currency roll-up.
+- [Sharing](/domain/sharing.md) — public read-only link + invited Collaborators (Phase 2).
 
 ## Integrations
 
