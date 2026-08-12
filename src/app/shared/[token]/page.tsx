@@ -1,6 +1,11 @@
+import type { Metadata } from 'next';
 import { InvalidShareLinkError } from '@/server/errors';
 import { getSharedBudgetSummary, getSharedTrip } from '@/server/sharing';
 import { SharedTripView } from './SharedTripView';
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { robots: { index: false, follow: false } };
+}
 
 export default async function SharedTripPage({
   params,
