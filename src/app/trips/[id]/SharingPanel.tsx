@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useSyncExternalStore } from 'react';
 import type { InviteFormState } from './sharing-actions';
 import {
   enableShareLinkAction,
@@ -22,10 +22,15 @@ export function SharingPanel({
     FormData
   >(inviteCollaboratorAction.bind(null, tripId), {});
 
-  const shareUrl =
-    status.shareToken && typeof window !== 'undefined'
-      ? `${window.location.origin}/shared/${status.shareToken}`
-      : null;
+  const origin = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => '',
+  );
+
+  const shareUrl = status.shareToken
+    ? `${origin}/shared/${status.shareToken}`
+    : null;
 
   return (
     <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
@@ -37,7 +42,7 @@ export function SharingPanel({
         {status.shareToken ? (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-zinc-600 dark:text-zinc-400 break-all">
-              {shareUrl ?? `/shared/${status.shareToken}`}
+              {shareUrl}
             </p>
             <div className="flex gap-4">
               <form action={enableShareLinkAction.bind(null, tripId)}>
