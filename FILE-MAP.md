@@ -18,10 +18,11 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]` | 8 | The single-trip route: itinerary days/activities and the multi-currency budget roll-up for one trip, every page here reached only via `requireTripAccess(tripId)` so a trip's nested resources can't be accessed by their own id alone. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/edit` | 1 | The trip edit/delete route: loads a trip via `requireTripAccess`, then binds its `updatedAt` into the update action so a stale-write attempt is rejected per the optimistic-locking rule (ADR-0003). |
+| `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
 | `src/components` | 1 | Shared presentational components used across trip pages: currently the Mapbox pin map that plots an itinerary's geocoded activity places. |
 | `src/lib` | 5 | Framework-agnostic helpers shared across app and server code: money as integer minor units + ISO 4217 currency (this file), env var validation, currency-conversion (fx), geocoding, and the Prisma client instance. |
 | `src/server` | 7 | Trip sharing: a public read-only link (Trip.shareToken) and named Collaborators (TripCollaborator, invited by email, explicitly accepted or declined — no separate accept/decline table, just a status column). |
 | `prisma` | 1 | Prisma schema and local dev seed data: `schema.prisma` defines the Trip/ Day/Activity/Expense models, this script populates a demo trip for `npm run db:seed` against the local Postgres container. |
 
-13 source directories, 36 files, 0 without a declared purpose.
+14 source directories, 38 files, 0 without a declared purpose.
