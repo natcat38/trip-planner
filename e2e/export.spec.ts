@@ -6,7 +6,9 @@ import { db } from '../src/lib/db';
 // Matches this repo's existing e2e pattern (see e2e/smoke.spec.ts,
 // e2e/sharing.spec.ts) of verifying the redirect/render boundary rather
 // than a full OAuth click-through (no test OAuth account exists in CI).
-test('the print page redirects to sign-in when signed out', async ({ page }) => {
+test('the print page redirects to sign-in when signed out', async ({
+  page,
+}) => {
   const response = await page.goto('/trips/nonexistent-id/print');
   await expect(page).toHaveURL(/\/api\/auth\/signin/);
   expect(response?.ok()).toBe(true);
@@ -102,9 +104,7 @@ test.describe('print page, signed in', () => {
 
     await page.emulateMedia({ media: 'print' });
     await expect(page.getByRole('link', { name: 'Back to trip' })).toBeHidden();
-    await expect(
-      page.getByRole('button', { name: 'Export PDF' }),
-    ).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Export PDF' })).toBeHidden();
     await expect(page.getByText('Fushimi Inari')).toBeVisible();
   });
 
@@ -115,24 +115,24 @@ test.describe('print page, signed in', () => {
     const otherUser = await db.user.create({
       data: { email: `print-e2e-other-${crypto.randomUUID()}@example.com` },
     });
-    const otherToken = crypto.randomUUID();
-    await db.session.create({
-      data: {
-        sessionToken: otherToken,
-        userId: otherUser.id,
-        expires: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
-
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: otherToken,
-        url: 'http://localhost:3000',
-      },
-    ]);
-
     try {
+      const otherToken = crypto.randomUUID();
+      await db.session.create({
+        data: {
+          sessionToken: otherToken,
+          userId: otherUser.id,
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        },
+      });
+
+      await context.addCookies([
+        {
+          name: 'authjs.session-token',
+          value: otherToken,
+          url: 'http://localhost:3000',
+        },
+      ]);
+
       const response = await page.goto(`/trips/${tripId}/print`);
       expect(response?.ok()).toBe(true);
       await expect(
