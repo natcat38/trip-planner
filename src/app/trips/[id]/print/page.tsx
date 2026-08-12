@@ -6,7 +6,10 @@
  */
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
-import { ForbiddenOrNotFoundError, requireTripAccess } from '@/server/auth-scope';
+import {
+  ForbiddenOrNotFoundError,
+  requireTripAccess,
+} from '@/server/auth-scope';
 import { getBudgetSummary } from '@/server/budget';
 import { listExpenses } from '@/server/expenses';
 import { ensureDaysForTrip } from '@/server/itinerary';
@@ -62,7 +65,10 @@ export default async function TripPrintPage({
     <div className="flex flex-col flex-1 bg-white">
       <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8 print:py-0 print:px-0">
         <div className="flex items-center justify-between mb-2 print:hidden">
-          <Link href={`/trips/${trip.id}`} className="text-sm text-zinc-600 underline">
+          <Link
+            href={`/trips/${trip.id}`}
+            className="text-sm text-zinc-600 underline"
+          >
             Back to trip
           </Link>
           <ExportButton />
@@ -97,7 +103,9 @@ export default async function TripPrintPage({
                   <span>
                     {expense.label} ({expense.category})
                   </span>
-                  <span>{formatMoney(expense.costMinor, expense.costCurrency)}</span>
+                  <span>
+                    {formatMoney(expense.costMinor, expense.costCurrency)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -107,7 +115,9 @@ export default async function TripPrintPage({
         <div className="flex flex-col gap-8">
           {days.map((day) => (
             <section key={day.id} className="break-inside-avoid">
-              <h2 className="font-medium text-black mb-3">{formatDay(day.date)}</h2>
+              <h2 className="font-medium text-black mb-3">
+                {formatDay(day.date)}
+              </h2>
               {day.activities.length > 0 ? (
                 <ul className="flex flex-col gap-2">
                   {day.activities.map((activity) => (
@@ -128,14 +138,19 @@ export default async function TripPrintPage({
                             : activity.startTime,
                           activity.placeName,
                           activity.costMinor != null && activity.costCurrency
-                            ? formatMoney(activity.costMinor, activity.costCurrency)
+                            ? formatMoney(
+                                activity.costMinor,
+                                activity.costCurrency,
+                              )
                             : null,
                         ]
                           .filter(Boolean)
                           .join(' · ')}
                       </p>
                       {activity.notes && (
-                        <p className="text-sm text-zinc-500 mt-1">{activity.notes}</p>
+                        <p className="text-sm text-zinc-500 mt-1">
+                          {activity.notes}
+                        </p>
                       )}
                     </li>
                   ))}
