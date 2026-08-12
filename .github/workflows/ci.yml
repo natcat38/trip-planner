@@ -22,6 +22,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://trip:trip@localhost:5432/trip_planner
+      AUTH_SECRET: ci-test-secret-not-used-in-production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

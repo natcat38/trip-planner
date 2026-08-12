@@ -1,3 +1,10 @@
+/**
+ * The public share-link route: a fully anonymous, session-less read-only
+ * view of a trip's itinerary and budget, reached only by its `shareToken`.
+ * The only route in the app with no auth gate (`src/proxy.ts`'s matcher
+ * excludes it) — its data must never carry more than a visitor should see.
+ * @packageDocumentation
+ */
 import type { Metadata } from 'next';
 import { InvalidShareLinkError } from '@/server/errors';
 import { getSharedBudgetSummary, getSharedTrip } from '@/server/sharing';
