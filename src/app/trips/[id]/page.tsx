@@ -6,7 +6,11 @@
  * @packageDocumentation
  */
 import Link from 'next/link';
-import { currentUserId, ForbiddenOrNotFoundError, requireTripAccess } from '@/server/auth-scope';
+import {
+  currentUserId,
+  ForbiddenOrNotFoundError,
+  requireTripAccess,
+} from '@/server/auth-scope';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { getShareStatus } from '@/server/sharing';
 import { BudgetPanel } from './BudgetPanel';
@@ -55,7 +59,12 @@ export default async function TripItineraryPage({
 
         <BudgetPanel tripId={trip.id} />
 
-        {isOwner && <SharingPanel tripId={trip.id} status={await getShareStatus(trip.id)} />}
+        {isOwner && (
+          <SharingPanel
+            tripId={trip.id}
+            status={await getShareStatus(trip.id)}
+          />
+        )}
 
         <ItineraryDays tripId={trip.id} days={days} />
       </main>

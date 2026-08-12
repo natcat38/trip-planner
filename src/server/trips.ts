@@ -9,7 +9,11 @@
 
 import { db } from '../lib/db';
 import { toMinorUnits } from '../lib/money';
-import { currentUserId, requireTripAccess, requireTripOwner } from './auth-scope';
+import {
+  currentUserId,
+  requireTripAccess,
+  requireTripOwner,
+} from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
 
 export interface TripInput {

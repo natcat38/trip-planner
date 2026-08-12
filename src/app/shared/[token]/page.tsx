@@ -17,7 +17,9 @@ export default async function SharedTripPage({
   if (!token) {
     return (
       <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-600 dark:text-zinc-400">This link is no longer valid.</p>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          This link is no longer valid.
+        </p>
       </div>
     );
   }

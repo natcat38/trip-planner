@@ -34,9 +34,7 @@ export function SharingPanel({
 
   return (
     <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
-      <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
-        Sharing
-      </h2>
+      <h2 className="font-medium text-black dark:text-zinc-50 mb-4">Sharing</h2>
 
       <div className="mb-6">
         {status.shareToken ? (
@@ -89,7 +87,11 @@ export function SharingPanel({
                 <span>
                   {collaborator.email}{' '}
                   <span className="text-zinc-500 dark:text-zinc-400">
-                    ({collaborator.status === 'ACCEPTED' ? 'accepted' : 'pending'})
+                    (
+                    {collaborator.status === 'ACCEPTED'
+                      ? 'accepted'
+                      : 'pending'}
+                    )
                   </span>
                 </span>
                 <form

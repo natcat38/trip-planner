@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
-import { currentUserId, requireTripAccess, requireTripOwner } from './auth-scope';
+import {
+  currentUserId,
+  requireTripAccess,
+  requireTripOwner,
+} from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
 import { createTrip, deleteTrip, listTrips, updateTrip } from './trips';
 

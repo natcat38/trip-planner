@@ -19,7 +19,10 @@ function formatDateRange(start: Date, end: Date): string {
 }
 
 export default async function TripsPage() {
-  const [trips, invites] = await Promise.all([listTrips(), listPendingInvites()]);
+  const [trips, invites] = await Promise.all([
+    listTrips(),
+    listPendingInvites(),
+  ]);
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">

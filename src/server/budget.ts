@@ -32,7 +32,9 @@ interface BudgetTrip {
 // Extracted from getBudgetSummary so the public share-link path (sharing.ts,
 // token-gated instead of session-gated) can reuse the same roll-up math
 // without going through requireTripAccess.
-export async function summarizeBudget(trip: BudgetTrip): Promise<BudgetSummary> {
+export async function summarizeBudget(
+  trip: BudgetTrip,
+): Promise<BudgetSummary> {
   const [activities, expenses] = await Promise.all([
     db.activity.findMany({
       where: { day: { tripId: trip.id }, costMinor: { not: null } },

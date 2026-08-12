@@ -80,7 +80,10 @@ export function SharedTripView({
                             : activity.startTime,
                           activity.placeName,
                           activity.costMinor != null && activity.costCurrency
-                            ? formatMoney(activity.costMinor, activity.costCurrency)
+                            ? formatMoney(
+                                activity.costMinor,
+                                activity.costCurrency,
+                              )
                             : null,
                         ]
                           .filter(Boolean)
