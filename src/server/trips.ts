@@ -2,14 +2,18 @@
 
 /**
  * The server-side domain layer: Trip/Day/Activity/Expense/Budget business
- * logic and the `requireTrip`/`requireActivity` authorization gate that
+ * logic and the `requireTripAccess`/`requireActivity` authorization gate that
  * every nested-resource lookup must go through, never a bare id.
  * @packageDocumentation
  */
 
 import { db } from '../lib/db';
 import { toMinorUnits } from '../lib/money';
-import { currentUserId, requireTrip } from './auth-scope';
+import {
+  currentUserId,
+  requireTripAccess,
+  requireTripOwner,
+} from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
 
 export interface TripInput {
@@ -61,7 +65,7 @@ export async function createTrip(input: TripInput) {
 }
 
 export async function updateTrip(tripId: string, input: TripUpdateInput) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   validateTripInput(input);
   const result = await db.trip.updateMany({
     where: { id: tripId, userId: trip.userId, updatedAt: input.updatedAt },
@@ -78,6 +82,6 @@ export async function updateTrip(tripId: string, input: TripUpdateInput) {
 }
 
 export async function deleteTrip(tripId: string) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripOwner(tripId);
   await db.trip.delete({ where: { id: trip.id } });
 }

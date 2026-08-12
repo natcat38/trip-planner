@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
-import { ForbiddenOrNotFoundError, requireTrip } from './auth-scope';
+import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { ValidationError } from './errors';
 import {
   createActivity,
@@ -20,7 +20,7 @@ vi.mock('./auth-scope', () => {
       super("That trip doesn't exist or you don't have access.");
     }
   }
-  return { requireTrip: vi.fn(), ForbiddenOrNotFoundError };
+  return { requireTripAccess: vi.fn(), ForbiddenOrNotFoundError };
 });
 vi.mock('../lib/db', () => ({
   db: {
@@ -39,7 +39,7 @@ vi.mock('../lib/db', () => ({
 vi.mock('../lib/geocode', () => ({ geocode: vi.fn() }));
 
 beforeEach(() => {
-  vi.mocked(requireTrip).mockReset();
+  vi.mocked(requireTripAccess).mockReset();
   vi.mocked(db.day.findMany).mockReset();
   vi.mocked(db.day.createMany).mockReset();
   vi.mocked(db.day.findFirst).mockReset();
@@ -62,7 +62,7 @@ const trip = {
 
 describe('ensureDaysForTrip', () => {
   it('creates the missing days for the trip range', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findMany)
       .mockResolvedValueOnce([] as never)
       .mockResolvedValueOnce([] as never);
@@ -79,7 +79,7 @@ describe('ensureDaysForTrip', () => {
   });
 
   it('is a no-op when all days already exist', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     const existing = [
       { date: new Date('2026-09-01') },
       { date: new Date('2026-09-02') },
@@ -99,7 +99,7 @@ describe('createActivity', () => {
   const day = { id: 'day-1', tripId: 'trip-1' };
 
   it('assigns the next sortOrder and creates the activity', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
     vi.mocked(db.activity.count).mockResolvedValue(2);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
@@ -129,7 +129,7 @@ describe('createActivity', () => {
   });
 
   it('geocodes a provided placeName and stores the resulting lat/lng', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
     vi.mocked(db.activity.count).mockResolvedValue(0);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
@@ -150,7 +150,7 @@ describe('createActivity', () => {
   });
 
   it('stores null lat/lng when geocoding finds nothing, without throwing', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
     vi.mocked(db.activity.count).mockResolvedValue(0);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
@@ -170,7 +170,7 @@ describe('createActivity', () => {
   });
 
   it('converts an optional cost to minor units', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
     vi.mocked(db.activity.count).mockResolvedValue(0);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
@@ -190,7 +190,7 @@ describe('createActivity', () => {
   });
 
   it('rejects a negative cost amount', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
 
     await expect(
@@ -205,7 +205,7 @@ describe('createActivity', () => {
   });
 
   it("throws ForbiddenOrNotFoundError when the day doesn't belong to the trip", async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(null);
 
     await expect(
@@ -224,7 +224,7 @@ describe('updateActivity and deleteActivity', () => {
   };
 
   it('updates the activity after authorization', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
     vi.mocked(db.activity.update).mockResolvedValue({} as never);
 
@@ -250,7 +250,7 @@ describe('updateActivity and deleteActivity', () => {
       lat: 35.6586,
       lng: 139.7454,
     };
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
     vi.mocked(db.activity.update).mockResolvedValue({} as never);
 
@@ -276,7 +276,7 @@ describe('updateActivity and deleteActivity', () => {
       lat: 35.6586,
       lng: 139.7454,
     };
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
     vi.mocked(db.activity.update).mockResolvedValue({} as never);
     vi.mocked(geocode).mockResolvedValue({ lat: 35.71, lng: 139.81 });
@@ -296,7 +296,7 @@ describe('updateActivity and deleteActivity', () => {
   });
 
   it('deletes the activity after authorization', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
     vi.mocked(db.activity.delete).mockResolvedValue({} as never);
 
@@ -308,7 +308,7 @@ describe('updateActivity and deleteActivity', () => {
   });
 
   it("throws ForbiddenOrNotFoundError when the activity isn't scoped to the trip", async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(null);
 
     await expect(deleteActivity('trip-1', 'activity-1')).rejects.toBeInstanceOf(
@@ -326,7 +326,7 @@ describe('moveActivity', () => {
   ];
 
   it('swaps sortOrder with the previous sibling when moving up', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
     vi.mocked(db.activity.findMany).mockResolvedValue(siblings as never);
     vi.mocked(db.$transaction).mockResolvedValue([] as never);
@@ -345,7 +345,7 @@ describe('moveActivity', () => {
   });
 
   it('is a no-op at the top boundary', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(siblings[0] as never);
     vi.mocked(db.activity.findMany).mockResolvedValue(siblings as never);
 

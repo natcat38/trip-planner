@@ -2,7 +2,7 @@
 
 import { db } from '../lib/db';
 import { toMinorUnits } from '../lib/money';
-import { ForbiddenOrNotFoundError, requireTrip } from './auth-scope';
+import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { ValidationError } from './errors';
 
 export interface ExpenseInput {
@@ -19,12 +19,12 @@ function validateExpenseInput(input: ExpenseInput) {
 }
 
 export async function listExpenses(tripId: string) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   return db.expense.findMany({ where: { tripId: trip.id } });
 }
 
 export async function createExpense(tripId: string, input: ExpenseInput) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   validateExpenseInput(input);
   return db.expense.create({
     data: {
@@ -38,7 +38,7 @@ export async function createExpense(tripId: string, input: ExpenseInput) {
 }
 
 export async function deleteExpense(tripId: string, expenseId: string) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   const expense = await db.expense.findFirst({
     where: { id: expenseId, tripId: trip.id },
   });

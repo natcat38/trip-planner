@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
-import { currentUserId, requireTrip } from './auth-scope';
+import {
+  currentUserId,
+  requireTripAccess,
+  requireTripOwner,
+} from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
 import { createTrip, deleteTrip, listTrips, updateTrip } from './trips';
 
 vi.mock('./auth-scope', () => ({
   currentUserId: vi.fn(),
-  requireTrip: vi.fn(),
+  requireTripAccess: vi.fn(),
+  requireTripOwner: vi.fn(),
 }));
 vi.mock('../lib/db', () => ({
   db: {
@@ -21,7 +26,8 @@ vi.mock('../lib/db', () => ({
 
 beforeEach(() => {
   vi.mocked(currentUserId).mockReset();
-  vi.mocked(requireTrip).mockReset();
+  vi.mocked(requireTripAccess).mockReset();
+  vi.mocked(requireTripOwner).mockReset();
   vi.mocked(db.trip.findMany).mockReset();
   vi.mocked(db.trip.create).mockReset();
   vi.mocked(db.trip.updateMany).mockReset();
@@ -107,7 +113,7 @@ describe('updateTrip', () => {
   const lastSeenUpdatedAt = new Date('2026-07-01T00:00:00Z');
 
   it('updates the trip when the optimistic lock matches', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({
+    vi.mocked(requireTripAccess).mockResolvedValue({
       id: 'trip-1',
       userId: 'user-1',
     } as never);
@@ -129,7 +135,7 @@ describe('updateTrip', () => {
   });
 
   it('throws StaleWriteError when the row changed since it was last read', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({
+    vi.mocked(requireTripAccess).mockResolvedValue({
       id: 'trip-1',
       userId: 'user-1',
     } as never);
@@ -141,7 +147,7 @@ describe('updateTrip', () => {
   });
 
   it('rejects an end date before the start date without touching the db', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({
+    vi.mocked(requireTripAccess).mockResolvedValue({
       id: 'trip-1',
       userId: 'user-1',
     } as never);
@@ -160,7 +166,7 @@ describe('updateTrip', () => {
 
 describe('deleteTrip', () => {
   it('deletes the trip after authorization', async () => {
-    vi.mocked(requireTrip).mockResolvedValue({
+    vi.mocked(requireTripOwner).mockResolvedValue({
       id: 'trip-1',
       userId: 'user-1',
     } as never);
@@ -168,7 +174,7 @@ describe('deleteTrip', () => {
 
     await deleteTrip('trip-1');
 
-    expect(requireTrip).toHaveBeenCalledWith('trip-1');
+    expect(requireTripOwner).toHaveBeenCalledWith('trip-1');
     expect(db.trip.delete).toHaveBeenCalledWith({ where: { id: 'trip-1' } });
   });
 });

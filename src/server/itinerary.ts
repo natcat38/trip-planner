@@ -3,18 +3,18 @@
 import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
 import { toMinorUnits } from '../lib/money';
-import { ForbiddenOrNotFoundError, requireTrip } from './auth-scope';
+import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { ValidationError } from './errors';
 
 async function requireDay(tripId: string, dayId: string) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   const day = await db.day.findFirst({ where: { id: dayId, tripId: trip.id } });
   if (!day) throw new ForbiddenOrNotFoundError();
   return day;
 }
 
 export async function requireActivity(tripId: string, activityId: string) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   const activity = await db.activity.findFirst({
     where: { id: activityId, day: { tripId: trip.id } },
   });
@@ -43,7 +43,7 @@ function dateRange(start: Date, end: Date): Date[] {
 // (and any activities on them) outside the new range are left alone rather
 // than cascade-deleted — see docs/adr/0005.
 export async function ensureDaysForTrip(tripId: string) {
-  const trip = await requireTrip(tripId);
+  const trip = await requireTripAccess(tripId);
   const existing = await db.day.findMany({ where: { tripId: trip.id } });
   const existingDates = new Set(existing.map((d) => dateOnly(d.date)));
   const missing = dateRange(trip.startDate, trip.endDate).filter(

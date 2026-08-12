@@ -6,6 +6,8 @@
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
 import { listTrips } from '@/server/trips';
+import { listPendingInvites } from '@/server/sharing';
+import { InvitesBanner } from './InvitesBanner';
 
 function formatDateRange(start: Date, end: Date): string {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -17,11 +19,16 @@ function formatDateRange(start: Date, end: Date): string {
 }
 
 export default async function TripsPage() {
-  const trips = await listTrips();
+  const [trips, invites] = await Promise.all([
+    listTrips(),
+    listPendingInvites(),
+  ]);
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
       <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+        <InvitesBanner invites={invites} />
+
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Your trips

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
-import { ForbiddenOrNotFoundError, requireTrip } from './auth-scope';
+import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { ValidationError } from './errors';
 import { createExpense, deleteExpense, listExpenses } from './expenses';
 
@@ -10,7 +10,7 @@ vi.mock('./auth-scope', () => {
       super("That trip doesn't exist or you don't have access.");
     }
   }
-  return { requireTrip: vi.fn(), ForbiddenOrNotFoundError };
+  return { requireTripAccess: vi.fn(), ForbiddenOrNotFoundError };
 });
 vi.mock('../lib/db', () => ({
   db: {
@@ -24,7 +24,7 @@ vi.mock('../lib/db', () => ({
 }));
 
 beforeEach(() => {
-  vi.mocked(requireTrip).mockReset();
+  vi.mocked(requireTripAccess).mockReset();
   vi.mocked(db.expense.create).mockReset();
   vi.mocked(db.expense.findFirst).mockReset();
   vi.mocked(db.expense.findMany).mockReset();
@@ -35,7 +35,7 @@ const trip = { id: 'trip-1', userId: 'user-1' };
 
 describe('listExpenses', () => {
   it("queries the trip's expenses after authorization", async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.expense.findMany).mockResolvedValue([] as never);
 
     await listExpenses('trip-1');
@@ -48,7 +48,7 @@ describe('listExpenses', () => {
 
 describe('createExpense', () => {
   it('converts the cost to minor units and creates the expense', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.expense.create).mockResolvedValue({} as never);
 
     await createExpense('trip-1', {
@@ -70,7 +70,7 @@ describe('createExpense', () => {
   });
 
   it('rejects a negative cost amount', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
 
     await expect(
       createExpense('trip-1', {
@@ -86,7 +86,7 @@ describe('createExpense', () => {
 
 describe('deleteExpense', () => {
   it('deletes the expense after authorization', async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.expense.findFirst).mockResolvedValue({
       id: 'expense-1',
       tripId: 'trip-1',
@@ -101,7 +101,7 @@ describe('deleteExpense', () => {
   });
 
   it("throws ForbiddenOrNotFoundError when the expense isn't scoped to the trip", async () => {
-    vi.mocked(requireTrip).mockResolvedValue(trip as never);
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.expense.findFirst).mockResolvedValue(null);
 
     await expect(deleteExpense('trip-1', 'expense-1')).rejects.toBeInstanceOf(

@@ -1,7 +1,7 @@
 ---
 type: Integration
 title: Auth & authorization
-description: Auth.js OAuth for identity plus the single requireTrip rule that gates every nested resource.
+description: Auth.js OAuth for identity plus requireTripAccess/requireTripOwner, the rules that gate every nested resource.
 resource: ../../docs/Trip_Planner_Tech_Scope.md
 tags: [integration, auth, security]
 timestamp: 2026-06-15T00:00:00Z
@@ -11,11 +11,12 @@ timestamp: 2026-06-15T00:00:00Z
 
 - **Identity** — Auth.js with an OAuth provider (Google or GitHub) + Prisma adapter, so there is
   no password handling; sessions live in the DB. `middleware.ts` guards `/trips/*`.
-- **Authorization (the single rule)** — every read is filtered by the authenticated user; every
-  mutation re-checks ownership via `requireTrip(tripId)`, which looks up the
-  [trip](/domain/trip.md) by `{ id, userId }` and throws if it isn't the caller's.
+- **Authorization** — every read is filtered by the authenticated user or an accepted
+  [Collaborator](/domain/sharing.md); every mutation re-checks this via `requireTripAccess(tripId)`.
+  Owner-only actions (deleting the trip, managing sharing) instead use `requireTripOwner(tripId)`,
+  which skips the collaborator check entirely.
 
-⚠️ Nested resources (Day / Activity / Expense) are **always** reached through `requireTrip` —
+⚠️ Nested resources (Day / Activity / Expense) are **always** reached through `requireTripAccess` —
 never queried by their own id alone. This is the no-bypass guarantee that prevents the classic
 IDOR vulnerability.
 
