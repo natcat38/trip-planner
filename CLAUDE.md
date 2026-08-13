@@ -1,6 +1,7 @@
 # Trip Planner
 
-Multi-user Japan/Europe trip planner: itinerary + multi-currency budget + maps.
+Multi-user Japan/Europe trip planner: itinerary + multi-currency budget + maps,
+plus trip sharing (public link + collaborators) and print-to-PDF export.
 Read `docs/Trip_Planner_Tech_Scope.md` (§2 core logic), `docs/adr/` (decisions),
 and `knowledge/index.md` (glossary) before implementing anything.
 The scope docs' AWS deployment is superseded for Phase 1 — see docs/adr/0001.
@@ -27,7 +28,11 @@ One-time account-side setup (Vercel/Neon projects, secrets): `docs/deploy-setup.
 ## Non-negotiable rules
 
 - **Money:** integer minor units + ISO 4217 currency. Never floats. Convert on read.
-- **Authorization:** nested resources (Day/Activity/Expense) only via `requireTrip(tripId)`,
-  never by their own id alone.
+- **Authorization:** nested resources (Day/Activity/Expense) only via
+  `requireTripAccess(tripId)` (owner or accepted collaborator), never by their own id alone.
+  Deleting a trip and managing its sharing use `requireTripOwner(tripId)`.
+- **Public share route:** `/shared/[token]` is the ONLY route with no auth gate
+  (`src/proxy.ts` matches `/trips/:path*` only). Anything it returns is world-readable —
+  strip owner/token fields in `src/server/sharing.ts`, never at the component layer.
 - **Concurrency:** mutations carry `updatedAt`, reject stale writes (ADR-0003).
 - **Secrets:** `.env` (gitignored) / Vercel env only. `.env.example` = names only.
