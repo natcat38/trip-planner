@@ -4,14 +4,17 @@ A multi-user trip planner for longer, multi-city trips (Japan and Europe were th
 use cases): a day-by-day itinerary, a budget that handles spending in several currencies at
 once, and a map that stays in sync with the plan.
 
-**Status: working app, actively in development.** Phase 1 is functional end-to-end. Phase 2
-(trip sharing and itinerary export) is specced and planned, not yet built.
+**Status: working app, actively in development.** Phases 1 and 2 are functional end-to-end —
+trips, itinerary, multi-currency budget, maps, sharing, and export.
 
 ## Seeing it
 
-There's no public demo link, deliberately. The app sits behind Google/GitHub sign-in and
-there's no logged-out landing page yet, so a demo URL would show you a sign-in redirect and
-nothing else. Run it locally instead — see [Running it](#running-it) below.
+The app sits behind Google/GitHub sign-in and there's no logged-out landing page yet, so the
+site root isn't worth linking. The one part you can see without an account is a shared trip:
+enabling sharing mints a `/shared/<token>` URL that renders a read-only itinerary and budget
+with no session at all.
+
+To see the rest, run it locally — see [Running it](#running-it) below.
 
 ## What works today
 
@@ -26,6 +29,12 @@ nothing else. Run it locally instead — see [Running it](#running-it) below.
   Mapbox map view stays in sync in both directions: click an activity in the itinerary and
   the map flies to its pin, click a pin and the activity highlights in the list.
 - **Auth** — Auth.js v5 with Google and GitHub, database-backed sessions.
+- **Sharing** — a trip can be published to a read-only public link, and named Collaborators
+  can be invited by email (accept/decline, full edit rights once accepted). Every access
+  check runs through the same ownership scope, so a collaborator's reach is enforced in one
+  place rather than per-route.
+- **Export** — a print-styled itinerary page rendered for the browser's native print-to-PDF,
+  no server-side PDF generation (ADR-0007).
 
 ## Decisions worth reading
 
@@ -40,9 +49,10 @@ The reasoning lives in [`docs/adr/`](docs/adr/). The ones that shaped the code m
   production is the Actions pipeline, after the full quality gate passes.
 - **[ADR-0003](docs/adr/0003-optimistic-locking.md) — optimistic locking from day one.**
   Every mutable model carries `updatedAt`; mutations send the client's last-seen value and
-  the write is rejected if it's stale. Phase 1 is single-owner so conflicts are currently
-  impossible — the point is that concurrency control is cheap to add now and error-prone to
-  retrofit onto every mutation once sharing lands.
+  the write is rejected if it's stale. It was built in Phase 1, when single-owner trips made
+  conflicts impossible, precisely because it is cheap to add up front and error-prone to
+  retrofit onto every mutation later. Phase 2 collaborators now make concurrent edits real,
+  and the locking was already there.
 - **[ADR-0005](docs/adr/0005-additive-day-generation.md) — day generation never deletes.**
   `Day` cascades to `Activity`, so regenerating a trip's days from its current date range
   would silently destroy activities if the user shortened the trip. Generation is
@@ -62,7 +72,14 @@ Two rules the code holds to throughout:
 - **Money is never a float.** Integer minor units plus an ISO 4217 currency code, converted
   only on read (`src/lib/money.ts`, `src/lib/fx.ts`).
 - **Nested resources are never addressed by their own id alone.** Days, activities, and
-  expenses are always reached through an ownership check on their trip (`src/server/auth-scope.ts`).
+  expenses are always reached through an access check on their trip
+  (`src/server/auth-scope.ts`). There are exactly three gates: `requireTripAccess` (owner or
+  accepted collaborator) for reads and edits and `requireTripOwner` (owner only) for deleting
+  a trip and managing its sharing, both in `auth-scope.ts`, plus `requireShareToken` for the
+  public link, kept private to `src/server/sharing.ts` so nothing else can reach a trip by
+  token. The share route
+  is the only one with no session at all, so it strips `userId` and `shareToken` from its
+  payload rather than trusting callers not to leak them.
 
 ## Stack
 
@@ -104,14 +121,12 @@ lists every required variable and which ones are safe to expose to the browser.
 
 ## What's not done
 
-- **Phase 2: trip sharing and itinerary export.** Designed and planned, not implemented:
-  [design spec](docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md),
-  [sharing implementation plan](docs/superpowers/plans/2026-08-11-phase2-sharing.md), and
-  [export implementation plan](docs/superpowers/plans/2026-08-11-phase2-export.md). Sharing
-  adds a public read-only link and named Collaborators (invite by email, accept/decline, full
-  edit rights once accepted); export is a print-styled page using the browser's native
-  print-to-PDF (ADR-0007). Optimistic locking is already in place for it (ADR-0003).
-- **No logged-out landing page**, which is why there's no demo link above.
+- **No logged-out landing page.** The site root is still the framework's starter page, so a
+  `/shared/<token>` link is the only thing worth showing a stranger.
+- **Collaborator invites aren't delivered.** Inviting writes the row; the invitee finds out
+  by signing in and seeing the pending-invites banner. No email is sent.
+- **Collaborators are only an email string.** ADR-0006 trades away the `User` foreign key,
+  so there's no name or avatar to show without a separate lookup.
 - **AWS/Terraform infrastructure** — deferred, not abandoned; see ADR-0001.
 - **FX rates are daily, not historical.** An expense is converted at the current day's rate,
   not the rate on the date it was incurred.
