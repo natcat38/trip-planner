@@ -23,6 +23,6 @@ block — an orientation gap, not an omission by the generator.
 | `src/components` | 1 | Shared presentational components used across trip pages: currently the Mapbox pin map that plots an itinerary's geocoded activity places. |
 | `src/lib` | 5 | Framework-agnostic helpers shared across app and server code: money as integer minor units + ISO 4217 currency (this file), env var validation, currency-conversion (fx), geocoding, and the Prisma client instance. |
 | `src/server` | 7 | Trip sharing: a public read-only link (Trip.shareToken) and named Collaborators (TripCollaborator, invited by email, explicitly accepted or declined — no separate accept/decline table, just a status column). |
-| `prisma` | 1 | Prisma schema and local dev seed data: `schema.prisma` defines the Trip/ Day/Activity/Expense models, this script populates a demo trip for `npm run db:seed` against the local Postgres container. |
+| `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
 14 source directories, 38 files, 0 without a declared purpose.

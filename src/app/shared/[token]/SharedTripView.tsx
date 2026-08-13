@@ -53,7 +53,9 @@ export function SharedTripView({
         </section>
 
         <div className="flex flex-col gap-8">
-          <Map pins={pins} selectedId={null} onSelectPin={() => {}} />
+          {/* Read-only view: no pin selection, so no handler to pass — and a
+              Server Component cannot pass one to a Client Component anyway. */}
+          <Map pins={pins} selectedId={null} />
 
           {days.map((day) => (
             <section key={day.id}>
