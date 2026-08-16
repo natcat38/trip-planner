@@ -15,10 +15,13 @@ import { ActivityForm } from './ActivityForm';
 type Days = Awaited<ReturnType<typeof ensureDaysForTrip>>;
 
 function formatDay(date: Date): string {
+  // Day.date is always stored as UTC midnight — pin the format to UTC so it
+  // reads the same calendar day everywhere, regardless of viewer/server TZ.
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 }
 

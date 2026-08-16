@@ -2,9 +2,9 @@
 
 import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
-import { toMinorUnits } from '../lib/money';
+import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
-import { ValidationError } from './errors';
+import { StaleWriteError, ValidationError } from './errors';
 
 async function requireDay(tripId: string, dayId: string) {
   const trip = await requireTripAccess(tripId);
@@ -74,9 +74,19 @@ export interface ActivityInput {
   costCurrency?: string;
 }
 
+export interface ActivityUpdateInput extends ActivityInput {
+  updatedAt: Date;
+}
+
 function validateActivityInput(input: ActivityInput) {
-  if (input.costAmount != null && !(input.costAmount >= 0)) {
+  if (input.costAmount == null) return;
+  if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
+  }
+  if (!input.costCurrency || !isValidCurrencyCode(input.costCurrency)) {
+    throw new ValidationError(
+      'Enter a valid 3-letter currency code for the cost.',
+    );
   }
 }
 
@@ -112,12 +122,13 @@ async function resolveActivityData(
     endTime: input.endTime || null,
     category: input.category,
     notes: input.notes || null,
+    // validateActivityInput already rejects a costAmount with no/invalid
+    // costCurrency, so a present costAmount always has a usable currency here.
     costMinor:
-      input.costAmount != null && input.costCurrency
-        ? toMinorUnits(input.costAmount, input.costCurrency)
+      input.costAmount != null
+        ? toMinorUnits(input.costAmount, input.costCurrency!)
         : null,
-    costCurrency:
-      input.costAmount != null ? (input.costCurrency ?? null) : null,
+    costCurrency: input.costAmount != null ? input.costCurrency! : null,
   };
 }
 
@@ -128,7 +139,11 @@ export async function createActivity(
 ) {
   const day = await requireDay(tripId, dayId);
   validateActivityInput(input);
-  const sortOrder = await db.activity.count({ where: { dayId: day.id } });
+  const maxSortOrder = await db.activity.aggregate({
+    where: { dayId: day.id },
+    _max: { sortOrder: true },
+  });
+  const sortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
   const data = await resolveActivityData(input);
   return db.activity.create({ data: { dayId: day.id, ...data, sortOrder } });
 }
@@ -136,12 +151,16 @@ export async function createActivity(
 export async function updateActivity(
   tripId: string,
   activityId: string,
-  input: ActivityInput,
+  input: ActivityUpdateInput,
 ) {
   const activity = await requireActivity(tripId, activityId);
   validateActivityInput(input);
   const data = await resolveActivityData(input, activity);
-  return db.activity.update({ where: { id: activity.id }, data });
+  const result = await db.activity.updateMany({
+    where: { id: activity.id, updatedAt: input.updatedAt },
+    data,
+  });
+  if (result.count === 0) throw new StaleWriteError();
 }
 
 export async function deleteActivity(tripId: string, activityId: string) {

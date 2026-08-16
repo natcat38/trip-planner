@@ -4,7 +4,7 @@ import { listExpenses } from '@/server/expenses';
 import { addExpenseAction, deleteExpenseAction } from './actions';
 import { ExpenseForm } from './ExpenseForm';
 
-function budgetBannerText(
+export function budgetBannerText(
   spentMinor: number,
   budgetMinor: number,
   baseCurrency: string,

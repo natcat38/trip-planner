@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { auth } from '../auth';
 import { db } from '../lib/db';
 
@@ -13,25 +14,37 @@ export class ForbiddenOrNotFoundError extends Error {
   }
 }
 
+// Every request-scoped caller (currentUserId, currentUserEmail,
+// requireTripAccess, requireTripOwner) needs the same session — memoize it
+// with React's request-scoped cache() so they share one lookup instead of
+// each re-querying it. Outside a Next.js request (e.g. plain unit tests),
+// cache() is a no-op passthrough, so this doesn't change test behavior.
+const getSession = cache(() => auth());
+
 export async function currentUserId(): Promise<string> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new UnauthenticatedError();
   return session.user.id;
 }
 
 export async function currentUserEmail(): Promise<string> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.email) throw new UnauthenticatedError();
-  return session.user.email;
+  return session.user.email.toLowerCase();
 }
 
 // Owner OR an accepted collaborator — the gate every nested resource
 // (Day/Activity/Expense) and the trip's own reads/edits go through.
-export async function requireTripAccess(tripId: string) {
-  const session = await auth();
+// Memoized per tripId: several independent call sites (the trip page, its
+// budget panel, itinerary, sharing status) all re-check access to the same
+// trip within one request, so this dedupes them to one query instead of
+// one per call site, without weakening the check itself — every call site
+// still runs the full authorization logic, just sharing its result.
+export const requireTripAccess = cache(async (tripId: string) => {
+  const session = await getSession();
   if (!session?.user?.id) throw new UnauthenticatedError();
   const userId = session.user.id;
-  const email = session.user.email ?? undefined;
+  const email = session.user.email?.toLowerCase() ?? undefined;
 
   const trip = await db.trip.findFirst({
     where: {
@@ -46,12 +59,25 @@ export async function requireTripAccess(tripId: string) {
   });
   if (!trip) throw new ForbiddenOrNotFoundError();
   return trip;
+});
+
+// Swallows a race where the target was already deleted/revoked by someone
+// else between this request's page load and the action running — the
+// desired outcome is a silent no-op (the UI revalidates to the new state),
+// not an uncaught crash.
+export async function ignoreIfMissing(action: Promise<void>): Promise<void> {
+  try {
+    await action;
+  } catch (err) {
+    if (!(err instanceof ForbiddenOrNotFoundError)) throw err;
+  }
 }
 
-// Owner only — deleting the trip and managing sharing itself.
-export async function requireTripOwner(tripId: string) {
+// Owner only — deleting the trip and managing sharing itself. Memoized per
+// tripId for the same reason as requireTripAccess above.
+export const requireTripOwner = cache(async (tripId: string) => {
   const userId = await currentUserId();
   const trip = await db.trip.findFirst({ where: { id: tripId, userId } });
   if (!trip) throw new ForbiddenOrNotFoundError();
   return trip;
-}
+});

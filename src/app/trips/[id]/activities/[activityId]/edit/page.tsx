@@ -31,7 +31,12 @@ export default async function EditActivityPage({
     throw err;
   }
 
-  const boundUpdate = updateActivityAction.bind(null, tripId, activity.id);
+  const boundUpdate = updateActivityAction.bind(
+    null,
+    tripId,
+    activity.id,
+    activity.updatedAt.toISOString(),
+  );
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
-import { ValidationError } from './errors';
+import { StaleWriteError, ValidationError } from './errors';
 import {
   createActivity,
   deleteActivity,
@@ -30,8 +30,9 @@ vi.mock('../lib/db', () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       delete: vi.fn(),
-      count: vi.fn(),
+      aggregate: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -47,8 +48,9 @@ beforeEach(() => {
   vi.mocked(db.activity.findMany).mockReset();
   vi.mocked(db.activity.create).mockReset();
   vi.mocked(db.activity.update).mockReset();
+  vi.mocked(db.activity.updateMany).mockReset();
   vi.mocked(db.activity.delete).mockReset();
-  vi.mocked(db.activity.count).mockReset();
+  vi.mocked(db.activity.aggregate).mockReset();
   vi.mocked(db.$transaction).mockReset();
   vi.mocked(geocode).mockReset();
 });
@@ -101,7 +103,9 @@ describe('createActivity', () => {
   it('assigns the next sortOrder and creates the activity', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
-    vi.mocked(db.activity.count).mockResolvedValue(2);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: 1 },
+    } as never);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
 
     await createActivity('trip-1', 'day-1', {
@@ -131,7 +135,9 @@ describe('createActivity', () => {
   it('geocodes a provided placeName and stores the resulting lat/lng', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
-    vi.mocked(db.activity.count).mockResolvedValue(0);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
     vi.mocked(geocode).mockResolvedValue({ lat: 35.6586, lng: 139.7454 });
 
@@ -152,7 +158,9 @@ describe('createActivity', () => {
   it('stores null lat/lng when geocoding finds nothing, without throwing', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
-    vi.mocked(db.activity.count).mockResolvedValue(0);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
     vi.mocked(geocode).mockResolvedValue(null);
 
@@ -172,7 +180,9 @@ describe('createActivity', () => {
   it('converts an optional cost to minor units', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
-    vi.mocked(db.activity.count).mockResolvedValue(0);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
     vi.mocked(db.activity.create).mockResolvedValue({} as never);
 
     await createActivity('trip-1', 'day-1', {
@@ -204,6 +214,21 @@ describe('createActivity', () => {
     expect(db.activity.create).not.toHaveBeenCalled();
   });
 
+  it('rejects a cost amount with no (or an invalid) currency', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+
+    await expect(
+      createActivity('trip-1', 'day-1', {
+        title: 'Dinner',
+        category: 'Food',
+        costAmount: 60,
+        costCurrency: '',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+  });
+
   it("throws ForbiddenOrNotFoundError when the day doesn't belong to the trip", async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(null);
@@ -223,23 +248,40 @@ describe('updateActivity and deleteActivity', () => {
     lng: null,
   };
 
+  const updatedAt = new Date('2026-08-01T00:00:00.000Z');
+
   it('updates the activity after authorization', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
-    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
 
     await updateActivity('trip-1', 'activity-1', {
       title: 'Renamed',
       category: 'Sightseeing',
+      updatedAt,
     });
 
-    expect(db.activity.update).toHaveBeenCalledWith({
-      where: { id: 'activity-1' },
+    expect(db.activity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', updatedAt },
       data: expect.objectContaining({
         title: 'Renamed',
         category: 'Sightseeing',
       }),
     });
+  });
+
+  it('throws StaleWriteError when the activity changed since it was read', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 0 } as never);
+
+    await expect(
+      updateActivity('trip-1', 'activity-1', {
+        title: 'Renamed',
+        category: 'Sightseeing',
+        updatedAt,
+      }),
+    ).rejects.toThrow(StaleWriteError);
   });
 
   it('does not re-geocode when placeName is unchanged, keeping the existing lat/lng', async () => {
@@ -252,16 +294,17 @@ describe('updateActivity and deleteActivity', () => {
     };
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
-    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
 
     await updateActivity('trip-1', 'activity-1', {
       title: 'Renamed',
       category: 'Sightseeing',
       placeName: 'Tokyo Tower',
+      updatedAt,
     });
 
     expect(geocode).not.toHaveBeenCalled();
-    expect(db.activity.update).toHaveBeenCalledWith(
+    expect(db.activity.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }),
       }),
@@ -278,17 +321,18 @@ describe('updateActivity and deleteActivity', () => {
     };
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
-    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
     vi.mocked(geocode).mockResolvedValue({ lat: 35.71, lng: 139.81 });
 
     await updateActivity('trip-1', 'activity-1', {
       title: 'Renamed',
       category: 'Sightseeing',
       placeName: 'Senso-ji',
+      updatedAt,
     });
 
     expect(geocode).toHaveBeenCalledWith('Senso-ji');
-    expect(db.activity.update).toHaveBeenCalledWith(
+    expect(db.activity.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ lat: 35.71, lng: 139.81 }),
       }),

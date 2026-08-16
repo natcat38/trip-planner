@@ -107,6 +107,15 @@ describe('createTrip', () => {
     ).rejects.toThrow(ValidationError);
     expect(db.trip.create).not.toHaveBeenCalled();
   });
+
+  it('rejects a malformed currency code', async () => {
+    vi.mocked(currentUserId).mockResolvedValue('user-1');
+
+    await expect(
+      createTrip({ ...validInput, baseCurrency: 'J' }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.trip.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('updateTrip', () => {

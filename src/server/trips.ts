@@ -8,7 +8,7 @@
  */
 
 import { db } from '../lib/db';
-import { toMinorUnits } from '../lib/money';
+import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import {
   currentUserId,
   requireTripAccess,
@@ -32,6 +32,9 @@ export interface TripUpdateInput extends TripInput {
 function validateTripInput(input: TripInput) {
   if (input.endDate < input.startDate) {
     throw new ValidationError('End date must be on or after the start date.');
+  }
+  if (!isValidCurrencyCode(input.baseCurrency)) {
+    throw new ValidationError('Enter a valid 3-letter currency code.');
   }
   if (!(input.budgetAmount >= 0)) {
     // catches negative amounts and NaN in one guard (NaN < 0 is false, so a plain
