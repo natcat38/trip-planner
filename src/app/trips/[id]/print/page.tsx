@@ -14,12 +14,16 @@ import { getBudgetSummary } from '@/server/budget';
 import { listExpenses } from '@/server/expenses';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { ExportButton } from './ExportButton';
+import { budgetBannerText } from '../BudgetPanel';
 
 function formatDay(date: Date): string {
+  // Day.date is always stored as UTC midnight — pin the format to UTC so it
+  // reads the same calendar day everywhere, regardless of viewer/server TZ.
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 }
 
@@ -82,10 +86,24 @@ export default async function TripPrintPage({
 
         <section className="mb-10 border border-black/[.08] rounded-lg p-5 break-inside-avoid">
           <h2 className="font-medium text-black mb-2">Budget</h2>
-          <p className="text-zinc-700">
-            {formatMoney(budget.spentMinor, budget.baseCurrency)} of{' '}
-            {formatMoney(budget.budgetMinor, budget.baseCurrency)} planned
+          <p className={budget.isOverBudget ? 'text-red-600' : 'text-zinc-700'}>
+            {budgetBannerText(
+              budget.spentMinor,
+              budget.budgetMinor,
+              budget.baseCurrency,
+            )}
           </p>
+          {budget.unconvertedItems.length > 0 && (
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-600">
+              {budget.unconvertedItems.map((item) => (
+                <li key={item.id}>
+                  {item.label}:{' '}
+                  {formatMoney(item.originalMinor, item.originalCurrency)} —
+                  Showing original amount — conversion rate unavailable.
+                </li>
+              ))}
+            </ul>
+          )}
           {Object.keys(budget.byCategory).length > 0 && (
             <ul className="mt-4 flex flex-col gap-1 text-sm text-zinc-600">
               {Object.entries(budget.byCategory).map(([category, minor]) => (

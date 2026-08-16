@@ -125,11 +125,11 @@ import {
 } from './sharing';
 import { currentUserEmail, ForbiddenOrNotFoundError } from './auth-scope';
 import { ValidationError } from './errors';
+import { Prisma } from '../generated/prisma/client';
 
 describe('inviteCollaborator', () => {
   it('creates a PENDING collaborator row after owner authorization', async () => {
     vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
-    vi.mocked(db.tripCollaborator.findUnique).mockResolvedValue(null);
     vi.mocked(db.tripCollaborator.create).mockResolvedValue({} as never);
 
     await inviteCollaborator('trip-1', 'friend@example.com');
@@ -143,16 +143,33 @@ describe('inviteCollaborator', () => {
     });
   });
 
+  it('normalizes the invited email to lowercase', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+    vi.mocked(db.tripCollaborator.create).mockResolvedValue({} as never);
+
+    await inviteCollaborator('trip-1', 'Friend@Example.com');
+
+    expect(db.tripCollaborator.create).toHaveBeenCalledWith({
+      data: {
+        tripId: 'trip-1',
+        email: 'friend@example.com',
+        status: 'PENDING',
+      },
+    });
+  });
+
   it('rejects an email that is already invited or already a collaborator', async () => {
     vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
-    vi.mocked(db.tripCollaborator.findUnique).mockResolvedValue({
-      id: 'c1',
-    } as never);
+    vi.mocked(db.tripCollaborator.create).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
 
     await expect(
       inviteCollaborator('trip-1', 'friend@example.com'),
     ).rejects.toThrow(ValidationError);
-    expect(db.tripCollaborator.create).not.toHaveBeenCalled();
   });
 
   it('rejects an invalid email', async () => {
@@ -350,6 +367,7 @@ describe('listSharedExpenses', () => {
     expect(expenses).toEqual([{ id: 'e1' }]);
     expect(db.expense.findMany).toHaveBeenCalledWith({
       where: { tripId: 'trip-1' },
+      orderBy: { id: 'asc' },
     });
   });
 });

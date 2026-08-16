@@ -9,7 +9,8 @@ import {
   updateActivity,
 } from '@/server/itinerary';
 import { createExpense, deleteExpense } from '@/server/expenses';
-import { ValidationError } from '@/server/errors';
+import { ignoreIfMissing } from '@/server/auth-scope';
+import { StaleWriteError, ValidationError } from '@/server/errors';
 
 export interface ActivityFormState {
   error?: string;
@@ -55,13 +56,18 @@ export async function addActivityAction(
 export async function updateActivityAction(
   tripId: string,
   activityId: string,
+  updatedAt: string,
   _prevState: ActivityFormState,
   formData: FormData,
 ): Promise<ActivityFormState> {
   try {
-    await updateActivity(tripId, activityId, parseActivityFormData(formData));
+    await updateActivity(tripId, activityId, {
+      ...parseActivityFormData(formData),
+      updatedAt: new Date(updatedAt),
+    });
   } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
+    if (err instanceof ValidationError || err instanceof StaleWriteError)
+      return { error: err.message };
     throw err;
   }
   redirect(`/trips/${tripId}`);
@@ -71,7 +77,7 @@ export async function deleteActivityAction(
   tripId: string,
   activityId: string,
 ): Promise<void> {
-  await deleteActivity(tripId, activityId);
+  await ignoreIfMissing(deleteActivity(tripId, activityId));
   revalidatePath(`/trips/${tripId}`);
 }
 
@@ -80,7 +86,7 @@ export async function moveActivityAction(
   activityId: string,
   direction: 'up' | 'down',
 ): Promise<void> {
-  await moveActivity(tripId, activityId, direction);
+  await ignoreIfMissing(moveActivity(tripId, activityId, direction));
   revalidatePath(`/trips/${tripId}`);
 }
 

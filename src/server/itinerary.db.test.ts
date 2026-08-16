@@ -83,6 +83,39 @@ describe('itinerary against a real database', () => {
     expect(reordered.map((a) => a.title)).toEqual(['Museum', 'Breakfast']);
   });
 
+  it('assigns a non-colliding sortOrder after a non-tail activity is deleted', async () => {
+    const [day] = await ensureDaysForTrip(tripId);
+
+    const first = await createActivity(tripId, day.id, {
+      title: 'Breakfast',
+      category: 'Food',
+    });
+    const middle = await createActivity(tripId, day.id, {
+      title: 'Museum',
+      category: 'Sightseeing',
+    });
+    const last = await createActivity(tripId, day.id, {
+      title: 'Dinner',
+      category: 'Food',
+    });
+    expect([first.sortOrder, middle.sortOrder, last.sortOrder]).toEqual([
+      0, 1, 2,
+    ]);
+
+    await deleteActivity(tripId, middle.id);
+
+    const replacement = await createActivity(tripId, day.id, {
+      title: 'Bar',
+      category: 'Food',
+    });
+    expect(replacement.sortOrder).toBe(3);
+
+    const sortOrders = (
+      await db.activity.findMany({ where: { dayId: day.id } })
+    ).map((a) => a.sortOrder);
+    expect(new Set(sortOrders).size).toBe(sortOrders.length);
+  });
+
   it("rejects creating an activity under another user's day", async () => {
     const otherUser = await db.user.create({
       data: { email: `other-${crypto.randomUUID()}@example.com` },
@@ -165,6 +198,7 @@ describe('itinerary against a real database', () => {
       title: 'Tokyo Tower (renamed)',
       category: 'Sightseeing',
       placeName: 'Tokyo Tower',
+      updatedAt: activity.updatedAt,
     });
 
     const reloaded = await db.activity.findUniqueOrThrow({

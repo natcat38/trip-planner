@@ -7,6 +7,7 @@ import {
   removeCollaborator,
   revokeShareLink,
 } from '@/server/sharing';
+import { ignoreIfMissing } from '@/server/auth-scope';
 import { ValidationError } from '@/server/errors';
 
 export interface InviteFormState {
@@ -19,7 +20,7 @@ export async function enableShareLinkAction(tripId: string): Promise<void> {
 }
 
 export async function revokeShareLinkAction(tripId: string): Promise<void> {
-  await revokeShareLink(tripId);
+  await ignoreIfMissing(revokeShareLink(tripId));
   revalidatePath(`/trips/${tripId}`);
 }
 
@@ -42,6 +43,6 @@ export async function removeCollaboratorAction(
   tripId: string,
   collaboratorId: string,
 ): Promise<void> {
-  await removeCollaborator(tripId, collaboratorId);
+  await ignoreIfMissing(removeCollaborator(tripId, collaboratorId));
   revalidatePath(`/trips/${tripId}`);
 }

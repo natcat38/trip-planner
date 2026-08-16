@@ -8,7 +8,13 @@
  */
 
 import { randomBytes } from 'node:crypto';
-import type { Activity, Day, Expense, Trip } from '../generated/prisma/client';
+import {
+  Prisma,
+  type Activity,
+  type Day,
+  type Expense,
+  type Trip,
+} from '../generated/prisma/client';
 import { db } from '../lib/db';
 import {
   currentUserEmail,
@@ -71,18 +77,23 @@ export async function inviteCollaborator(
   email: string,
 ): Promise<void> {
   const trip = await requireTripOwner(tripId);
-  validateEmail(email);
-  const existing = await db.tripCollaborator.findUnique({
-    where: { tripId_email: { tripId: trip.id, email } },
-  });
-  if (existing) {
-    throw new ValidationError(
-      'This person is already invited or already a collaborator.',
-    );
+  const normalizedEmail = email.trim().toLowerCase();
+  validateEmail(normalizedEmail);
+  try {
+    await db.tripCollaborator.create({
+      data: { tripId: trip.id, email: normalizedEmail, status: 'PENDING' },
+    });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2002'
+    ) {
+      throw new ValidationError(
+        'This person is already invited or already a collaborator.',
+      );
+    }
+    throw err;
   }
-  await db.tripCollaborator.create({
-    data: { tripId: trip.id, email, status: 'PENDING' },
-  });
 }
 
 export async function removeCollaborator(
@@ -171,5 +182,8 @@ export async function getSharedBudgetSummary(
 
 export async function listSharedExpenses(token: string): Promise<Expense[]> {
   const trip = await requireShareToken(token);
-  return db.expense.findMany({ where: { tripId: trip.id } });
+  return db.expense.findMany({
+    where: { tripId: trip.id },
+    orderBy: { id: 'asc' },
+  });
 }

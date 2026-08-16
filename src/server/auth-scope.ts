@@ -22,7 +22,7 @@ export async function currentUserId(): Promise<string> {
 export async function currentUserEmail(): Promise<string> {
   const session = await auth();
   if (!session?.user?.email) throw new UnauthenticatedError();
-  return session.user.email;
+  return session.user.email.toLowerCase();
 }
 
 // Owner OR an accepted collaborator — the gate every nested resource
@@ -31,7 +31,7 @@ export async function requireTripAccess(tripId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new UnauthenticatedError();
   const userId = session.user.id;
-  const email = session.user.email ?? undefined;
+  const email = session.user.email?.toLowerCase() ?? undefined;
 
   const trip = await db.trip.findFirst({
     where: {
@@ -46,6 +46,18 @@ export async function requireTripAccess(tripId: string) {
   });
   if (!trip) throw new ForbiddenOrNotFoundError();
   return trip;
+}
+
+// Swallows a race where the target was already deleted/revoked by someone
+// else between this request's page load and the action running — the
+// desired outcome is a silent no-op (the UI revalidates to the new state),
+// not an uncaught crash.
+export async function ignoreIfMissing(action: Promise<void>): Promise<void> {
+  try {
+    await action;
+  } catch (err) {
+    if (!(err instanceof ForbiddenOrNotFoundError)) throw err;
+  }
 }
 
 // Owner only — deleting the trip and managing sharing itself.

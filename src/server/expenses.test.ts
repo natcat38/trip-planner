@@ -42,6 +42,7 @@ describe('listExpenses', () => {
 
     expect(db.expense.findMany).toHaveBeenCalledWith({
       where: { tripId: 'trip-1' },
+      orderBy: { id: 'asc' },
     });
   });
 });
@@ -78,6 +79,20 @@ describe('createExpense', () => {
         category: 'Transport',
         costAmount: -1,
         costCurrency: 'EUR',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.expense.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed currency code', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    await expect(
+      createExpense('trip-1', {
+        label: 'Flights',
+        category: 'Transport',
+        costAmount: 60,
+        costCurrency: 'EU',
       }),
     ).rejects.toThrow(ValidationError);
     expect(db.expense.create).not.toHaveBeenCalled();

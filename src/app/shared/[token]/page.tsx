@@ -7,7 +7,11 @@
  */
 import type { Metadata } from 'next';
 import { InvalidShareLinkError } from '@/server/errors';
-import { getSharedBudgetSummary, getSharedTrip } from '@/server/sharing';
+import {
+  getSharedBudgetSummary,
+  getSharedTrip,
+  listSharedExpenses,
+} from '@/server/sharing';
 import { SharedTripView } from './SharedTripView';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,10 +37,12 @@ export default async function SharedTripPage({
 
   let data;
   let budget;
+  let expenses;
   try {
-    [data, budget] = await Promise.all([
+    [data, budget, expenses] = await Promise.all([
       getSharedTrip(token),
       getSharedBudgetSummary(token),
+      listSharedExpenses(token),
     ]);
   } catch (err) {
     if (err instanceof InvalidShareLinkError) {
@@ -49,5 +55,5 @@ export default async function SharedTripPage({
     throw err;
   }
 
-  return <SharedTripView data={data} budget={budget} />;
+  return <SharedTripView data={data} budget={budget} expenses={expenses} />;
 }

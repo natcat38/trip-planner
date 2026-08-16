@@ -1,24 +1,35 @@
 import { Map } from '@/components/Map';
 import { formatMoney } from '@/lib/money';
-import type { getSharedBudgetSummary, getSharedTrip } from '@/server/sharing';
+import type {
+  getSharedBudgetSummary,
+  getSharedTrip,
+  listSharedExpenses,
+} from '@/server/sharing';
+import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
 
 type SharedTripData = Awaited<ReturnType<typeof getSharedTrip>>;
 type BudgetSummary = Awaited<ReturnType<typeof getSharedBudgetSummary>>;
+type SharedExpenses = Awaited<ReturnType<typeof listSharedExpenses>>;
 
 function formatDay(date: Date): string {
+  // Day.date is always stored as UTC midnight — pin the format to UTC so it
+  // reads the same calendar day everywhere, regardless of viewer/server TZ.
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 }
 
 export function SharedTripView({
   data,
   budget,
+  expenses,
 }: {
   data: SharedTripData;
   budget: BudgetSummary;
+  expenses: SharedExpenses;
 }) {
   const { trip, days } = data;
 
@@ -46,10 +57,44 @@ export function SharedTripView({
           <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
-          <p className="text-zinc-700 dark:text-zinc-300">
-            {formatMoney(budget.spentMinor, budget.baseCurrency)} of{' '}
-            {formatMoney(budget.budgetMinor, budget.baseCurrency)} planned
+          <p
+            className={
+              budget.isOverBudget
+                ? 'text-red-600 dark:text-red-400'
+                : 'text-zinc-700 dark:text-zinc-300'
+            }
+          >
+            {budgetBannerText(
+              budget.spentMinor,
+              budget.budgetMinor,
+              budget.baseCurrency,
+            )}
           </p>
+          {budget.unconvertedItems.length > 0 && (
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-600 dark:text-amber-400">
+              {budget.unconvertedItems.map((item) => (
+                <li key={item.id}>
+                  {item.label}:{' '}
+                  {formatMoney(item.originalMinor, item.originalCurrency)} —
+                  Showing original amount — conversion rate unavailable.
+                </li>
+              ))}
+            </ul>
+          )}
+          {expenses.length > 0 && (
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+              {expenses.map((expense) => (
+                <li key={expense.id} className="flex justify-between">
+                  <span>
+                    {expense.label} ({expense.category})
+                  </span>
+                  <span>
+                    {formatMoney(expense.costMinor, expense.costCurrency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <div className="flex flex-col gap-8">
@@ -91,6 +136,11 @@ export function SharedTripView({
                           .filter(Boolean)
                           .join(' · ')}
                       </p>
+                      {activity.notes && (
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                          {activity.notes}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>
