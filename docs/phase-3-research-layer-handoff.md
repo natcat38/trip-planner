@@ -1,7 +1,11 @@
 # Phase 3 Handoff — Destination Research & Saved-Places Tray
 
 > **Status:** planned, not implemented. Nothing in this document has been built.
-> **Written:** 2026-08-19. **Audience:** a fresh session picking this up cold.
+> **Written:** 2026-08-19. **Revised same day** after a second research pass (four web-research
+> agents) and a decision round with the user: Milestone 1 is **approved as written**, its open
+> questions are resolved (§9), and §8 is now a decided M2–M7 roadmap, not a deferral list.
+> **Audience:** a fresh session picking this up cold — intended orchestration: Opus as
+> orchestrator dispatching Sonnet subagents per task.
 > **Read first:** `CLAUDE.md`, `docs/Trip_Planner_Tech_Scope.md` §2, `docs/adr/`, `knowledge/index.md`.
 
 This document exists because the research behind it was expensive and most of its value is in
@@ -189,6 +193,78 @@ the proxy would never run and the page would be **public** — while holding enc
 - Wikipedia REST is keyless and works, but returns encyclopedic prose that answers none of the
   three product questions.
 
+### 3.8 Transit routing IS free — the earlier "may not be free at all" is falsified
+
+**Transitous** (`https://api.transitous.org/api/`, community-hosted MOTIS v2) is live, keyless,
+and was **verified by a live test query**: a route near Tokyo Station → Tokyo Tower area
+returned 5 valid multi-leg rail/subway itineraries with correctly named stations (大手町,
+御成門, 新橋) and realistic 24–35 min timings. European feed coverage spans all major countries.
+
+Conditions (from transitous.org/api/): best-effort service, **no SLA**, they may cut off any
+consumer at any time; must send a `User-Agent` identifying the app + contact email; visible
+attribution to `transitous.org/sources/` and OSM required; non-commercial use fine; courtesy
+email to maintainers recommended before doing routing volume. Spot-check non-Tokyo coverage
+(Kyoto, Osaka, rural areas, smaller EU cities) before trusting app-wide.
+
+**Google Routes/Directions API is ruled out twice over**: (1) the free 10k calls/month now
+requires a billing account with a card — real overcharge risk for a $0 project; (2) its ToS
+requires results be displayed on a Google-branded map, which conflicts with the app's Mapbox
+map. **Google/Apple Maps deep links are the free fallback**: officially documented URL schemes,
+no key, no quota — `https://www.google.com/maps/dir/?api=1&origin=…&destination=…&travelmode=transit`
+and `https://maps.apple.com/?saddr=…&daddr=…&dirflg=r`.
+
+Ruled out: Navitia (free tier effectively France-only, per-region tokens), hosted
+OpenTripPlanner (no pan-Europe/Japan public instance; self-hosting violates $0), ODPT
+(data-only, no routing endpoint), NAVITIME/Jorudan/Ekispert (no confirmed self-serve free tier).
+
+### 3.9 Free-AI landscape (Aug 2026) — BYOK is the only $0 model; OpenRouter + Groq are ToS-clean
+
+- **GitHub Models is dead** — fully retired 2026-07-30. Older "best free LLM API" articles
+  still list it; ignore them.
+- **OpenRouter**: ToS §5.2 explicitly contemplates serving your own end users; no EEA
+  restriction; BYOK is a documented first-class feature. `:free` models: 20 req/min, 50
+  req/day at $0 balance, 1,000/day after a one-time $10 credit. Account privacy toggles
+  ("free endpoints that may train on inputs" / "may publish prompts") must stay **off** —
+  surface this in app docs. Never opt into the 1% prompt-logging discount.
+- **Groq**: cleanest ToS surveyed — Services Agreement §3.1 explicitly authorizes making it
+  available to end users through a "Customer Application"; UK/EEA contracting entity + SCC
+  DPA; states it never trains on customer data. Open-weights models only, very fast.
+- **Mistral** (EU company, likely EEA-safest) is a conditional third: phone-verification
+  friction, unpublished free-tier limits, and the API-vs-consumer terms split needs one manual
+  check of its commercial terms before relying on it.
+- **No provider's free tier can serve all users from one app-held key** at real scale.
+  Cloudflare Workers AI (10k neurons/day, app-held) is the only structural option and only
+  demo-sized. Hence BYOK.
+- BYOK precedent: no formal legal blessing, but OpenRouter and Groq allow it in their own
+  terms, an ecosystem of tools (Warp, ngrok, BYOKList.com) practices it openly, and provider
+  prohibitions target key *resale/sharing*, not a user's own key in a tool acting for them.
+  Distinct risk to avoid: piggybacking flat-rate chat *subscriptions* (the pattern Anthropic
+  enforced against in Apr 2026) — metered API keys are the permitted pattern.
+- Whether routing Gemini *through OpenRouter* cures the §3.4 EEA problem is **unresolved** —
+  don't rely on it; moot given other free models.
+
+### 3.10 Competitive findings (Wanderlog + peers)
+
+- **Nobody does "multiple options per day" — including Wanderlog.** Its AI generates one
+  draft, then editing is manual (the AI cannot even add places to the map from chat
+  afterward); Layla and Google Gemini do reactive single-swaps via chat. A structured
+  "N candidate days, approve/swap" UI is a **differentiator, not parity**.
+- Wanderlog's data = Google Places (ratings/hours/price level) + mention-count aggregation
+  across ~21 travel blogs. **Star ratings/reviews are structurally unfree** (Google's paid
+  API; OSM has none; Yelp's free tier forbids persisting reviews). Deep-link to the place's
+  Google Maps page instead.
+- Wanderlog's AI was caught serving stale training-data facts (Hagia Sophia listed as free
+  museum; it's a ~€25 mosque since 2020) — vindicates this project's grounding rule (§4).
+- Wanderlog free tier also has: checklists/packing lists, place notes, custom pin
+  colors/icons, weather, browser extension, place photos. Pro ($39.99/yr) adds: unlimited AI
+  messages, route optimization, offline maps, export route to Google Maps, Gmail auto-scan,
+  unlimited attachments, flight/car deal alerts, live flight tracking, dark mode.
+- **Wanderlog gaps (differentiator opportunities, confirmed):** no calendar/ICS export at any
+  tier; no whole-trip duplication/cloning (confirmed via its founders' own forum replies).
+- Pro features that are **free to build at personal scale**: offline access (PWA
+  service-worker caching of viewed data), unlimited attachments, route optimization
+  (travel-time TSP over a day's stops), dark mode.
+
 ## 4. Decisions taken with the user
 
 | Decision | Choice | Rationale |
@@ -199,6 +275,19 @@ the proxy would never run and the page would be **public** — while holding enc
 | Thin coverage | **Coverage indicator, degrade honestly** | Never render an empty panel that looks broken. Falls back to OSM-places-only, which works globally. |
 | "Multiple options per day" | **Saved-places tray first** | Multi-candidate day generation is a later milestone that composes from the tray. |
 | Scope | **One vertical slice, end to end** | Prove the free-data stack before building UI on top of it. |
+
+Second decision round (2026-08-19, after the research in §3.8–3.10):
+
+| Decision | Choice | Rationale |
+| --- | --- | --- |
+| Milestone 1 | **Approved as written**, open questions resolved per §9 | — |
+| Transit (M2) | **Transitous primary, Google/Apple deep links fallback, prose + nearest station last resort** | Keyless, verified live in Tokyo (§3.8); slots before the AI layer because it needs no settings route. |
+| AI providers (M3) | **BYOK: OpenRouter default + Groq second** | Both ToS-clean for third-party apps and EEA (§3.9). User requirement: key entry/edit must be easy. Gemini-direct stays blocked (§3.4). |
+| Day generation (M4) | **Guided questionnaire → 2–3 grounded candidate day plans; algorithmic path when keyless** | User wants day-trip style ("what to do in Shibuya for a day"), focus weights incl. food, iconic sights, and off-the-beaten-path/unique finds. Grounding rule unchanged. |
+| QoL pack (M5) | **All eight features** | Checklists, day notes, weather, ICS export, trip clone, pin colors, group voting, dark mode. |
+| Attachments storage (M6) | **Postgres `bytea` + per-file cap + per-trip total cap** | No new service. Encryption-at-rest required before allowing identity documents. |
+| Browser extension | **Later milestone (M7)**, not dropped | Highest-effort item; most direct hit on "never open another tab". |
+| Skipped | Flight/hotel price APIs, live flight tracking, Gmail auto-scan, imported reviews/ratings | All need paid APIs or heavy compliance; deep-link out instead (§8). |
 
 ## 5. Milestone 1 plan
 
@@ -301,7 +390,8 @@ include places, and a test asserts the shared payload contains none. Add a comme
 longer needs. The one new route, `/trips/[id]/places`, falls inside the existing
 `matcher: ['/trips/:path*']` and is auth-gated with no proxy change.
 
-Milestone 2 **must** extend the matcher before any settings route ships. See §3.6.
+M3 (the first milestone with a settings route — see §8) **must** extend the matcher before
+that route ships. See §3.6.
 
 ### 5.8 UI
 
@@ -379,27 +469,101 @@ npm run lint && npm run format:check && npm run test && npm run test:e2e && npm 
 - **Gemini free tier is unusable for EEA/UK/CH users** — quote the ToS clause from §3.4 so this
   is not rediscovered. Milestone 2 defaults to OpenRouter.
 
-## 8. Deferred
+## 8. Roadmap — decided milestones (M2–M7)
 
-- **Milestone 2 — synthesis layer.** OpenRouter + Gemini BYO key, encrypted at rest (AES-256-GCM
-  via node `crypto`, no new dependency), behind a `/settings` route. Requires the `src/proxy.ts`
-  matcher fix in §3.6 **before** it ships.
-- **Milestone 3 — multi-candidate day generation**, composing from the tray built here.
-- **Transit routing is not solved at $0.** Mapbox Directions has no transit profile. v1 answers
-  "how do I get around" with Wikivoyage's *Get around* section plus the nearest OSM station.
-  True A→B transit routing may not be free at all and deserves its own decision rather than
-  being half-shipped.
-- Wikipedia enrichment, place photos, drag-and-drop reordering.
+M1 (this document's §5) is the only milestone planned to execution detail. **Each later
+milestone needs its own planning pass at execution time** — verify APIs live again (per §3.7's
+lesson: don't write third-party API shapes from training memory), then plan, then build.
+Sequence and scope below are decided; internals are not.
 
-## 9. Open questions for the next session
+### M2 — "How do I get there": transit routing
 
-1. **Wikivoyage page-title resolution.** `Trip.destinations` is a free-text `String[]`. "Fukuoka"
-   resolves cleanly; "Fukuoka, Japan" or "Hakata" may not. Needs a search/normalise step against
-   the MediaWiki search API, and a decision on what to do when a destination has no page.
-2. **Overpass query category mapping.** OSM tags (`amenity=restaurant`, `tourism=museum`, …) need
-   mapping onto the app's fixed `Activity.category` vocabulary
-   (Food | Transport | Lodging | Sightseeing | Other). Not yet designed.
-3. **Wikitext rendering.** Wikivoyage sections come back as raw wikitext with templates and
-   markup. Decide between stripping to plain text, minimal parsing, or `action=parse`'s HTML
-   output — the last is easiest but needs sanitising before rendering.
-4. Whether the guide panel belongs on the Places route or on the trip page itself.
+- `src/lib/research/transitous.ts` following the house pattern (server-only, never throws,
+  module-level cache, timeout): `planJourney(from, to, when)` against
+  `https://api.transitous.org/api/` (MOTIS v2). Send `User-Agent` identifying the app + contact
+  email. Best-effort service — every call must degrade gracefully.
+- Fallback chain: Transitous → "Open in Google Maps" / "Open in Apple Maps" deep-link buttons
+  (also shown as permanent secondary actions next to any result) → Wikivoyage *Get around*
+  prose + nearest OSM station (already built in M1).
+- Visible attribution: `transitous.org/sources/` + OSM.
+- Before shipping: spot-check coverage on non-Tokyo routes (Kyoto, Osaka, a rural JP town, 2–3
+  EU cities); send the courtesy email to Transitous maintainers.
+- Keyless → no settings route, no proxy change. ADR: "Transitous for transit routing; Google
+  Routes API rejected (billing-card requirement + Google-map display ToS vs. Mapbox)".
+
+### M3 — BYOK AI layer
+
+- **Prerequisite, do first:** extend the `src/proxy.ts` matcher before any `/settings` route
+  exists (§3.6), plus in-action `currentUserId()` guard as defence in depth.
+- Providers: **OpenRouter default, Groq second** — one function, provider branch on key prefix.
+  Keys encrypted at rest (AES-256-GCM via node `crypto`, no new dependency). Handle 429s;
+  never hardcode rate limits (§3.7).
+- **User requirement: key setup must be easy** — paste/edit/remove key in `/settings` with a
+  "test key" button and plain-language pointers to where each provider issues keys. App docs
+  must tell OpenRouter users to keep the train-on-inputs/publish-prompts toggles off (§3.9).
+- Grounding rule holds: the model reformats/summarizes retrieved OSM/Wikivoyage content; no
+  user-visible fact may be model-generated (ADR from §7).
+
+### M4 — Guided multi-option day generation (the differentiator — see §3.10)
+
+- Input is a short **questionnaire, not a blank chat**: area ("Shibuya", "day trip from
+  Fukuoka"), focus weights (food / iconic sights / off-the-beaten-path & unique finds /
+  shopping / nature), pace (packed vs. relaxed), budget level.
+- Output: **2–3 candidate day plans**, each a sequenced list of real places drawn from the
+  saved tray + OSM search + Wikivoyage guide. Accept a candidate wholesale into the itinerary,
+  or swap individual slots from other candidates/the tray.
+- With a BYOK key: the LLM does selection, sequencing, and "why this is unique" blurbs —
+  grounded in retrieved data only. "Off the beaten path" = prompt it to favor places absent
+  from the guide's headline *See* items.
+- Without a key: algorithmic candidates — proximity clustering + travel-time ordering (the
+  same math as Wanderlog's *paywalled* route optimization). Both paths ship; keyless users
+  are not locked out.
+
+### M5 — Quality-of-life pack (all free-to-build; can be split into small PRs)
+
+Checklists/packing lists · notes per day (per-place notes exist from M1's `Place.notes`) ·
+weather via **Open-Meteo** (keyless, forecast + historical, house fetch pattern) · **ICS
+export** (RFC 5545, ~dozens of lines — Wanderlog lacks this entirely) · **trip
+duplication/clone** incl. clone-from-`/shared/[token]` (Wanderlog lacks this too; cloning must
+copy only what the sharing boundary already exposes) · custom pin colors/icons (extend
+`Map.tsx` pin props) · group voting/reactions on activities · dark mode (Tailwind toggle).
+
+### M6 — Offline PWA + attachments
+
+- Offline: service worker + IndexedDB caching of already-viewed itinerary, notes, and map
+  tiles. "What you've looked at stays available" — not region downloads.
+- Attachments: **Postgres `bytea`** with a per-file size cap **and a per-trip total cap**
+  (user decision). No identity documents until encryption-at-rest is added.
+
+### M7 — Browser extension
+
+MV3 extension: save a place to a trip from any webpage via the app's own API; geocode via
+Nominatim (fits existing OSM usage). Highest-effort item; most direct hit on the "never open
+another tab" goal.
+
+### Explicitly skipped (deep-link out instead)
+
+- Hotel/flight price comparison → pre-filled Google Flights/Kayak links. Real integration
+  needs paid affiliate/GDS APIs.
+- Live flight tracking → link to FlightAware/Google flight status.
+- Gmail auto-scan → Google OAuth sensitive-scope compliance isn't worth it; manual
+  forward-and-parse can ride on M3's LLM later.
+- Imported reviews/ratings → structurally unfree (§3.10); deep-link to the place's Google
+  Maps page.
+- Still unscheduled: Wikipedia enrichment, place photos (Wikimedia Commons is the $0 source
+  when wanted), drag-and-drop reordering.
+
+## 9. Formerly-open questions — RESOLVED (user-approved defaults, 2026-08-19)
+
+1. **Wikivoyage page-title resolution:** one MediaWiki search call
+   (`action=query&list=search`) on the free-text destination, take the top hit; no hit →
+   `coverage: 'none'` and the existing honest-degrade path. No new UI.
+2. **Overpass → category mapping:** small static lookup table (~15 lines):
+   `amenity=restaurant|cafe|fast_food|bar → Food`,
+   `tourism=museum|attraction|viewpoint|gallery → Sightseeing`,
+   `railway=station` / `highway=bus_stop → Transport`,
+   `tourism=hotel|hostel|guest_house → Lodging`, everything else → Other.
+3. **Wikitext rendering:** strip to plain text (drop templates, unwrap links). `action=parse`
+   HTML would need a sanitizer (new dependency or XSS risk); the payload is prose with prices,
+   which survives plain text fine. Revisit only if it reads badly.
+4. **Guide panel location:** the Places route, as §5.8 already says.
