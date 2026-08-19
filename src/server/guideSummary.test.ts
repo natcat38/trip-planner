@@ -129,7 +129,10 @@ describe('summarizeGuide', () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
     vi.mocked(getGuide).mockResolvedValue(guide);
-    vi.mocked(complete).mockResolvedValue('A short summary.');
+    vi.mocked(complete).mockResolvedValue({
+      text: 'A short summary.',
+      truncated: false,
+    });
 
     const result = await summarizeGuide('trip-1');
 
@@ -154,6 +157,66 @@ describe('summarizeGuide', () => {
     expect(user).toContain('Fukuoka Tower');
   });
 
+  it('flags a truncated completion instead of presenting a half-sentence', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
+    vi.mocked(getGuide).mockResolvedValue(guide);
+    // finish_reason 'length' — the model stopped at the output cap mid-thought.
+    vi.mocked(complete).mockResolvedValue({
+      text: 'This area is located next to',
+      truncated: true,
+    });
+
+    const result = await summarizeGuide('trip-1');
+
+    expect(result).toHaveProperty('text');
+    expect('text' in result && result.text).toMatch(/cut short/i);
+    // The partial text is still shown — it's real, just incomplete.
+    expect('text' in result && result.text).toContain(
+      'This area is located next to',
+    );
+  });
+
+  it('asks the model for plain text, not markdown', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
+    vi.mocked(getGuide).mockResolvedValue(guide);
+    vi.mocked(complete).mockResolvedValue({ text: 'ok', truncated: false });
+
+    await summarizeGuide('trip-1');
+
+    // Raw markdown rendered as plain text is what the user actually saw
+    // first time round: literal ### and ** in the output.
+    const system = vi.mocked(complete).mock.calls[0][2];
+    expect(system).toMatch(/plain text/i);
+    expect(system).toMatch(/no markdown/i);
+  });
+
+  it('a verbose section does not starve the later ones', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
+    vi.mocked(getGuide).mockResolvedValue({
+      title: 'Fukuoka',
+      url: '',
+      coverage: 'good',
+      sections: {
+        ...emptyGuideSections(),
+        eat: 'x'.repeat(50_000),
+        getAround: 'An all-day subway pass costs ¥640.',
+      },
+    });
+    vi.mocked(complete).mockResolvedValue({ text: 'ok', truncated: false });
+
+    await summarizeGuide('trip-1');
+
+    // Before the per-section budget, Fukuoka's Eat section consumed the whole
+    // allowance and Get around — where the fares live, one of the three
+    // questions this product answers — never reached the model at all.
+    const [, , , user] = vi.mocked(complete).mock.calls[0];
+    expect(user).toContain('Get around');
+    expect(user).toContain('¥640');
+  });
+
   it('truncates over-long guide text before sending it to the model', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
@@ -164,12 +227,16 @@ describe('summarizeGuide', () => {
       coverage: 'good',
       sections: { ...emptyGuideSections(), eat: longText },
     });
-    vi.mocked(complete).mockResolvedValue('A short summary.');
+    vi.mocked(complete).mockResolvedValue({
+      text: 'A short summary.',
+      truncated: false,
+    });
 
     await summarizeGuide('trip-1');
 
     const [, , , user] = vi.mocked(complete).mock.calls[0];
-    expect(user.length).toBeLessThan(longText.length);
+    // Per-section budget is 2000 chars; allow headroom for headings only.
+    expect(user.length).toBeLessThan(3000);
     // Sane, documented cap rather than an untruncated 50,000-char blob.
     expect(user.length).toBeLessThanOrEqual(6000);
   });

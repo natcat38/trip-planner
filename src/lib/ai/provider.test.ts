@@ -112,7 +112,7 @@ describe('complete', () => {
       'user prompt',
     );
 
-    expect(result).toBe('The answer is 42.');
+    expect(result).toEqual({ text: 'The answer is 42.', truncated: false });
   });
 
   it('returns null for an empty choices array', async () => {
@@ -147,6 +147,45 @@ describe('complete', () => {
 
     expect(result).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('complete output limits', () => {
+  it('sends an explicit max_tokens so the provider default cannot clip the answer', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(200, {
+        choices: [{ message: { content: 'hi' }, finish_reason: 'stop' }],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await complete('gsk_test', 'm', 'sys', 'usr');
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.max_tokens).toBeGreaterThan(0);
+  });
+
+  it('reports truncated when the model stopped at the output cap', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(200, {
+          choices: [
+            {
+              message: { content: 'This area is located next to' },
+              finish_reason: 'length',
+            },
+          ],
+        }),
+      ),
+    );
+
+    const result = await complete('gsk_test', 'm', 'sys', 'usr');
+
+    expect(result).toEqual({
+      text: 'This area is located next to',
+      truncated: true,
+    });
   });
 });
 

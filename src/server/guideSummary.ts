@@ -29,19 +29,22 @@ const SYSTEM_PROMPT = `You reformat and condense travel guide text. Rules:
 - Use only facts that appear in the guide text the user gives you. Do not add attractions, prices, opening hours, or recommendations from your own knowledge.
 - If the text doesn't mention something, say nothing about it. Do not fill the gap.
 - Reproduce any prices exactly as they appear in the text. Never compute, estimate, or average a price.
-- Write a short, readable summary organized by section.`;
+- Write a short, readable summary organized by section.
+
+Format: plain text only. No markdown — no #, no **, no backticks, no bullet characters. Write a short heading line for each section, then ordinary sentences. Keep it under 400 words.`;
 
 // Guide sections can run to tens of thousands of characters — Fukuoka's five
-// sections combined strip down to ~28,000 chars, and Lisbon's "Get around"
-// section alone runs ~15,000 (see wikivoyage.ts's coverage-threshold
-// comment, calibrated against the same live pages). Sending that whole blob
-// risks silently exceeding the model's context window, which just comes
-// back as a null completion from complete() and looks like an unrelated
-// bug rather than an oversized request. 6,000 characters (roughly 1,500
-// tokens) is comfortably inside every free-tier chat model's context window
-// on both providers while still giving the model a real guide's worth of
-// prose to summarize.
-const MAX_INPUT_CHARS = 6000;
+// sections combined strip down to ~28,000, and Lisbon's "Get around" alone to
+// ~15,000 (see wikivoyage.ts's coverage-threshold comment, calibrated against
+// the same live pages). Sending the whole blob risks exceeding the model's
+// context window, which comes back as a null completion and looks like an
+// unrelated bug.
+//
+// The budget is PER SECTION, not one pool, and that matters: Fukuoka's "Eat"
+// section alone will happily eat a whole shared budget, leaving "Get around" —
+// where the transit fares live, one of the three questions this product exists
+// to answer — never sent to the model at all. Observed live before this split.
+const MAX_SECTION_CHARS = 2000;
 
 const NO_KEY_ERROR = 'Add an API key in Settings to use AI features.';
 const NO_MODEL_ERROR = 'Choose an AI model in Settings to use AI features.';
@@ -64,13 +67,26 @@ const SECTION_ORDER: { key: keyof Guide['sections']; label: string }[] = [
 function buildGuideText(guide: Guide): string {
   const sections = SECTION_ORDER.map(({ key, label }) => {
     const text = guide.sections[key];
-    return text ? `## ${label}\n${text}` : null;
+    return text ? `## ${label}\n${clip(text, MAX_SECTION_CHARS)}` : null;
   }).filter((section): section is string => section != null);
   return `# ${guide.title}\n\n${sections.join('\n\n')}`;
 }
 
-function truncate(text: string): string {
-  return text.length > MAX_INPUT_CHARS ? text.slice(0, MAX_INPUT_CHARS) : text;
+// Cuts at a paragraph, then sentence, boundary rather than mid-word. A section
+// that stops halfway doesn't just read badly — the model narrates the cut. Seen
+// live before this: a summary ending "Nakasu is an area next to the text's
+// cutoff point", which reads like a bug and invites the model to guess at what
+// followed, exactly the invention ADR-0008 forbids.
+function clip(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+  const clipped = text.slice(0, limit);
+  const boundary = Math.max(
+    clipped.lastIndexOf('\n\n'),
+    clipped.lastIndexOf('. '),
+  );
+  // Only honour a boundary in the last quarter, otherwise we'd discard most of
+  // the section chasing a tidy cut.
+  return boundary > limit * 0.75 ? clipped.slice(0, boundary + 1) : clipped;
 }
 
 export async function summarizeGuide(
@@ -88,10 +104,18 @@ export async function summarizeGuide(
   const guide = await getGuide(destination);
   if (!guide || guide.coverage === 'none') return { error: NO_GUIDE_ERROR };
 
-  const guideText = truncate(buildGuideText(guide));
+  const guideText = buildGuideText(guide);
 
   const result = await complete(key.key, key.model, SYSTEM_PROMPT, guideText);
   if (!result) return { error: COMPLETE_FAILED_ERROR };
 
-  return { text: result };
+  // Say so rather than presenting a half-sentence as if it were the whole
+  // answer — the model stopped at the output cap, it didn't finish.
+  return {
+    text: result.truncated
+      ? `${result.text}
+
+[Summary cut short — the model reached its output limit.]`
+      : result.text,
+  };
 }

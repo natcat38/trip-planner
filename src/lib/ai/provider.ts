@@ -25,6 +25,9 @@ const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
 // is generation, not an index lookup) — 30s gives a real model room to finish without hanging a
 // request indefinitely.
 const REQUEST_TIMEOUT_MS = 30_000;
+// Generous enough for a multi-section guide summary. Providers' own defaults
+// are often far smaller, which silently clips the answer mid-sentence.
+const MAX_OUTPUT_TOKENS = 1500;
 
 function baseUrlFor(provider: AiProvider): string {
   return provider === 'groq' ? GROQ_BASE : OPENROUTER_BASE;
@@ -120,7 +123,13 @@ export async function listModels(
 }
 
 interface ChatCompletionResponse {
-  choices?: { message?: { content?: string } }[];
+  choices?: { message?: { content?: string }; finish_reason?: string }[];
+}
+
+export interface Completion {
+  text: string;
+  /** The model hit the output cap mid-thought; the text is incomplete. */
+  truncated: boolean;
 }
 
 export async function complete(
@@ -128,7 +137,7 @@ export async function complete(
   model: string,
   system: string,
   user: string,
-): Promise<string | null> {
+): Promise<Completion | null> {
   const provider = detectProvider(apiKey);
   if (!provider) return null;
 
@@ -140,13 +149,21 @@ export async function complete(
         { role: 'system', content: system },
         { role: 'user', content: user },
       ],
+      // Without this the model uses whatever default the provider picks, which
+      // is often small enough to stop a summary mid-sentence. Observed live:
+      // a Fukuoka summary cut off at "This area is located next to".
+      max_tokens: MAX_OUTPUT_TOKENS,
     }),
   });
   if (!result || result.status !== 200) return null;
 
-  const content = (result.body as ChatCompletionResponse | null)?.choices?.[0]
-    ?.message?.content;
-  return typeof content === 'string' && content.length > 0 ? content : null;
+  const choice = (result.body as ChatCompletionResponse | null)?.choices?.[0];
+  const content = choice?.message?.content;
+  if (typeof content !== 'string' || content.length === 0) return null;
+
+  // finish_reason 'length' means the model was still going when it hit the cap.
+  // Callers surface that rather than presenting a half-sentence as the answer.
+  return { text: content, truncated: choice?.finish_reason === 'length' };
 }
 
 // Dedicated, idempotent, zero-cost credential-check endpoints — deliberately not
