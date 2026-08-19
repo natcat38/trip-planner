@@ -7,6 +7,7 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -23,9 +24,12 @@ jobs:
     env:
       DATABASE_URL: postgresql://trip:trip@localhost:5432/trip_planner
       AUTH_SECRET: ci-test-secret-not-used-in-production
+      # Auth.js only auto-trusts the Host header in dev or on Vercel; e2e runs
+      # `next start` on a bare runner, which is neither. Never set on Vercel.
+      AUTH_TRUST_HOST: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: npm
@@ -36,7 +40,7 @@ jobs:
       - run: node scripts/gen-file-map.mjs --check
       - run: npx prisma migrate deploy
       - run: npm run test:coverage
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --only-shell chromium
       - run: npm run test:e2e
 
   deploy:
@@ -46,8 +50,8 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: npm
