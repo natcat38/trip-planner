@@ -18,11 +18,13 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]` | 8 | The single-trip route: itinerary days/activities and the multi-currency budget roll-up for one trip, every page here reached only via `requireTripAccess(tripId)` so a trip's nested resources can't be accessed by their own id alone. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/edit` | 1 | The trip edit/delete route: loads a trip via `requireTripAccess`, then binds its `updatedAt` into the update action so a stale-write attempt is rejected per the optimistic-locking rule (ADR-0003). |
+| `src/app/trips/[id]/places` | 3 | Server Actions for the Places route: save an OSM search result onto the trip, edit a saved place's notes/cost, delete it, or promote it onto a Day as an Activity. |
 | `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
 | `src/components` | 1 | Shared presentational components used across trip pages: currently the Mapbox pin map that plots an itinerary's geocoded activity places. |
 | `src/lib` | 5 | Framework-agnostic helpers shared across app and server code: money as integer minor units + ISO 4217 currency (this file), env var validation, currency-conversion (fx), geocoding, and the Prisma client instance. |
-| `src/server` | 7 | Trip sharing: a public read-only link (Trip.shareToken) and named Collaborators (TripCollaborator, invited by email, explicitly accepted or declined — no separate accept/decline table, just a status column). |
+| `src/lib/research` | 2 | Free, keyless destination-research data sources — currently OpenStreetMap via the Overpass API. |
+| `src/server` | 8 | The saved-places research tray (Phase 3 M1): search OpenStreetMap for nearby places, save the ones worth keeping onto a trip, and promote a saved place onto a Day as an Activity without re-geocoding it. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-14 source directories, 38 files, 0 without a declared purpose.
+16 source directories, 44 files, 0 without a declared purpose.

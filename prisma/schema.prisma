@@ -73,6 +73,7 @@ model Trip {
   days          Day[]
   expenses      Expense[]
   collaborators TripCollaborator[]
+  places        Place[]
 
   @@index([userId])
 }
@@ -102,10 +103,13 @@ model Activity {
   costMinor    Int? // in costCurrency MINOR units
   costCurrency String? // ISO 4217 of the original cost
   sortOrder    Int
+  placeId      String?
   updatedAt    DateTime @updatedAt
   day          Day      @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  place        Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   @@index([dayId])
+  @@index([placeId])
 }
 
 model Expense {
@@ -119,6 +123,33 @@ model Expense {
   updatedAt    DateTime @updatedAt
   trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
+  @@index([tripId])
+}
+
+model Place {
+  id           String     @id @default(cuid())
+  tripId       String
+  source       String // "osm" | "manual"
+  sourceId     String? // e.g. "node/1234567"
+  name         String
+  lat          Float
+  lng          Float
+  category     String // same vocabulary as Activity.category
+  cuisine      String?
+  openingHours String?
+  website      String?
+  phone        String?
+  notes        String? // user's own research notes
+  // Integer minor units + ISO 4217 per CLAUDE.md. Never a float.
+  // User-entered: a price they read in the guide. No source gives this programmatically.
+  costMinor    Int?
+  costCurrency String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  trip         Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities   Activity[]
+
+  @@unique([tripId, source, sourceId])
   @@index([tripId])
 }
 

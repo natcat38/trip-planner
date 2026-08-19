@@ -66,6 +66,8 @@ export async function ensureDaysForTrip(tripId: string) {
 export interface ActivityInput {
   title: string;
   placeName?: string;
+  lat?: number;
+  lng?: number;
   startTime?: string;
   endTime?: string;
   category: string;
@@ -107,7 +109,15 @@ async function resolveActivityData(
   let lat = existing?.lat ?? null;
   let lng = existing?.lng ?? null;
 
-  if (placeName !== (existing?.placeName ?? null)) {
+  if (input.lat != null && input.lng != null) {
+    // Already-known coordinates (e.g. a saved OSM place) — trust them instead
+    // of firing a Mapbox text geocode that could resolve elsewhere. Checked
+    // before the placeName comparison, not inside it: coordinates supplied by
+    // the caller must be honoured even when placeName is blank or unchanged,
+    // otherwise they'd be silently dropped and the pin would go missing.
+    lat = input.lat;
+    lng = input.lng;
+  } else if (placeName !== (existing?.placeName ?? null)) {
     const result = placeName ? await geocode(placeName) : null;
     lat = result?.lat ?? null;
     lng = result?.lng ?? null;

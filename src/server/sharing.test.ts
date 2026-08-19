@@ -333,6 +333,29 @@ describe('getSharedTrip', () => {
       InvalidShareLinkError,
     );
   });
+
+  it('exposes no places in the shared payload', async () => {
+    vi.mocked(db.trip.findUnique).mockResolvedValue(sharedTrip as never);
+    vi.mocked(db.day.findMany).mockResolvedValue([] as never);
+
+    const result = await getSharedTrip('abc123');
+
+    // The saved-places research tray is a planning workspace, not published
+    // output, so it must never reach the public share payload. Assert the
+    // exact query args (not just the returned shape) so this fails the
+    // moment someone adds `places: true` to the include, even before any
+    // fixture data would surface it.
+    expect(result).not.toHaveProperty('places');
+    expect(result.trip).not.toHaveProperty('places');
+    expect(db.trip.findUnique).toHaveBeenCalledWith({
+      where: { shareToken: 'abc123' },
+    });
+    expect(db.day.findMany).toHaveBeenCalledWith({
+      where: { tripId: 'trip-1' },
+      orderBy: { date: 'asc' },
+      include: { activities: { orderBy: { sortOrder: 'asc' } } },
+    });
+  });
 });
 
 describe('getSharedBudgetSummary', () => {
