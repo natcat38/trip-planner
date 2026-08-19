@@ -173,7 +173,14 @@ export function ItineraryDays({
                       </div>
                     </li>
                     {showTransitLeg && (
+                      // Keyed on BOTH endpoints so reordering or deleting an
+                      // activity remounts this leg. Without it React keeps the
+                      // component (the Fragment's key and the position are
+                      // unchanged) and useActionState holds the journeys
+                      // fetched for the previous destination — a real route,
+                      // shown against the wrong leg.
                       <TransitLeg
+                        key={`${activity.id}-${nextActivity.id}`}
                         tripId={tripId}
                         from={{
                           activityId: activity.id,

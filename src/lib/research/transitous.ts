@@ -110,9 +110,13 @@ let breakerOpenedAt: number | null = null;
 function breakerIsOpen(now: number): boolean {
   if (breakerOpenedAt == null) return false;
   if (now - breakerOpenedAt >= BREAKER_COOLDOWN_MS) {
-    // Cooldown elapsed: half-open — let the next call through and judge by its outcome.
+    // Cooldown elapsed: half-open — let the next call through and judge by its outcome. The
+    // failure count is left one short of the threshold rather than reset to zero, so a failed
+    // trial re-opens the breaker immediately. Resetting to zero would grant a full fresh run of
+    // attempts every cooldown, which is exactly the pile-on this layer exists to prevent.
+    // recordSuccess() clears it properly when the trial actually succeeds.
     breakerOpenedAt = null;
-    consecutiveFailures = 0;
+    consecutiveFailures = BREAKER_FAILURE_THRESHOLD - 1;
     return false;
   }
   return true;
@@ -148,11 +152,13 @@ interface PlanApiLeg {
   agencyName?: string;
 }
 
+// Every field optional: this describes an external response reached through an `as` cast, so
+// treating any of it as guaranteed is wishful. Defaults are applied in toJourney.
 interface PlanApiItinerary {
-  duration: number;
-  startTime: string;
-  endTime: string;
-  transfers: number;
+  duration?: number;
+  startTime?: string;
+  endTime?: string;
+  transfers?: number;
   legs?: PlanApiLeg[];
 }
 
@@ -191,10 +197,12 @@ function resolveLine(leg: PlanApiLeg): string | null {
 // not read here is garbage collected with the response, not retained.
 function toJourney(itinerary: PlanApiItinerary): Journey {
   return {
-    durationSeconds: itinerary.duration,
-    transfers: itinerary.transfers,
-    startTime: itinerary.startTime,
-    endTime: itinerary.endTime,
+    // Defaulted like the leg fields below: a missing duration would otherwise reach the UI as
+    // undefined and render as the literal text "NaN min".
+    durationSeconds: itinerary.duration ?? 0,
+    transfers: itinerary.transfers ?? 0,
+    startTime: itinerary.startTime ?? '',
+    endTime: itinerary.endTime ?? '',
     legs: (itinerary.legs ?? []).map((leg) => ({
       mode: leg.mode,
       from: leg.from?.name ?? '',

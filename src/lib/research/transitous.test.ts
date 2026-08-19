@@ -311,6 +311,50 @@ describe('planJourney', () => {
       expect(afterCooldown).toEqual([]);
       expect(fetchMock).toHaveBeenCalledTimes(4);
     });
+
+    it('re-opens immediately when the half-open trial also fails', async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new Error('down'));
+      vi.stubGlobal('fetch', fetchMock);
+
+      for (let i = 0; i < 3; i++) await planJourney(TOKYO, TOKYO_TOWER, WHEN);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+
+      vi.setSystemTime(new Date(Date.now() + 61_000));
+
+      // The one trial request the cooldown earns — and it fails.
+      expect(await planJourney(TOKYO, TOKYO_TOWER, WHEN)).toBeNull();
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+
+      // A still-dead service must not now get another full run of attempts:
+      // the failed trial re-opens the breaker on its own.
+      expect(await planJourney(TOKYO, TOKYO_TOWER, WHEN)).toBeNull();
+      expect(await planJourney(TOKYO, TOKYO_TOWER, WHEN)).toBeNull();
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+    });
+
+    it('a successful half-open trial fully resets the failure count', async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new Error('down'));
+      vi.stubGlobal('fetch', fetchMock);
+
+      for (let i = 0; i < 3; i++) await planJourney(TOKYO, TOKYO_TOWER, WHEN);
+      vi.setSystemTime(new Date(Date.now() + 61_000));
+
+      fetchMock.mockResolvedValue(jsonResponse({ itineraries: [] }));
+      expect(await planJourney(TOKYO, TOKYO_TOWER, WHEN)).toEqual([]);
+
+      // Recovered: the count is back to zero, so the next two failures are
+      // still attempted rather than being cut off. A healthy service must not
+      // sit one bad request away from the breaker, which is what would happen
+      // if the half-open trial's success left the count near the threshold.
+      fetchMock.mockRejectedValue(new Error('blip'));
+      expect(
+        await planJourney(TOKYO, { lat: 35.7, lng: 139.8 }, WHEN),
+      ).toBeNull();
+      expect(
+        await planJourney(TOKYO, { lat: 35.71, lng: 139.81 }, WHEN),
+      ).toBeNull();
+      expect(fetchMock).toHaveBeenCalledTimes(6);
+    });
   });
 
   describe('cache', () => {
