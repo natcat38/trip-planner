@@ -238,6 +238,24 @@ describe('searchPlaces', () => {
     ]);
   });
 
+  it('returns [] rather than throwing when a param is not a string', async () => {
+    // Next hands searchParams values as string[] when a key is repeated, and
+    // the never-throws contract has to hold for query building too, not just
+    // for the network call.
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ elements: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await searchPlaces({
+      lat: 1,
+      lng: 1,
+      radius: 500,
+      query: ['a', 'b'] as unknown as string,
+    });
+
+    expect(result).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('escapes regex metacharacters in the search term so it stays a literal search', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ elements: [] }));
     vi.stubGlobal('fetch', fetchMock);

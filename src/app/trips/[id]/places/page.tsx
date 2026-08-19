@@ -27,6 +27,10 @@ export const maxDuration = 60;
 
 const SEARCH_RADIUS_M = 1500;
 
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 const GUIDE_SECTIONS: { key: keyof Guide['sections']; label: string }[] = [
   { key: 'eat', label: 'Eat' },
   { key: 'see', label: 'See' },
@@ -162,10 +166,14 @@ export default async function PlacesPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id: tripId } = await params;
-  const { q, category } = await searchParams;
+  // Next hands back an array when a key is repeated (?q=a&q=b), so collapse to
+  // one value rather than letting an array through as if it were a string.
+  const raw = await searchParams;
+  const q = firstParam(raw.q);
+  const category = firstParam(raw.category);
 
   let trip;
   let days;

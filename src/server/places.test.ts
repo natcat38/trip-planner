@@ -160,6 +160,25 @@ describe('searchPlaces', () => {
 });
 
 describe('savePlace', () => {
+  it('rejects a blank name', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    // Reachable from a crafted Server Action POST — the page's own hidden
+    // inputs always carry a name. Persisting a blank one would later promote
+    // into a titleless, unpinned Activity.
+    await expect(
+      savePlace('trip-1', {
+        source: 'manual',
+        name: '   ',
+        lat: 0,
+        lng: 0,
+        category: 'Food',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.place.create).not.toHaveBeenCalled();
+    expect(db.place.upsert).not.toHaveBeenCalled();
+  });
+
   it('rejects a negative cost amount', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
 

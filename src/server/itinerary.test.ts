@@ -226,6 +226,32 @@ describe('createActivity', () => {
     );
   });
 
+  it('honours supplied lat/lng even when there is no placeName', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+
+    // A blank placeName leaves placeName === null, which matches the "no
+    // existing place" default — so gating the passthrough on that comparison
+    // used to drop the coordinates silently and lose the pin.
+    await createActivity('trip-1', 'day-1', {
+      title: 'Picnic spot',
+      category: 'Other',
+      lat: 35.6586,
+      lng: 139.7454,
+    });
+
+    expect(geocode).not.toHaveBeenCalled();
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }),
+      }),
+    );
+  });
+
   it('stores null lat/lng when geocoding finds nothing, without throwing', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);

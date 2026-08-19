@@ -64,6 +64,15 @@ export interface PlaceUpdateInput extends PlaceFields {
   updatedAt: Date;
 }
 
+// Server Actions hand this client-supplied FormData, so a name has to be
+// checked here rather than trusted from the hidden inputs the page renders.
+// An empty one would otherwise persist a blank tray row and, once promoted,
+// a titleless Activity with no pin (blank placeName skips the coordinate
+// passthrough in ./itinerary.ts).
+function validatePlaceName(name: string) {
+  if (!name.trim()) throw new ValidationError('Enter a name for the place.');
+}
+
 function validatePlaceCost(input: {
   costAmount?: number;
   costCurrency?: string;
@@ -100,6 +109,7 @@ function resolvePlaceFields(input: PlaceFields) {
 
 export async function savePlace(tripId: string, input: SavePlaceInput) {
   const trip = await requireTripAccess(tripId);
+  validatePlaceName(input.name);
   validatePlaceCost(input);
   const data = {
     tripId: trip.id,
@@ -137,6 +147,7 @@ export async function updatePlace(
   input: PlaceUpdateInput,
 ) {
   const place = await requirePlace(tripId, placeId);
+  validatePlaceName(input.name);
   validatePlaceCost(input);
   const result = await db.place.updateMany({
     where: { id: place.id, updatedAt: input.updatedAt },

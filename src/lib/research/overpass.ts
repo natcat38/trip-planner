@@ -163,8 +163,17 @@ async function runQuery(query: string): Promise<OverpassElement[] | null> {
 
 // Server-side only. Never throws: a bad bbox, a slow host, or both hosts being down should
 // leave the tray empty, not break the page (same fallback philosophy as ../fx.ts / ../geocode.ts).
+// Building the query counts as "not breaking the page" too — params come from URL search
+// params, so a malformed one must yield no results rather than escape as a TypeError.
 export async function searchPlaces(params: SearchParams): Promise<OsmPlace[]> {
-  const elements = await runQuery(buildSearchQuery(params));
+  let query: string;
+  try {
+    query = buildSearchQuery(params);
+  } catch {
+    return [];
+  }
+
+  const elements = await runQuery(query);
   if (!elements) return [];
 
   const places: OsmPlace[] = [];
