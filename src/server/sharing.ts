@@ -161,13 +161,17 @@ export async function getSharedTrip(token: string): Promise<{
   const days = await db.day.findMany({
     where: { tripId: trip.id },
     orderBy: { date: 'asc' },
+    // Anything added to this include becomes world-readable — see the note
+    // below.
     include: { activities: { orderBy: { sortOrder: 'asc' } } },
   });
   // This is the one read path with no session/auth gate at all, so its
   // return shape IS the public API surface — strip owner/token fields here
   // rather than relying on callers (today: a Server Component) to not leak
   // them. Don't narrow requireShareToken's own query: getSharedBudgetSummary
-  // and listSharedExpenses need the full trip row.
+  // and listSharedExpenses need the full trip row. The saved-places research
+  // tray (Trip.places) is a planning workspace, not published output — it is
+  // deliberately left out of this include and must stay that way.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit fields from the response, not to use them
   const { userId, shareToken, ...publicTrip } = trip;
   return { trip: publicTrip, days };

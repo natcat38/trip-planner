@@ -1,6 +1,8 @@
 # Phase 3 Handoff — Destination Research & Saved-Places Tray
 
-> **Status:** planned, not implemented. Nothing in this document has been built.
+> **Status:** **Milestone 1 (§5) is implemented** (2026-08-20) — see ADR-0008 and ADR-0009.
+> M2-M7 (§8) remain planned, not built; each still needs its own planning pass at execution
+> time, re-verifying third-party API shapes live rather than from training memory.
 > **Written:** 2026-08-19. **Revised same day** after a second research pass (four web-research
 > agents) and a decision round with the user: Milestone 1 is **approved as written**, its open
 > questions are resolved (§9), and §8 is now a decided M2–M7 roadmap, not a deferral list.

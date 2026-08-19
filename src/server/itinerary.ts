@@ -66,6 +66,8 @@ export async function ensureDaysForTrip(tripId: string) {
 export interface ActivityInput {
   title: string;
   placeName?: string;
+  lat?: number;
+  lng?: number;
   startTime?: string;
   endTime?: string;
   category: string;
@@ -108,9 +110,16 @@ async function resolveActivityData(
   let lng = existing?.lng ?? null;
 
   if (placeName !== (existing?.placeName ?? null)) {
-    const result = placeName ? await geocode(placeName) : null;
-    lat = result?.lat ?? null;
-    lng = result?.lng ?? null;
+    if (input.lat != null && input.lng != null) {
+      // Already-known coordinates (e.g. a saved OSM place) — trust them
+      // instead of firing a Mapbox text geocode that could resolve elsewhere.
+      lat = input.lat;
+      lng = input.lng;
+    } else {
+      const result = placeName ? await geocode(placeName) : null;
+      lat = result?.lat ?? null;
+      lng = result?.lng ?? null;
+    }
   }
 
   return {

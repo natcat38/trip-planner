@@ -14,11 +14,13 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 - [Itinerary](/domain/itinerary.md) — days and activities under a trip.
 - [Budget](/domain/budget.md) — minor-unit money + convert-on-read currency roll-up.
 - [Sharing](/domain/sharing.md) — public read-only link + invited Collaborators (Phase 2).
+- [Places](/domain/places.md) — the saved-places research tray under a trip (Phase 3).
 
 ## Integrations
 
 - [Auth & authorization](/integrations/auth.md) — Auth.js OAuth + the `requireTripAccess`/`requireTripOwner` no-bypass rule.
 - [Mapbox](/integrations/mapbox.md) — geocoding + map view, token kept server-side.
+- [Research sources](/integrations/research-sources.md) — keyless Overpass/OSM places + Wikivoyage guide prose.
 
 ## Infra
 

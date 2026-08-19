@@ -155,6 +155,77 @@ describe('createActivity', () => {
     );
   });
 
+  it('regression: geocodes as before when no lat/lng are supplied', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+    vi.mocked(geocode).mockResolvedValue({ lat: 35.6586, lng: 139.7454 });
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Tokyo Tower',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+    });
+
+    expect(geocode).toHaveBeenCalledWith('Tokyo Tower');
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }),
+      }),
+    );
+  });
+
+  it('uses supplied lat/lng verbatim and does not geocode', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Tokyo Tower',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+      lat: 35.6586,
+      lng: 139.7454,
+    });
+
+    expect(geocode).not.toHaveBeenCalled();
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }),
+      }),
+    );
+  });
+
+  it('falls back to geocoding when only one of lat/lng is supplied', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+    vi.mocked(geocode).mockResolvedValue({ lat: 35.6586, lng: 139.7454 });
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Tokyo Tower',
+      category: 'Sightseeing',
+      placeName: 'Tokyo Tower',
+      lat: 35.6586,
+    });
+
+    expect(geocode).toHaveBeenCalledWith('Tokyo Tower');
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }),
+      }),
+    );
+  });
+
   it('stores null lat/lng when geocoding finds nothing, without throwing', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
