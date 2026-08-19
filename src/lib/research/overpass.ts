@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+import { USER_AGENT } from './userAgent';
+
 export interface OsmPlace {
   id: string; // `${type}/${id}`, e.g. "node/1234567"
   name: string;
@@ -38,7 +40,6 @@ interface OverpassElement {
 
 const PRIMARY_HOST = 'https://overpass-api.de/api/interpreter';
 const MIRROR_HOST = 'https://overpass.kumi.systems/api/interpreter';
-const USER_AGENT = 'trip-planner (https://trip-planner-cyan-five.vercel.app)';
 const REQUEST_TIMEOUT_MS = 20_000;
 const QUERY_TIMEOUT_S = 20;
 const MAX_RADIUS_M = 2000;

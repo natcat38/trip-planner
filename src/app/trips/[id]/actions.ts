@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import type { Journey } from '@/lib/research/transitous';
 import {
   createActivity,
   deleteActivity,
@@ -11,6 +12,7 @@ import {
 import { createExpense, deleteExpense } from '@/server/expenses';
 import { ignoreIfMissing } from '@/server/auth-scope';
 import { StaleWriteError, ValidationError } from '@/server/errors';
+import { planJourneyBetweenActivities } from '@/server/transit';
 
 export interface ActivityFormState {
   error?: string;
@@ -120,4 +122,31 @@ export async function deleteExpenseAction(
 ): Promise<void> {
   await deleteExpense(tripId, expenseId);
   revalidatePath(`/trips/${tripId}`);
+}
+
+// `journeys` carries all three of planJourney's outcomes straight through:
+// undefined (button not yet clicked), null (Transitous wasn't/couldn't be
+// asked), [] (asked, confirmed no route), or a populated array. TransitLeg
+// renders each of those distinctly — see docs/adr/0010.
+export interface TransitFormState {
+  journeys: Journey[] | null | undefined;
+}
+
+// Deliberately a no-op read: never mutates anything, so there's nothing here
+// for CLAUDE.md's stale-write rule to apply to. Still gated through
+// planJourneyBetweenActivities -> requireActivity -> requireTripAccess on
+// every call, same as every other nested-resource access in this file.
+export async function planTransitAction(
+  tripId: string,
+  fromActivityId: string,
+  toActivityId: string,
+  _prevState: TransitFormState,
+  _formData: FormData,
+): Promise<TransitFormState> {
+  const journeys = await planJourneyBetweenActivities(
+    tripId,
+    fromActivityId,
+    toActivityId,
+  );
+  return { journeys };
 }
