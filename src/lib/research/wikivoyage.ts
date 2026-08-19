@@ -8,8 +8,9 @@
 // "average meal cost" derived from these sections; no free source supports
 // that claim (see docs/phase-3-research-layer-handoff.md §3.3).
 
+import { USER_AGENT } from './userAgent';
+
 const API_BASE = 'https://en.wikivoyage.org/w/api.php';
-const USER_AGENT = 'trip-planner (https://trip-planner-cyan-five.vercel.app)';
 const FETCH_TIMEOUT_MS = 10_000;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // mirrors fx.ts's daily refresh
 

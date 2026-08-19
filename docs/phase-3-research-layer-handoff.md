@@ -1,7 +1,8 @@
 # Phase 3 Handoff — Destination Research & Saved-Places Tray
 
-> **Status:** **Milestone 1 (§5) is implemented** (2026-08-20) — see ADR-0008 and ADR-0009.
-> M2-M7 (§8) remain planned, not built; each still needs its own planning pass at execution
+> **Status:** **Milestones 1 (§5) and 2 (§8) are implemented** (2026-08-20) — see ADR-0008,
+> ADR-0009 and ADR-0010. M2's live re-verification findings are in §10 and **correct §3.8**.
+> M3-M7 (§8) remain planned, not built; each still needs its own planning pass at execution
 > time, re-verifying third-party API shapes live rather than from training memory.
 > **Written:** 2026-08-19. **Revised same day** after a second research pass (four web-research
 > agents) and a decision round with the user: Milestone 1 is **approved as written**, its open
@@ -569,3 +570,78 @@ another tab" goal.
    HTML would need a sanitizer (new dependency or XSS risk); the payload is prose with prices,
    which survives plain text fine. Revisit only if it reads badly.
 4. **Guide panel location:** the Places route, as §5.8 already says.
+
+
+---
+
+## 10. M2 live re-verification (2026-08-20) — corrections to §3.8
+
+§3.8 was written from a research pass. Re-verifying against the live API before building found
+things it got wrong or missed. Recorded here for the same reason §3 exists.
+
+### 10.1 §3.8's conditions list was incomplete — the licence condition
+
+The Transitous usage policy requires, of any consuming application:
+
+> Make sure your source code is published under an appropriate open-source license
+
+§3.8 did not mention this at all. At the time of the M2 build the repo was **public but
+unlicensed** — legally all rights reserved, which does *not* satisfy the condition. The repo is
+now **MIT licensed** (`LICENSE` + `package.json`), and that is a prerequisite of using the API,
+not incidental housekeeping.
+
+Two further corrections: contact is via their **Matrix channel**, not email; and the policy asks
+consumers to make contact **before** using resource-intensive endpoints (it names routing as
+difficult to calculate), rather than the "courtesy email recommended" §3.8 described. The
+`User-Agent` must carry application name, **version**, and contact — the M1 modules were sending
+no version, and have been corrected.
+
+**Decision taken (see ADR-0010):** that message was deliberately **not** sent; the client
+self-throttles in code instead. This is a knowing deviation from their stated policy, accepted by
+the project owner, not an oversight.
+
+### 10.2 Coverage is per-operator, not per-city — the biggest finding
+
+§3.8 said to "spot-check non-Tokyo coverage". Doing so showed the framing itself was wrong:
+coverage does not decompose by city.
+
+| Route | Result |
+| --- | --- |
+| Tokyo Sta → Tokyo Tower | 10 itineraries (大手町 → 御成門) |
+| Osaka, Fukuoka, Lisbon, Paris, Berlin, Rome | 3–6 itineraries, real multi-modal legs |
+| Kyoto Sta → **Gion** | 5 itineraries |
+| Kyoto Sta → **Kinkaku-ji** | **0, at every time of day** |
+| Yubari (rural JP) | 0 |
+
+Kinkaku-ji is bus-served and Kyoto City Bus is not in the feed. So a city can look well covered
+via rail while its best-known sights are unreachable. **Consequence:** the fallback must trigger
+on zero results *for this route*, never on a "is this city supported" check, and the UI must say
+"no route found in this data" rather than implying no transport exists.
+
+### 10.3 Responses are ~1.8 MB and no parameter trims them
+
+A Paris route returns ~1.8 MB. Composition per leg: `alerts` 691 KB, `from` 421 KB, `tripFrom`
+199 KB, `intermediateStops` 181 KB, `steps` 116 KB. `detailedTransfers=false` and
+`numItineraries` barely move it. Geometry, the intuitive suspect, is only 7 KB.
+**Consequence:** project to a compact summary immediately and discard the rest. Anyone tempted to
+surface service alerts should measure first.
+
+### 10.4 `routeShortName` is often an internal ID, not a line name
+
+Japanese rail feeds put a numeric internal id there with an empty `routeLongName` — a leg came
+back as `routeShortName: "8478511"`, `agencyName: "都営地下鉄"`, `headsign: "日吉(神奈川県)"`.
+Rendering `routeShortName` directly would tell a traveller to board "line 8478511". Short numeric
+route numbers are legitimate elsewhere (Lisbon bus `728`), so the client resolves
+`routeLongName` → `routeShortName` (unless it looks like an internal id) → `agencyName`, and also
+projects `headsign` and `agency`, which are the genuinely useful fields.
+
+### 10.5 What shipped
+
+`transitous.ts` (five restraint layers per ADR-0010), `mapLinks.ts` (permanent Google/Apple
+deep links), `src/server/transit.ts` (takes **activity ids, not coordinates**, so the shared
+budget can't be used as a general routing proxy), and a `TransitLeg` disclosure between
+consecutive activities that fetches only on click.
+
+**Not built, deliberately:** the nearest-OSM-station rung of §8's fallback chain. `nearestStation`
+has existed unused since M1; the Wikivoyage *Get around* prose and the map deep links already
+cover the degraded path, so wiring a third rung was not justified. It remains available.
