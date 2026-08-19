@@ -23,6 +23,21 @@ model User {
   accounts      Account[]
   sessions      Session[]
   trips         Trip[]
+
+  // BYOK AI key (ADR-0011). One key per user, stored inline rather than in a
+  // separate UserApiKey table with a one-to-one back-relation — a 1:1 table
+  // is more moving parts (join, extra model, extra migration surface) for a
+  // relationship that is exactly as optional as a nullable column already
+  // expresses, and every one of these fields is null for most users. If this
+  // ever grows into multiple keys per user, split it out then.
+  // aiKeyCiphertext/aiKeyIv/aiKeyTag are AES-256-GCM parts from
+  // src/lib/crypto.ts's encryptSecret() — never a plaintext key at rest.
+  aiProvider      String? // "groq" | "openrouter"
+  aiKeyCiphertext String?
+  aiKeyIv         String?
+  aiKeyTag        String?
+  aiModel         String? // provider's live model id, e.g. "openai/gpt-oss-120b"
+  aiKeyUpdatedAt  DateTime?
 }
 
 // Auth.js Prisma adapter models (database sessions) — Google + GitHub OAuth, ADR-0004
