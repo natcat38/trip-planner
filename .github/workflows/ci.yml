@@ -24,6 +24,9 @@ jobs:
     env:
       DATABASE_URL: postgresql://trip:trip@localhost:5432/trip_planner
       AUTH_SECRET: ci-test-secret-not-used-in-production
+      # Auth.js only auto-trusts the Host header in dev or on Vercel; e2e runs
+      # `next start` on a bare runner, which is neither. Never set on Vercel.
+      AUTH_TRUST_HOST: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
