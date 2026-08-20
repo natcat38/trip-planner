@@ -8,7 +8,9 @@ import {
   deleteActivity,
   ensureDaysForTrip,
   moveActivity,
+  setActivityPinColor,
   updateActivity,
+  updateDayNotes,
 } from './itinerary';
 
 // Mocked as a plain factory (not importOriginal) so this never touches the real
@@ -24,7 +26,12 @@ vi.mock('./auth-scope', () => {
 });
 vi.mock('../lib/db', () => ({
   db: {
-    day: { findMany: vi.fn(), createMany: vi.fn(), findFirst: vi.fn() },
+    day: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      findFirst: vi.fn(),
+      updateMany: vi.fn(),
+    },
     activity: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -44,6 +51,7 @@ beforeEach(() => {
   vi.mocked(db.day.findMany).mockReset();
   vi.mocked(db.day.createMany).mockReset();
   vi.mocked(db.day.findFirst).mockReset();
+  vi.mocked(db.day.updateMany).mockReset();
   vi.mocked(db.activity.findFirst).mockReset();
   vi.mocked(db.activity.findMany).mockReset();
   vi.mocked(db.activity.create).mockReset();
@@ -94,6 +102,66 @@ describe('ensureDaysForTrip', () => {
     await ensureDaysForTrip('trip-1');
 
     expect(db.day.createMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateDayNotes', () => {
+  const day = { id: 'day-1', tripId: 'trip-1' };
+  const updatedAt = new Date('2026-08-01T00:00:00.000Z');
+
+  it('refuses when requireTripAccess rejects', async () => {
+    const denied = new ForbiddenOrNotFoundError();
+    vi.mocked(requireTripAccess).mockRejectedValue(denied);
+
+    await expect(
+      updateDayNotes('trip-1', 'day-1', 'bring an umbrella', updatedAt),
+    ).rejects.toBe(denied);
+    expect(db.day.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('updates the notes after authorization', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.day.updateMany).mockResolvedValue({ count: 1 } as never);
+
+    await updateDayNotes('trip-1', 'day-1', 'bring an umbrella', updatedAt);
+
+    expect(db.day.updateMany).toHaveBeenCalledWith({
+      where: { id: 'day-1', updatedAt },
+      data: { notes: 'bring an umbrella' },
+    });
+  });
+
+  it('stores null for an empty notes string', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.day.updateMany).mockResolvedValue({ count: 1 } as never);
+
+    await updateDayNotes('trip-1', 'day-1', '', updatedAt);
+
+    expect(db.day.updateMany).toHaveBeenCalledWith({
+      where: { id: 'day-1', updatedAt },
+      data: { notes: null },
+    });
+  });
+
+  it('throws StaleWriteError when the day changed since it was read', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.day.updateMany).mockResolvedValue({ count: 0 } as never);
+
+    await expect(
+      updateDayNotes('trip-1', 'day-1', 'bring an umbrella', updatedAt),
+    ).rejects.toThrow(StaleWriteError);
+  });
+
+  it("throws ForbiddenOrNotFoundError when the day doesn't belong to the trip", async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(null);
+
+    await expect(
+      updateDayNotes('trip-1', 'day-1', 'bring an umbrella', updatedAt),
+    ).rejects.toBeInstanceOf(ForbiddenOrNotFoundError);
   });
 });
 
@@ -455,6 +523,91 @@ describe('updateActivity and deleteActivity', () => {
     await expect(deleteActivity('trip-1', 'activity-1')).rejects.toBeInstanceOf(
       ForbiddenOrNotFoundError,
     );
+  });
+});
+
+describe('setActivityPinColor', () => {
+  const activity = { id: 'activity-1', dayId: 'day-1' };
+
+  it('refuses when requireTripAccess (via requireActivity) rejects', async () => {
+    const denied = new ForbiddenOrNotFoundError();
+    vi.mocked(requireTripAccess).mockRejectedValue(denied);
+
+    await expect(
+      setActivityPinColor('trip-1', 'activity-1', '#e11d48'),
+    ).rejects.toBe(denied);
+    expect(db.activity.update).not.toHaveBeenCalled();
+  });
+
+  it('accepts a 6-digit hex colour and persists it', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+
+    await setActivityPinColor('trip-1', 'activity-1', '#e11d48');
+
+    expect(db.activity.update).toHaveBeenCalledWith({
+      where: { id: 'activity-1' },
+      data: { pinColor: '#e11d48' },
+    });
+  });
+
+  it('accepts a 3-digit hex colour', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+
+    await setActivityPinColor('trip-1', 'activity-1', '#abc');
+
+    expect(db.activity.update).toHaveBeenCalledWith({
+      where: { id: 'activity-1' },
+      data: { pinColor: '#abc' },
+    });
+  });
+
+  it('accepts null to clear back to the map default', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+
+    await setActivityPinColor('trip-1', 'activity-1', null);
+
+    expect(db.activity.update).toHaveBeenCalledWith({
+      where: { id: 'activity-1' },
+      data: { pinColor: null },
+    });
+  });
+
+  // The injection guard: this string reaches Map.tsx's marker style.background
+  // verbatim if it isn't rejected here, so it must fail closed with no write.
+  it('rejects a non-hex string with ValidationError and writes nothing', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+
+    await expect(
+      setActivityPinColor('trip-1', 'activity-1', 'red; background:url(x)'),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a colour missing the leading #', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+
+    await expect(
+      setActivityPinColor('trip-1', 'activity-1', 'e11d48'),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty string rather than treating it as "clear"', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+
+    await expect(
+      setActivityPinColor('trip-1', 'activity-1', ''),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.update).not.toHaveBeenCalled();
   });
 });
 

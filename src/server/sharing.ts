@@ -239,8 +239,11 @@ export async function duplicateSharedTrip(token: string) {
     });
 
     for (const day of days) {
+      // notes travel with the day because getSharedTrip already exposes them
+      // (they're itinerary content, like Activity.notes) — copying exactly what
+      // the public payload contains, no more.
       const newDay = await tx.day.create({
-        data: { tripId: newTrip.id, date: day.date },
+        data: { tripId: newTrip.id, date: day.date, notes: day.notes },
       });
       for (const activity of day.activities) {
         const {

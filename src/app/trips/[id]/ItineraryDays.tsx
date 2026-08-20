@@ -6,15 +6,32 @@ import { Map } from '@/components/Map';
 import { formatMoney } from '@/lib/money';
 import type { DayWeather } from '@/lib/research/weather';
 import type { ensureDaysForTrip } from '@/server/itinerary';
+import type { VoteSummary } from '@/server/votes';
 import {
   addActivityAction,
   deleteActivityAction,
   moveActivityAction,
+  setActivityPinColorAction,
+  toggleVoteAction,
 } from './actions';
 import { ActivityForm } from './ActivityForm';
+import { DayNotesForm } from './DayNotesForm';
 import { TransitLeg } from './TransitLeg';
 
 type Days = Awaited<ReturnType<typeof ensureDaysForTrip>>;
+
+// A fixed palette is friendlier and safer than a free-text colour field —
+// every value here is already a valid hex, so there's nothing for a picker
+// built on it to get wrong. "Default" clears pinColor (submits null) rather
+// than being one of these.
+const PIN_COLOR_PALETTE = [
+  '#dc2626', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#16a34a', // green
+  '#2563eb', // blue
+  '#9333ea', // purple
+] as const;
 
 function formatDay(date: Date): string {
   // Day.date is always stored as UTC midnight — pin the format to UTC so it
@@ -55,10 +72,12 @@ export function ItineraryDays({
   tripId,
   days,
   weather,
+  votes,
 }: {
   tripId: string;
   days: Days;
   weather: Record<string, DayWeather> | null;
+  votes: Record<string, VoteSummary>;
 }) {
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
     null,
@@ -72,6 +91,7 @@ export function ItineraryDays({
       lat: activity.lat!,
       lng: activity.lng!,
       title: activity.title,
+      color: activity.pinColor,
     }));
 
   return (
@@ -122,41 +142,121 @@ export function ItineraryDays({
                             : 'border-black/[.08] dark:border-white/[.145]'
                         }`}
                       >
-                        <button
-                          type="button"
-                          onClick={() => setSelectedActivityId(activity.id)}
-                          className="flex-1 text-left"
-                          disabled={activity.lat == null}
-                        >
-                          <p className="font-medium text-black dark:text-zinc-50">
-                            {activity.title}{' '}
-                            <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                              ({activity.category})
-                            </span>
-                          </p>
-                          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                            {[
-                              activity.startTime && activity.endTime
-                                ? `${activity.startTime}–${activity.endTime}`
-                                : activity.startTime,
-                              activity.placeName,
-                              activity.costMinor != null &&
-                              activity.costCurrency
-                                ? formatMoney(
-                                    activity.costMinor,
-                                    activity.costCurrency,
-                                  )
-                                : null,
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </p>
-                          {activity.notes && (
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                              {activity.notes}
+                        <div className="flex-1 flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedActivityId(activity.id)}
+                            className="text-left"
+                            disabled={activity.lat == null}
+                          >
+                            <p className="font-medium text-black dark:text-zinc-50">
+                              {activity.title}{' '}
+                              <span className="font-normal text-zinc-500 dark:text-zinc-400">
+                                ({activity.category})
+                              </span>
                             </p>
-                          )}
-                        </button>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                              {[
+                                activity.startTime && activity.endTime
+                                  ? `${activity.startTime}–${activity.endTime}`
+                                  : activity.startTime,
+                                activity.placeName,
+                                activity.costMinor != null &&
+                                activity.costCurrency
+                                  ? formatMoney(
+                                      activity.costMinor,
+                                      activity.costCurrency,
+                                    )
+                                  : null,
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </p>
+                            {activity.notes && (
+                              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                                {activity.notes}
+                              </p>
+                            )}
+                          </button>
+
+                          <div className="flex items-center gap-3">
+                            <form
+                              action={toggleVoteAction.bind(
+                                null,
+                                tripId,
+                                activity.id,
+                              )}
+                            >
+                              <button
+                                type="submit"
+                                title={
+                                  votes[activity.id]?.mine
+                                    ? 'You voted for this — click to undo'
+                                    : 'Vote for this'
+                                }
+                                className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
+                                  votes[activity.id]?.mine
+                                    ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
+                                    : 'border-black/[.08] text-zinc-500 dark:border-white/[.145] dark:text-zinc-400'
+                                }`}
+                              >
+                                👍 {votes[activity.id]?.count ?? 0}
+                              </button>
+                            </form>
+
+                            <details className="relative">
+                              <summary className="cursor-pointer list-none">
+                                <span
+                                  aria-hidden
+                                  className="inline-block h-4 w-4 rounded-full border border-black/[.08] align-middle dark:border-white/[.145]"
+                                  style={{
+                                    background: activity.pinColor ?? '#2563eb',
+                                  }}
+                                />
+                                <span className="sr-only">Pin colour</span>
+                              </summary>
+                              <div className="absolute z-10 mt-1 flex items-center gap-1 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/[.145]">
+                                {PIN_COLOR_PALETTE.map((color) => (
+                                  <form
+                                    key={color}
+                                    action={setActivityPinColorAction.bind(
+                                      null,
+                                      tripId,
+                                      activity.id,
+                                      color,
+                                    )}
+                                  >
+                                    <button
+                                      type="submit"
+                                      aria-label={`Set pin colour ${color}`}
+                                      className={`h-5 w-5 rounded-full border ${
+                                        activity.pinColor === color
+                                          ? 'border-black dark:border-white'
+                                          : 'border-black/[.08] dark:border-white/[.145]'
+                                      }`}
+                                      style={{ background: color }}
+                                    />
+                                  </form>
+                                ))}
+                                <form
+                                  action={setActivityPinColorAction.bind(
+                                    null,
+                                    tripId,
+                                    activity.id,
+                                    null,
+                                  )}
+                                >
+                                  <button
+                                    type="submit"
+                                    className="text-xs text-zinc-500 underline dark:text-zinc-400"
+                                  >
+                                    Default
+                                  </button>
+                                </form>
+                              </div>
+                            </details>
+                          </div>
+                        </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <form
                             action={moveActivityAction.bind(
@@ -254,6 +354,13 @@ export function ItineraryDays({
                 />
               </div>
             </details>
+
+            <DayNotesForm
+              tripId={tripId}
+              dayId={day.id}
+              updatedAt={day.updatedAt.toISOString()}
+              notes={day.notes}
+            />
           </section>
         );
       })}

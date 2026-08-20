@@ -158,7 +158,7 @@ export async function duplicateTrip(tripId: string) {
     });
     for (const day of days) {
       const newDay = await tx.day.create({
-        data: { tripId: newTrip.id, date: day.date },
+        data: { tripId: newTrip.id, date: day.date, notes: day.notes },
       });
       for (const activity of day.activities) {
         const {
@@ -176,6 +176,20 @@ export async function duplicateTrip(tripId: string) {
           },
         });
       }
+    }
+
+    // Checklists come along: a packing list is the most reusable thing about a
+    // trip, and copying one to plan a similar trip is the point of the feature.
+    // Votes deliberately do NOT — an ActivityVote is a person's opinion about
+    // the original trip, and it isn't ours to transplant onto a copy they may
+    // never see. They're simply not read here, so there is nothing to forget.
+    const checklist = await tx.checklistItem.findMany({
+      where: { tripId: trip.id },
+      orderBy: { sortOrder: 'asc' },
+    });
+    for (const item of checklist) {
+      const { id: _id, tripId: _tripId, updatedAt: _updatedAt, ...rest } = item;
+      await tx.checklistItem.create({ data: { ...rest, tripId: newTrip.id } });
     }
 
     const expenses = await tx.expense.findMany({
