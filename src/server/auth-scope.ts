@@ -33,19 +33,17 @@ export async function currentUserEmail(): Promise<string> {
   return session.user.email.toLowerCase();
 }
 
-// Owner OR an accepted collaborator — the gate every nested resource
-// (Day/Activity/Expense) and the trip's own reads/edits go through.
-// Memoized per tripId: several independent call sites (the trip page, its
-// budget panel, itinerary, sharing status) all re-check access to the same
-// trip within one request, so this dedupes them to one query instead of
-// one per call site, without weakening the check itself — every call site
-// still runs the full authorization logic, just sharing its result.
-export const requireTripAccess = cache(async (tripId: string) => {
-  const session = await getSession();
-  if (!session?.user?.id) throw new UnauthenticatedError();
-  const userId = session.user.id;
-  const email = session.user.email?.toLowerCase() ?? undefined;
-
+// "Owner OR an accepted collaborator", as a query — separated from *where the
+// identity came from* so there is exactly one definition of trip access in
+// the codebase. requireTripAccess below supplies the identity from the
+// session; the browser extension's route handlers supply it from a bearer
+// token (ADR-0017), because they run outside any session. A second copy of
+// this predicate is precisely how the two paths would drift.
+export async function requireTripAccessForUser(
+  userId: string,
+  email: string | undefined,
+  tripId: string,
+) {
   const trip = await db.trip.findFirst({
     where: {
       id: tripId,
@@ -59,6 +57,23 @@ export const requireTripAccess = cache(async (tripId: string) => {
   });
   if (!trip) throw new ForbiddenOrNotFoundError();
   return trip;
+}
+
+// The gate every nested resource (Day/Activity/Expense) and the trip's own
+// reads/edits go through.
+// Memoized per tripId: several independent call sites (the trip page, its
+// budget panel, itinerary, sharing status) all re-check access to the same
+// trip within one request, so this dedupes them to one query instead of
+// one per call site, without weakening the check itself — every call site
+// still runs the full authorization logic, just sharing its result.
+export const requireTripAccess = cache(async (tripId: string) => {
+  const session = await getSession();
+  if (!session?.user?.id) throw new UnauthenticatedError();
+  return requireTripAccessForUser(
+    session.user.id,
+    session.user.email?.toLowerCase() ?? undefined,
+    tripId,
+  );
 });
 
 // Swallows a race where the target was already deleted/revoked by someone

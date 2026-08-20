@@ -1,15 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
+import { CATEGORIES } from '@/lib/categories';
 import type { ActivityFormState } from './actions';
-
-const CATEGORIES = [
-  'Food',
-  'Transport',
-  'Lodging',
-  'Sightseeing',
-  'Other',
-] as const;
 
 export interface ActivityFormDefaults {
   title: string;

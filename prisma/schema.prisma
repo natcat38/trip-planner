@@ -38,6 +38,16 @@ model User {
   aiKeyTag        String?
   aiModel         String? // provider's live model id, e.g. "openai/gpt-oss-120b"
   aiKeyUpdatedAt  DateTime?
+
+  // Browser-extension token (ADR-0017). Stored inline for the same reason as
+  // the AI key above, and HASHED rather than encrypted: unlike the AI key,
+  // this value never needs showing again after it is generated, so there is
+  // nothing to decrypt it for. The token itself is 32 random bytes, so a
+  // plain SHA-256 is the right primitive — bcrypt/argon2 exist to slow down
+  // guessing of LOW-entropy secrets, and there is nothing here to guess.
+  // @unique because verification looks a user up BY this hash.
+  extensionTokenHash      String?   @unique
+  extensionTokenCreatedAt DateTime?
 }
 
 // Auth.js Prisma adapter models (database sessions) — Google + GitHub OAuth, ADR-0004

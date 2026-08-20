@@ -13,6 +13,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { deleteApiKey, saveApiKey, setModel } from '@/server/aiSettings';
+import {
+  createExtensionToken,
+  revokeExtensionToken,
+} from '@/server/extensionToken';
 import { ValidationError } from '@/server/errors';
 
 export interface KeyFormState {
@@ -65,4 +69,29 @@ export async function setModelAction(
 // retry button anything else to do.
 export async function refreshModelsAction(): Promise<void> {
   revalidatePath('/settings');
+}
+
+export interface ExtensionTokenFormState {
+  // The plaintext token, returned to the browser exactly once. Only its hash
+  // is stored (ADR-0017), so if the user doesn't copy it now they generate a
+  // new one — there is no path to showing this value again.
+  token?: string;
+}
+
+// Generate and revoke share one action, and therefore one useActionState, on
+// purpose. As two actions the revoke button had no way to clear the token the
+// generate button had just put on screen, so revoking left a dead credential
+// displayed under "copy this now" as though it still worked.
+export async function manageExtensionTokenAction(
+  _prevState: ExtensionTokenFormState,
+  formData: FormData,
+): Promise<ExtensionTokenFormState> {
+  if (formData.get('intent') === 'revoke') {
+    await revokeExtensionToken();
+    revalidatePath('/settings');
+    return {};
+  }
+  const token = await createExtensionToken();
+  revalidatePath('/settings');
+  return { token };
 }
