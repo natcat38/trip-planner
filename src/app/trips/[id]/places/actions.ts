@@ -11,6 +11,7 @@
 import { revalidatePath } from 'next/cache';
 import { ignoreIfMissing } from '@/server/auth-scope';
 import { StaleWriteError, ValidationError } from '@/server/errors';
+import { summarizeGuide } from '@/server/guideSummary';
 import {
   addActivityFromPlace,
   deletePlace,
@@ -20,6 +21,11 @@ import {
 } from '@/server/places';
 
 export interface PlaceFormState {
+  error?: string;
+}
+
+export interface GuideSummaryFormState {
+  text?: string;
   error?: string;
 }
 
@@ -88,6 +94,19 @@ export async function deletePlaceAction(
 ): Promise<void> {
   await ignoreIfMissing(deletePlace(tripId, placeId));
   revalidatePath(`/trips/${tripId}/places`);
+}
+
+// Deliberately a no-op read: never mutates anything, so nothing here for
+// CLAUDE.md's stale-write rule to apply to (same rationale as
+// planTransitAction in ../actions.ts). Still gated through summarizeGuide ->
+// requireTripAccess on every call.
+export async function summarizeGuideAction(
+  tripId: string,
+  _prevState: GuideSummaryFormState,
+  _formData: FormData,
+): Promise<GuideSummaryFormState> {
+  const result = await summarizeGuide(tripId);
+  return 'error' in result ? { error: result.error } : { text: result.text };
 }
 
 export async function addActivityFromPlaceAction(

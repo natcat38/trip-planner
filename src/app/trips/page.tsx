@@ -33,12 +33,20 @@ export default async function TripsPage() {
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Your trips
           </h1>
-          <Link
-            href="/trips/new"
-            className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
-          >
-            Create trip
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/settings"
+              className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+            >
+              Settings
+            </Link>
+            <Link
+              href="/trips/new"
+              className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            >
+              Create trip
+            </Link>
+          </div>
         </div>
 
         {trips.length === 0 ? (

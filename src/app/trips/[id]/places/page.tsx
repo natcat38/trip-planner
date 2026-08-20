@@ -15,10 +15,12 @@ import {
 import { geocode } from '@/lib/geocode';
 import type { Guide } from '@/lib/research/wikivoyage';
 import { getGuide } from '@/lib/research/wikivoyage';
+import { getKeyStatus } from '@/server/aiSettings';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
 import { saveOsmPlaceAction } from './actions';
+import { GuideSummary } from './GuideSummary';
 import { PlaceRow } from './PlaceRow';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
@@ -42,9 +44,13 @@ const GUIDE_SECTIONS: { key: keyof Guide['sections']; label: string }[] = [
 function GuidePanel({
   destination,
   guide,
+  tripId,
+  hasApiKey,
 }: {
   destination: string | null;
   guide: Guide | null;
+  tripId: string;
+  hasApiKey: boolean;
 }) {
   if (!destination) {
     return (
@@ -135,6 +141,18 @@ function GuidePanel({
         </div>
       )}
 
+      {availableSections.length > 0 &&
+        (hasApiKey ? (
+          <GuideSummary tripId={tripId} />
+        ) : (
+          <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+            <Link href="/settings" className="underline">
+              Add an API key
+            </Link>{' '}
+            in Settings to summarize this guide with AI.
+          </p>
+        ))}
+
       <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
         Any prices above are sample prices quoted from the guide text, not a
         computed average. Guide content from{' '}
@@ -193,10 +211,11 @@ export default async function PlacesPage({
 
   const destination = trip.destinations[0] ?? null;
 
-  const [guide, center, savedPlaces] = await Promise.all([
+  const [guide, center, savedPlaces, keyStatus] = await Promise.all([
     destination ? getGuide(destination) : null,
     destination ? geocode(destination) : null,
     listPlaces(tripId),
+    getKeyStatus(),
   ]);
 
   // Only query Overpass when the user actually searched. Overpass is a
@@ -235,7 +254,12 @@ export default async function PlacesPage({
           </Link>
         </div>
 
-        <GuidePanel destination={destination} guide={guide} />
+        <GuidePanel
+          destination={destination}
+          guide={guide}
+          tripId={tripId}
+          hasApiKey={keyStatus != null}
+        />
 
         <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
