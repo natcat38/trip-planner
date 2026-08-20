@@ -51,6 +51,13 @@ const NO_MODEL_ERROR = 'Choose an AI model in Settings to use AI features.';
 const NO_GUIDE_ERROR = "There's no guide text to summarize for this trip yet.";
 const COMPLETE_FAILED_ERROR =
   "Couldn't reach the AI provider just now — try again shortly.";
+// Distinct from the above on purpose. A reasoning model can spend its whole
+// token budget on hidden chain-of-thought and return no answer at all; the
+// provider was perfectly reachable. Telling the user to "try again shortly"
+// there sends them to retry something that will fail identically every time.
+const NO_ROOM_ERROR =
+  'That model ran out of room before it answered — reasoning models use most ' +
+  'of their budget thinking. Try a different model in Settings.';
 
 const SECTION_ORDER: { key: keyof Guide['sections']; label: string }[] = [
   { key: 'eat', label: 'Eat' },
@@ -107,7 +114,12 @@ export async function summarizeGuide(
   const guideText = buildGuideText(guide);
 
   const result = await complete(key.key, key.model, SYSTEM_PROMPT, guideText);
-  if (!result) return { error: COMPLETE_FAILED_ERROR };
+  if (!result.ok) {
+    return {
+      error:
+        result.reason === 'no_room' ? NO_ROOM_ERROR : COMPLETE_FAILED_ERROR,
+    };
+  }
 
   // Say so rather than presenting a half-sentence as if it were the whole
   // answer — the model stopped at the output cap, it didn't finish.

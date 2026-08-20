@@ -15,6 +15,7 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 - [Budget](/domain/budget.md) — minor-unit money + convert-on-read currency roll-up.
 - [Sharing](/domain/sharing.md) — public read-only link + invited Collaborators (Phase 2).
 - [Places](/domain/places.md) — the saved-places research tray under a trip (Phase 3).
+- [Day generation](/domain/day-generation.md) — multi-option candidate day plans from the tray (Phase 3).
 
 ## Integrations
 

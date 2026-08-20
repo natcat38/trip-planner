@@ -20,6 +20,7 @@ import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
 import { saveOsmPlaceAction } from './actions';
+import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
 import { PlaceRow } from './PlaceRow';
 
@@ -239,6 +240,12 @@ export default async function PlacesPage({
     title: place.name,
   }));
 
+  // A model id ending ":free" is OpenRouter's free-tier convention (ADR-0011)
+  // — those endpoints generally require permission to train on and publish
+  // prompts. DayPlanner shows the notice at the point of generating, not only
+  // in Settings, because that's the moment the trade actually applies.
+  const showFreeModelNotice = keyStatus?.model?.endsWith(':free') ?? false;
+
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
       <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
@@ -432,6 +439,12 @@ export default async function PlacesPage({
             </ul>
           )}
         </section>
+
+        <DayPlanner
+          tripId={tripId}
+          days={days}
+          showFreeModelNotice={showFreeModelNotice}
+        />
       </main>
     </div>
   );

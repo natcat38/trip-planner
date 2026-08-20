@@ -19,14 +19,15 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]` | 9 | Renders between two consecutive activities on a day (ItineraryDays.tsx), only when both have coordinates. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/edit` | 1 | The trip edit/delete route: loads a trip via `requireTripAccess`, then binds its `updatedAt` into the update action so a stale-write attempt is rejected per the optimistic-locking rule (ADR-0003). |
-| `src/app/trips/[id]/places` | 4 | "Summarize this guide" (Phase 3 M3): the single grounded AI feature that proves the BYOK chain end to end. |
+| `src/app/trips/[id]/places` | 5 | "Plan a day" (Phase 3 M4, ADR-0012): a short structured questionnaire — focus + pace, deliberately not a free-text/chat box (handoff §8) — that turns the saved-places tray into 2-3 candidate day plans. |
 | `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
 | `src/components` | 1 | Shared presentational components used across trip pages: currently the Mapbox pin map that plots an itinerary's geocoded activity places. |
 | `src/lib` | 6 | AES-256-GCM encryption for user-supplied secrets (BYOK provider API keys) at rest in Postgres. |
 | `src/lib/ai` | 1 | BYOK AI layer: talks to the user's own Groq or OpenRouter API key over their shared OpenAI-compatible surface (`POST {base}/chat/completions`, `GET {base}/models`, `Authorization: Bearer {key}`) — see docs/adr/0009-gemini-free-tier-unusable-eea.md for why these two providers and not a Gemini-direct or app-held-key design. |
+| `src/lib/dayPlan` | 1 | Algorithmic day-plan candidate generation — the keyless path for Phase 3 M4. |
 | `src/lib/research` | 5 | Free, keyless destination-research data sources — currently OpenStreetMap via the Overpass API. |
-| `src/server` | 11 | BYOK AI key settings (Phase 3 M3, ADR-0011): store, mask, and retrieve the user's own Groq/OpenRouter API key. |
+| `src/server` | 12 | BYOK AI key settings (Phase 3 M3, ADR-0011): store, mask, and retrieve the user's own Groq/OpenRouter API key. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-18 source directories, 57 files, 0 without a declared purpose.
+19 source directories, 60 files, 0 without a declared purpose.

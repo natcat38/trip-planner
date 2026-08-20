@@ -10,6 +10,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { ignoreIfMissing } from '@/server/auth-scope';
+import { generateDayPlans, type DayPlanCandidate } from '@/server/dayPlan';
 import { StaleWriteError, ValidationError } from '@/server/errors';
 import { summarizeGuide } from '@/server/guideSummary';
 import {
@@ -26,6 +27,17 @@ export interface PlaceFormState {
 
 export interface GuideSummaryFormState {
   text?: string;
+  error?: string;
+}
+
+export interface DayPlanFormState {
+  candidates?: DayPlanCandidate[];
+  source?: 'ai' | 'algorithmic';
+  notice?: string;
+  error?: string;
+}
+
+export interface AcceptDayPlanFormState {
   error?: string;
 }
 
@@ -123,4 +135,55 @@ export async function addActivityFromPlaceAction(
   );
   revalidatePath(`/trips/${tripId}`);
   revalidatePath(`/trips/${tripId}/places`);
+}
+
+// Deliberately a no-op read: never mutates anything, so nothing here for
+// CLAUDE.md's stale-write rule to apply to. Generation is on click only
+// (DayPlanner.tsx) — never fired from render — because it may spend the
+// user's own metered AI quota (ADR-0011/0012).
+export async function generateDayPlanAction(
+  tripId: string,
+  _prevState: DayPlanFormState,
+  formData: FormData,
+): Promise<DayPlanFormState> {
+  const focus = formData.getAll('focus').map(String);
+  const paceRaw = String(formData.get('pace') ?? 'relaxed');
+  const pace = paceRaw === 'packed' ? 'packed' : 'relaxed';
+
+  const result = await generateDayPlans({ tripId, focus, pace });
+  if ('error' in result) return { error: result.error };
+  return {
+    candidates: result.candidates,
+    source: result.source,
+    notice: result.notice,
+  };
+}
+
+// Accepts one ephemeral candidate (DayPlanner.tsx keeps candidates only in
+// component state, per ADR-0012 — no table, no migration): adds every place
+// in the candidate to the chosen day, in order, reusing
+// addActivityFromPlace exactly like PlaceRow's own "Add to day" form. A
+// place that's since been deleted from the tray is skipped rather than
+// failing the whole batch, same tolerance as addActivityFromPlaceAction
+// above.
+export async function acceptDayPlanAction(
+  tripId: string,
+  _prevState: AcceptDayPlanFormState,
+  formData: FormData,
+): Promise<AcceptDayPlanFormState> {
+  const dayId = String(formData.get('dayId') ?? '');
+  const placeIds = formData.getAll('placeId').map(String);
+  if (!dayId || placeIds.length === 0) return {};
+
+  for (const placeId of placeIds) {
+    await ignoreIfMissing(
+      (async () => {
+        await addActivityFromPlace(tripId, placeId, dayId);
+      })(),
+    );
+  }
+
+  revalidatePath(`/trips/${tripId}`);
+  revalidatePath(`/trips/${tripId}/places`);
+  return {};
 }

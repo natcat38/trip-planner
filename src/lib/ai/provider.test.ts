@@ -112,10 +112,14 @@ describe('complete', () => {
       'user prompt',
     );
 
-    expect(result).toEqual({ text: 'The answer is 42.', truncated: false });
+    expect(result).toEqual({
+      ok: true,
+      text: 'The answer is 42.',
+      truncated: false,
+    });
   });
 
-  it('returns null for an empty choices array', async () => {
+  it('reports unavailable for an empty choices array', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(jsonResponse(200, { choices: [] })),
@@ -123,10 +127,10 @@ describe('complete', () => {
 
     const result = await complete(GROQ_KEY, 'llama-3.1-8b', 'sys', 'usr');
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ ok: false, reason: 'unavailable' });
   });
 
-  it('returns null for malformed JSON shapes missing message.content', async () => {
+  it('reports unavailable for malformed JSON shapes missing message.content', async () => {
     vi.stubGlobal(
       'fetch',
       vi
@@ -136,16 +140,70 @@ describe('complete', () => {
 
     const result = await complete(GROQ_KEY, 'llama-3.1-8b', 'sys', 'usr');
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ ok: false, reason: 'unavailable' });
   });
 
-  it('returns null for an unrecognised key without making a request', async () => {
+  it('reports no_room when a reasoning model spends the whole budget thinking', async () => {
+    // Real shape observed live on dots-3-note-preview: the provider answered
+    // 200, the model reasoned for its entire allowance, and content came back
+    // null with finish_reason 'length'. Reporting that as "unavailable" sent
+    // the user off to retry something that fails identically every time.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(200, {
+          choices: [{ message: { content: null }, finish_reason: 'length' }],
+        }),
+      ),
+    );
+
+    const result = await complete(GROQ_KEY, 'reasoner', 'sys', 'usr');
+
+    expect(result).toEqual({ ok: false, reason: 'no_room' });
+  });
+
+  it('passes a caller-supplied token budget through', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(200, {
+        choices: [{ message: { content: 'hi' }, finish_reason: 'stop' }],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await complete(GROQ_KEY, 'm', 'sys', 'usr', { maxTokens: 4000 });
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.max_tokens).toBe(4000);
+  });
+
+  it('requests JSON mode only when asked, and omits it otherwise', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(200, {
+        choices: [{ message: { content: '{}' }, finish_reason: 'stop' }],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await complete(GROQ_KEY, 'm', 'sys', 'usr');
+    expect(
+      JSON.parse(fetchMock.mock.calls[0][1].body as string).response_format,
+    ).toBeUndefined();
+
+    // Verified live: without response_format the same model burned its whole
+    // budget reasoning and returned nothing, so this flag is load-bearing.
+    await complete(GROQ_KEY, 'm', 'sys', 'usr', { jsonMode: true });
+    expect(
+      JSON.parse(fetchMock.mock.calls[1][1].body as string).response_format,
+    ).toEqual({ type: 'json_object' });
+  });
+
+  it('reports unavailable for an unrecognised key without making a request', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await complete('not-a-key', 'model', 'sys', 'usr');
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ ok: false, reason: 'unavailable' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
@@ -183,6 +241,7 @@ describe('complete output limits', () => {
     const result = await complete('gsk_test', 'm', 'sys', 'usr');
 
     expect(result).toEqual({
+      ok: true,
       text: 'This area is located next to',
       truncated: true,
     });

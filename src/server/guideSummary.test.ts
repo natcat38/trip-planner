@@ -88,7 +88,10 @@ describe('summarizeGuide', () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
     vi.mocked(getGuide).mockResolvedValue(guide);
-    vi.mocked(complete).mockResolvedValue(null);
+    vi.mocked(complete).mockResolvedValue({
+      ok: false,
+      reason: 'unavailable',
+    });
 
     const result = await summarizeGuide('trip-1');
 
@@ -130,6 +133,7 @@ describe('summarizeGuide', () => {
     vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
     vi.mocked(getGuide).mockResolvedValue(guide);
     vi.mocked(complete).mockResolvedValue({
+      ok: true,
       text: 'A short summary.',
       truncated: false,
     });
@@ -163,6 +167,7 @@ describe('summarizeGuide', () => {
     vi.mocked(getGuide).mockResolvedValue(guide);
     // finish_reason 'length' — the model stopped at the output cap mid-thought.
     vi.mocked(complete).mockResolvedValue({
+      ok: true,
       text: 'This area is located next to',
       truncated: true,
     });
@@ -181,7 +186,11 @@ describe('summarizeGuide', () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
     vi.mocked(getGuide).mockResolvedValue(guide);
-    vi.mocked(complete).mockResolvedValue({ text: 'ok', truncated: false });
+    vi.mocked(complete).mockResolvedValue({
+      ok: true,
+      text: 'ok',
+      truncated: false,
+    });
 
     await summarizeGuide('trip-1');
 
@@ -205,7 +214,11 @@ describe('summarizeGuide', () => {
         getAround: 'An all-day subway pass costs ¥640.',
       },
     });
-    vi.mocked(complete).mockResolvedValue({ text: 'ok', truncated: false });
+    vi.mocked(complete).mockResolvedValue({
+      ok: true,
+      text: 'ok',
+      truncated: false,
+    });
 
     await summarizeGuide('trip-1');
 
@@ -228,6 +241,7 @@ describe('summarizeGuide', () => {
       sections: { ...emptyGuideSections(), eat: longText },
     });
     vi.mocked(complete).mockResolvedValue({
+      ok: true,
       text: 'A short summary.',
       truncated: false,
     });
