@@ -61,15 +61,30 @@ function isCacheableNavigation(request, origin) {
   return !isExcludedPath(url.pathname);
 }
 
+// Routes src/proxy.ts guards. A navigation to one of these can only be
+// redirected for one reason: there is no session. (/settings is protected too,
+// but isExcludedPath keeps it out of the fetch handler entirely.)
+function isProtectedPath(pathname) {
+  return pathname === '/trips' || pathname.startsWith('/trips/');
+}
+
 // The session-ended signal. There is no sign-out control in the app yet, so
-// this is the only hook available: any navigation that comes back having been
-// redirected to Auth.js means the session is gone, and the pages cached for
-// the previous session must not outlive it. Written against the redirect
-// rather than a sign-out button so it keeps working once one is added.
-function isSignInRedirect(response, origin) {
-  if (!response.redirected) return false;
-  const url = new URL(response.url, origin);
-  return url.pathname.startsWith('/api/auth');
+// this is the only hook available: a navigation to a guarded route that comes
+// back a redirect means the session is gone, and the pages cached for it must
+// not outlive it.
+//
+// It has to be spelled as `type === 'opaqueredirect'`, NOT as
+// `response.redirected` plus a URL check. A navigation Request carries redirect
+// mode "manual", so fetch() does not follow the 3xx — it hands back an opaque
+// placeholder for the browser to follow itself. Measured against this app's own
+// sign-in redirect: `{type: 'opaqueredirect', status: 0, ok: false,
+// redirected: false, url: '<the requested page>'}`. Every field a redirect
+// check would naturally reach for reads as "not a redirect", and the
+// destination is not visible at all — which is why this is scoped by the
+// REQUESTED path instead.
+function isSessionEndedRedirect(response, requestUrl) {
+  if (response.type !== 'opaqueredirect') return false;
+  return isProtectedPath(new URL(requestUrl).pathname);
 }
 
 // Exposed for the node:vm test harness; harmless in a real worker.
@@ -78,16 +93,22 @@ self.__swInternals = {
   isExcludedPath,
   isImmutableAsset,
   isCacheableNavigation,
-  isSignInRedirect,
+  isProtectedPath,
+  isSessionEndedRedirect,
 };
 
+// Pre-caching the offline page is best-effort: if waitUntil rejects the worker
+// never activates, so a flaky network during install would silently mean no
+// offline support at all — a worse outcome than one missing fallback page.
+function cacheOfflinePage() {
+  return caches
+    .open(CACHE_NAME)
+    .then((cache) => cache.add(OFFLINE_URL))
+    .catch(() => {});
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.add(OFFLINE_URL))
-      .then(() => self.skipWaiting()),
-  );
+  event.waitUntil(cacheOfflinePage().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -108,16 +129,24 @@ self.addEventListener('activate', (event) => {
 async function clearAllCaches() {
   const names = await caches.keys();
   await Promise.all(names.map((name) => caches.delete(name)));
+  // Put the offline fallback back. Without this, clearing on sign-out also
+  // throws away the one page that makes going offline degrade gracefully, and
+  // it would not return until the worker was reinstalled — so the first
+  // offline navigation after a sign-out would hit the browser's own network
+  // error page instead.
+  await cacheOfflinePage();
 }
 
 // Network-first: the itinerary changes, and a collaborator's edit landing a
 // second ago matters more than saving a round trip. The cache is a safety net
 // for when the network fails, not a performance layer.
-async function handleNavigation(request, origin) {
+async function handleNavigation(request) {
   try {
     const response = await fetch(request);
-    if (isSignInRedirect(response, origin)) {
+    if (isSessionEndedRedirect(response, request.url)) {
       await clearAllCaches();
+      // Returned as-is so the browser follows the redirect itself, which is
+      // what an opaqueredirect is for.
       return response;
     }
     if (response.ok) {
@@ -151,7 +180,7 @@ self.addEventListener('fetch', (event) => {
   const origin = self.location.origin;
 
   if (isCacheableNavigation(request, origin)) {
-    event.respondWith(handleNavigation(request, origin));
+    event.respondWith(handleNavigation(request));
     return;
   }
 

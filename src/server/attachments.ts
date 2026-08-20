@@ -121,7 +121,6 @@ export interface AttachmentSummary {
   filename: string;
   mimeType: string;
   sizeBytes: number;
-  uploadedBy: string | null;
   createdAt: Date;
 }
 
@@ -132,10 +131,15 @@ export interface AttachmentUsage {
   maxFileBytes: number;
 }
 
-// `data` is excluded from the select on purpose, and this is the reason the
-// summary type is spelled out by hand rather than inferred: listing a trip's
-// attachments must never pull megabytes of file bodies into memory to render a
-// list of filenames.
+// Two columns are excluded from this select on purpose, which is why the
+// summary type is spelled out by hand rather than inferred:
+//
+// - `data`, because listing a trip's attachments must never pull megabytes of
+//   file bodies into memory to render a list of filenames.
+// - `uploadedBy`, because it is a collaborator's email address. Votes strip the
+//   same thing for the same reason (ADR-0014): two people on a trip need never
+//   have met, and shipping the addresses to every member would introduce them.
+//   The column is kept for provenance in the database, not for the client.
 export async function listAttachments(
   tripId: string,
 ): Promise<AttachmentSummary[]> {
@@ -148,7 +152,6 @@ export async function listAttachments(
       filename: true,
       mimeType: true,
       sizeBytes: true,
-      uploadedBy: true,
       createdAt: true,
     },
   });

@@ -14,11 +14,14 @@ import {
 // decides what a file is by reading its bytes.
 const ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 
+// Deliberately NOT pinned to UTC, unlike formatDay in ItineraryDays.tsx.
+// Day.date is stored as UTC midnight and means a calendar day, so pinning it
+// is correct there. This is a real timestamp: rendering it in UTC would show a
+// file uploaded at 22:00 in Tokyo as having arrived the day before.
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC',
   }).format(date);
 }
 
@@ -53,7 +56,13 @@ export function Attachments({
               >
                 {attachment.filename}
               </a>
-              <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+              {/* The server renders this in the server's zone and the client
+                  re-renders it in the viewer's, which is the point — the
+                  viewer's is the right one, and the mismatch is expected. */}
+              <span
+                suppressHydrationWarning
+                className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400"
+              >
                 {formatBytes(attachment.sizeBytes)} ·{' '}
                 {formatDate(attachment.createdAt)}
               </span>

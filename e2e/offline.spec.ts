@@ -8,10 +8,11 @@ import { db } from '../src/lib/db';
 // src/lib/offline.test.ts covers which requests sw.js decides to cache, and
 // this covers whether a cached page actually comes back.
 //
-// Driven through /shared/[token] rather than a signed-in /trips/[id]: this
-// repo has no test OAuth account (see e2e/sharing.spec.ts), and the share
-// route exercises the identical service worker path — a same-origin GET
-// navigation, cached on the way through, served from cache when fetch fails.
+// The caching tests drive /shared/[token] rather than a signed-in /trips/[id]:
+// the share route exercises the identical service worker path — a same-origin
+// GET navigation, cached on the way through, served from cache when fetch
+// fails — with none of the session setup. The cache-clearing test below does
+// need a session, and creates one the way the other specs here do.
 test.describe('offline', () => {
   test('the manifest is served and describes an installable app', async ({
     page,
@@ -101,6 +102,96 @@ test.describe('offline', () => {
     } finally {
       await context.setOffline(false);
       await db.trip.deleteMany({ where: { userId: user.id } });
+      await db.user.delete({ where: { id: user.id } });
+    }
+  });
+
+  test('drops every cached page once the session ends', async ({
+    page,
+    context,
+  }) => {
+    // The security control from ADR-0015 §5: cached trip pages must not
+    // outlive the session that fetched them, or the next person to use this
+    // browser profile can read them offline.
+    //
+    // Worth an end-to-end test rather than trusting the unit test, because the
+    // first implementation of this check could never fire: a navigation
+    // Request has redirect mode "manual", so the auth redirect arrives as an
+    // opaqueredirect with `redirected: false` and no destination URL.
+    const user = await db.user.create({
+      data: { email: `offline-session-${crypto.randomUUID()}@example.com` },
+    });
+    try {
+      const trip = await db.trip.create({
+        data: {
+          userId: user.id,
+          name: 'Session Ends Trip',
+          destinations: ['Fukuoka'],
+          startDate: new Date('2026-11-14'),
+          endDate: new Date('2026-11-14'),
+          baseCurrency: 'JPY',
+          budgetMinor: 0,
+        },
+      });
+      const sessionToken = crypto.randomUUID();
+      await db.session.create({
+        data: {
+          sessionToken,
+          userId: user.id,
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        },
+      });
+      await context.addCookies([
+        {
+          name: 'authjs.session-token',
+          value: sessionToken,
+          domain: 'localhost',
+          path: '/',
+          httpOnly: true,
+          sameSite: 'Lax',
+        },
+      ]);
+
+      await page.goto(`/trips/${trip.id}`);
+      await page.waitForFunction(
+        () => navigator.serviceWorker?.controller != null,
+        undefined,
+        { timeout: 15_000 },
+      );
+      await page.reload();
+      await expect(
+        page.getByRole('heading', { name: 'Session Ends Trip' }),
+      ).toBeVisible();
+      // The page is now cached — confirm before proving it goes away.
+      expect(
+        await page.evaluate(
+          async (url) => (await caches.match(url)) != null,
+          `/trips/${trip.id}`,
+        ),
+      ).toBe(true);
+
+      // End the session the way an expiry or a sign-out would.
+      await db.session.deleteMany({ where: { userId: user.id } });
+      await page.goto(`/trips/${trip.id}`);
+      await expect(page).toHaveURL(/\/api\/auth\/signin/);
+
+      expect(
+        await page.evaluate(
+          async (url) => (await caches.match(url)) != null,
+          `/trips/${trip.id}`,
+        ),
+      ).toBe(false);
+
+      // ...and the offline fallback is put back, so going offline after a
+      // sign-out still degrades to a real page rather than a browser error.
+      expect(
+        await page.evaluate(
+          async () => (await caches.match('/offline')) != null,
+        ),
+      ).toBe(true);
+    } finally {
+      await db.trip.deleteMany({ where: { userId: user.id } });
+      await db.session.deleteMany({ where: { userId: user.id } });
       await db.user.delete({ where: { id: user.id } });
     }
   });

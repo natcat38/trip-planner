@@ -100,6 +100,39 @@ test.describe('attachments', () => {
     expect(response.headers()['cache-control']).toContain('no-store');
   });
 
+  test('accepts a file larger than the default Server Action body limit', async ({
+    page,
+    context,
+  }) => {
+    // The reason this exists: next.config.ts raises
+    // serverActions.bodySizeLimit from its 1 MB default, and every other test
+    // here uploads a 70-byte PNG. Without a file over 1 MB, that config could
+    // regress — or the option could move out of `experimental` in a Next
+    // upgrade — and CI would stay green while real photo uploads 413'd in
+    // production.
+    const bigPdf = Buffer.concat([
+      Buffer.from('%PDF-1.7\n'),
+      Buffer.alloc(2 * 1024 * 1024, 0x20),
+    ]);
+
+    await signIn(context, userId);
+    await page.goto(`/trips/${tripId}`);
+
+    await page.getByText('Attachments', { exact: false }).first().click();
+    await page.setInputFiles('input[type="file"]', {
+      name: 'confirmation.pdf',
+      mimeType: 'application/pdf',
+      buffer: bigPdf,
+    });
+    await page.getByRole('button', { name: /upload/i }).click();
+
+    await expect(
+      page.getByRole('link', { name: 'confirmation.pdf' }),
+    ).toBeVisible();
+    const row = await db.attachment.findFirstOrThrow({ where: { tripId } });
+    expect(row.sizeBytes).toBe(bigPdf.byteLength);
+  });
+
   test('refuses a file type that is not on the allowlist', async ({
     page,
     context,

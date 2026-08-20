@@ -162,9 +162,15 @@ describe('addAttachment', () => {
   });
 
   it('rejects a file over the per-file cap', async () => {
-    const oversized = [...PNG, ...new Array(MAX_FILE_BYTES).fill(0)];
+    // A typed array, not a spread JS array — the latter allocates four million
+    // boxed elements to prove a size check.
+    const oversized = new Uint8Array(MAX_FILE_BYTES + 1);
+    oversized.set(PNG);
     await expect(
-      addAttachment('trip-1', fileOf(oversized, 'big.png', 'image/png')),
+      addAttachment(
+        'trip-1',
+        new File([oversized], 'big.png', { type: 'image/png' }),
+      ),
     ).rejects.toBeInstanceOf(ValidationError);
     expect(db.attachment.create).not.toHaveBeenCalled();
   });

@@ -29,9 +29,10 @@ function loadServiceWorker() {
       request: { method: string; mode: string; url: string },
       origin: string,
     ) => boolean;
-    isSignInRedirect: (
-      response: { redirected: boolean; url: string },
-      origin: string,
+    isProtectedPath: (pathname: string) => boolean;
+    isSessionEndedRedirect: (
+      response: { type: string },
+      requestUrl: string,
     ) => boolean;
   };
 }
@@ -123,34 +124,47 @@ describe('isImmutableAsset', () => {
   });
 });
 
-describe('isSignInRedirect', () => {
-  it('detects a navigation bounced to Auth.js', () => {
-    // src/proxy.ts redirects unauthenticated /trips/* to /api/auth/signin.
-    // That is the app's only available "the session ended" signal, and it is
-    // what triggers dropping every cached page.
+describe('isSessionEndedRedirect', () => {
+  // Measured, not assumed: a navigation Request carries redirect mode
+  // "manual", so fetch() does not follow the 3xx. This is exactly what the
+  // worker sees for this app's own sign-in redirect —
+  // `{type: 'opaqueredirect', status: 0, ok: false, redirected: false,
+  // url: '<the requested page>'}`. Note `redirected` is FALSE and the
+  // destination is absent; an implementation that checked either would never
+  // fire, which is the bug this test exists to prevent coming back.
+  const OPAQUE_REDIRECT = { type: 'opaqueredirect' };
+
+  it('detects a guarded page bounced by the auth proxy', () => {
     expect(
-      sw.isSignInRedirect(
-        {
-          redirected: true,
-          url: `${ORIGIN}/api/auth/signin?callbackUrl=%2Ftrips%2Fabc`,
-        },
-        ORIGIN,
-      ),
+      sw.isSessionEndedRedirect(OPAQUE_REDIRECT, `${ORIGIN}/trips/abc`),
     ).toBe(true);
+    expect(sw.isSessionEndedRedirect(OPAQUE_REDIRECT, `${ORIGIN}/trips`)).toBe(
+      true,
+    );
   });
 
-  it('ignores a response that was not redirected', () => {
+  it('ignores an ordinary response', () => {
     expect(
-      sw.isSignInRedirect(
-        { redirected: false, url: `${ORIGIN}/trips/abc` },
-        ORIGIN,
-      ),
+      sw.isSessionEndedRedirect({ type: 'basic' }, `${ORIGIN}/trips/abc`),
     ).toBe(false);
   });
 
-  it('ignores an ordinary redirect that is not to auth', () => {
+  it('does not drop the cache for a redirect on an unguarded route', () => {
+    // Only src/proxy.ts's matcher implies "no session". A redirect anywhere
+    // else means something different, and must not wipe someone's offline
+    // itinerary as a side effect.
+    expect(sw.isSessionEndedRedirect(OPAQUE_REDIRECT, `${ORIGIN}/`)).toBe(
+      false,
+    );
     expect(
-      sw.isSignInRedirect({ redirected: true, url: `${ORIGIN}/trips` }, ORIGIN),
+      sw.isSessionEndedRedirect(OPAQUE_REDIRECT, `${ORIGIN}/shared/token`),
     ).toBe(false);
+  });
+
+  it('matches the proxy matcher, including near misses', () => {
+    expect(sw.isProtectedPath('/trips')).toBe(true);
+    expect(sw.isProtectedPath('/trips/abc/places')).toBe(true);
+    expect(sw.isProtectedPath('/trips-archive')).toBe(false);
+    expect(sw.isProtectedPath('/')).toBe(false);
   });
 });

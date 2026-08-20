@@ -54,12 +54,30 @@ and is excluded as a whole subtree so a future `/settings/<anything>` inherits t
 ### 5. Cached pages are dropped when the session ends
 Cached trip pages are readable by whoever next uses the browser profile — like history, but they
 would survive a sign-out. **The app currently has no sign-out control anywhere**, so there is no
-button to hang cleanup on. The worker instead clears every cache when a navigation comes back
-having been redirected to `/api/auth/*`, which is what `src/proxy.ts` does once a session is gone.
+button to hang cleanup on. The worker instead clears every cache when a navigation to a
+proxy-guarded route comes back a redirect, which is what `src/proxy.ts` does once a session is gone.
 
-Written against the redirect rather than a sign-out handler so it keeps working when a sign-out
-control is eventually added — but adding one should still call `caches.delete` directly, because
-the redirect only fires on the *next* navigation.
+**How that check has to be spelled is not obvious, and the obvious version silently does nothing.**
+A navigation `Request` carries redirect mode `manual`, so `fetch()` inside the worker does not
+follow the 3xx — it returns an opaque placeholder for the browser to follow itself. Measured
+against this app's own sign-in redirect, the worker sees:
+
+```
+{ type: 'opaqueredirect', status: 0, ok: false, redirected: false, url: '<the requested page>' }
+```
+
+`redirected` is **false** and the destination is **absent**. A check written as
+`response.redirected && response.url.startsWith('/api/auth')` — which is what the API invites — can
+never fire, and the control would look present while doing nothing. So the test is
+`type === 'opaqueredirect'`, scoped by the **requested** path (the `/trips` subtree) rather than the
+destination, since the destination isn't visible. `src/lib/offline.test.ts` encodes that measured
+response shape so the mistake can't come back.
+
+Scoping matters in the other direction too: a redirect on an unguarded route means something else
+entirely and must not wipe someone's offline itinerary as a side effect.
+
+Adding a sign-out control later should still call `caches.delete` directly — this only fires on the
+*next* navigation.
 
 ### 6. The shipped worker is the tested worker
 `public/sw.js` is served verbatim and is not bundled, so it cannot be imported by the test suite.

@@ -108,7 +108,13 @@ describe('attachments against a real database', () => {
       new File([new Uint8Array(PNG_1X1)], 'pin.png', { type: 'image/png' }),
     );
 
+    // Read from the column, not from listAttachments: provenance is stored,
+    // but deliberately not shipped to the client (ADR-0014's reasoning about
+    // collaborator emails), so the summary below must NOT carry it.
+    const row = await db.attachment.findFirstOrThrow({ where: { tripId } });
+    expect(row.uploadedBy).toBe(`owner-${userId}@example.com`);
+
     const [summary] = await listAttachments(tripId);
-    expect(summary.uploadedBy).toBe(`owner-${userId}@example.com`);
+    expect(summary).not.toHaveProperty('uploadedBy');
   });
 });
