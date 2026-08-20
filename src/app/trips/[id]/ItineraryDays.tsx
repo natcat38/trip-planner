@@ -190,9 +190,9 @@ export function ItineraryDays({
                               <button
                                 type="submit"
                                 title={
-                                  votes[activity.id]?.voters.length
-                                    ? votes[activity.id].voters.join(', ')
-                                    : undefined
+                                  votes[activity.id]?.mine
+                                    ? 'You voted for this — click to undo'
+                                    : 'Vote for this'
                                 }
                                 className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
                                   votes[activity.id]?.mine

@@ -4,6 +4,7 @@ import { Prisma } from '../generated/prisma/client';
 import {
   currentUserEmail,
   ForbiddenOrNotFoundError,
+  UnauthenticatedError,
   requireTripAccess,
 } from './auth-scope';
 import { requireActivity } from './itinerary';
@@ -18,10 +19,12 @@ vi.mock('./auth-scope', () => {
       super("That trip doesn't exist or you don't have access.");
     }
   }
+  class UnauthenticatedError extends Error {}
   return {
     requireTripAccess: vi.fn(),
     currentUserEmail: vi.fn(),
     ForbiddenOrNotFoundError,
+    UnauthenticatedError,
   };
 });
 vi.mock('./itinerary', () => ({ requireActivity: vi.fn() }));
@@ -156,16 +159,37 @@ describe('listVotesForTrip', () => {
 
     const result = await listVotesForTrip('trip-1');
 
-    expect(result['activity-1']).toEqual({
-      count: 2,
-      voters: ['me@example.com', 'friend@example.com'],
-      mine: true,
-    });
-    expect(result['activity-2']).toEqual({
-      count: 1,
-      voters: ['friend@example.com'],
-      mine: false,
-    });
+    expect(result['activity-1']).toEqual({ count: 2, mine: true });
+    expect(result['activity-2']).toEqual({ count: 1, mine: false });
+  });
+
+  it('never returns voter email addresses to the caller', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue({ id: 'trip-1' } as never);
+    vi.mocked(currentUserEmail).mockResolvedValue('me@example.com');
+    vi.mocked(db.activityVote.findMany).mockResolvedValue([
+      { activityId: 'activity-1', voterEmail: 'friend@example.com' },
+    ] as never);
+
+    const result = await listVotesForTrip('trip-1');
+
+    // Two collaborators need never have met; the tally is what the feature
+    // needs, and shipping the addresses would introduce them to each other.
+    expect(JSON.stringify(result)).not.toContain('friend@example.com');
+  });
+
+  it('still renders tallies when the session carries no email', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue({ id: 'trip-1' } as never);
+    // requireTripAccess authorises an owner on userId alone, so this session
+    // is a legitimate caller — currentUserEmail throwing must not 500 the
+    // whole trip page, it just means nothing is attributable to them.
+    vi.mocked(currentUserEmail).mockRejectedValue(new UnauthenticatedError());
+    vi.mocked(db.activityVote.findMany).mockResolvedValue([
+      { activityId: 'activity-1', voterEmail: 'friend@example.com' },
+    ] as never);
+
+    const result = await listVotesForTrip('trip-1');
+
+    expect(result['activity-1']).toEqual({ count: 1, mine: false });
   });
 
   it('scopes the query to the trip', async () => {

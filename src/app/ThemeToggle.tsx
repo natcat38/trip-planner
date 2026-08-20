@@ -69,7 +69,11 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    // print:hidden because this renders from the root layout on EVERY route,
+    // including /trips/[id]/print — the page whose only purpose is to be
+    // exported as a PDF (ADR-0007). Without it the finished PDF carries a
+    // floating theme dropdown stamped over the corner of the itinerary.
+    <div className="fixed bottom-4 right-4 z-50 print:hidden">
       <label htmlFor="theme-preference" className="sr-only">
         Theme
       </label>

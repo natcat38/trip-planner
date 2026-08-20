@@ -17,14 +17,35 @@
 
 import { Prisma } from '../generated/prisma/client';
 import { db } from '../lib/db';
-import { currentUserEmail, requireTripAccess } from './auth-scope';
+import {
+  UnauthenticatedError,
+  currentUserEmail,
+  requireTripAccess,
+} from './auth-scope';
 import { requireActivity } from './itinerary';
+
+// A read-side variant of currentUserEmail: identifying the caller is optional
+// when only deciding whether to highlight their own vote. Voting itself still
+// uses the throwing version — you cannot cast a vote nobody can attribute.
+async function currentUserEmailOrNull(): Promise<string | null> {
+  try {
+    return await currentUserEmail();
+  } catch (err) {
+    if (err instanceof UnauthenticatedError) return null;
+    throw err;
+  }
+}
 
 export interface VoteSummary {
   count: number;
-  voters: string[];
   mine: boolean;
 }
+
+// Deliberately no `voters` list. The owner knows their collaborators' emails
+// because they sent the invitations, but two collaborators need never have met
+// — shipping the raw addresses to the client would introduce them to each
+// other without either one agreeing to it. A tally plus "did I vote" is what
+// the feature actually needs.
 
 // Presence IS the vote: if the caller already voted, remove that row;
 // otherwise add one. The unique index on [activityId, voterEmail] is what
@@ -77,7 +98,13 @@ export async function listVotesForTrip(
   tripId: string,
 ): Promise<Record<string, VoteSummary>> {
   const trip = await requireTripAccess(tripId);
-  const myEmail = await currentUserEmail();
+  // requireTripAccess authorises an owner on userId alone and treats a missing
+  // email as `undefined` rather than an error, so a session without one is a
+  // legitimate, already-supported caller. currentUserEmail() throws on exactly
+  // that session — calling it unguarded here would 500 the whole trip page for
+  // a user who could open it fine before votes existed. No email simply means
+  // nothing can be attributed to you.
+  const myEmail = await currentUserEmailOrNull();
 
   const votes = await db.activityVote.findMany({
     where: { activity: { day: { tripId: trip.id } } },
@@ -86,14 +113,9 @@ export async function listVotesForTrip(
 
   const summary: Record<string, VoteSummary> = {};
   for (const vote of votes) {
-    const entry = summary[vote.activityId] ?? {
-      count: 0,
-      voters: [],
-      mine: false,
-    };
+    const entry = summary[vote.activityId] ?? { count: 0, mine: false };
     entry.count += 1;
-    entry.voters.push(vote.voterEmail);
-    if (vote.voterEmail === myEmail) entry.mine = true;
+    if (myEmail != null && vote.voterEmail === myEmail) entry.mine = true;
     summary[vote.activityId] = entry;
   }
   return summary;
