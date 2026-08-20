@@ -193,6 +193,33 @@ describe('savePlaceFromPage', () => {
     );
   });
 
+  it('does not erase existing notes when the popup sends none', async () => {
+    // The popup's notes box starts empty every time, so re-saving a page
+    // would otherwise wipe research typed into the app — silently, with
+    // nothing in the extension flow to hint it had happened.
+    await savePlaceFromPage('user-1', undefined, input());
+
+    const call = vi.mocked(db.place.upsert).mock.calls[0][0] as {
+      create: { notes: string | null };
+      update: Record<string, unknown>;
+    };
+    expect(call.create.notes).toBeNull();
+    expect('notes' in call.update).toBe(false);
+  });
+
+  it('does write notes on update when the popup supplied some', async () => {
+    await savePlaceFromPage(
+      'user-1',
+      undefined,
+      input({ notes: 'Great cake' }),
+    );
+
+    const call = vi.mocked(db.place.upsert).mock.calls[0][0] as {
+      update: { notes?: string };
+    };
+    expect(call.update.notes).toBe('Great cake');
+  });
+
   it('truncates absurdly long notes instead of storing them whole', async () => {
     await savePlaceFromPage(
       'user-1',

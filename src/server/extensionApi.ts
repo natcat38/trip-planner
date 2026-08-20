@@ -118,6 +118,14 @@ export async function savePlaceFromPage(
   // Upsert on @@unique([tripId, source, sourceId]) for the same reason
   // savePlace does it for OSM results: saving the same page twice should
   // update that place, not add a duplicate.
+  //
+  // The update deliberately differs from the create: `notes` is only written
+  // when the popup actually supplied some. Name and category come from fields
+  // the user just filled in, so overwriting those is what they asked for — but
+  // the popup's notes box starts empty every time, so writing it
+  // unconditionally means re-saving a page silently erases research typed into
+  // the app. Nothing in the extension flow would ever hint that had happened.
+  const { notes: _omitted, ...alwaysUpdated } = data;
   return db.place.upsert({
     where: {
       tripId_source_sourceId: {
@@ -127,6 +135,6 @@ export async function savePlaceFromPage(
       },
     },
     create: data,
-    update: data,
+    update: notes ? data : alwaysUpdated,
   });
 }

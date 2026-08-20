@@ -43,15 +43,20 @@ async function api(appUrl, token, path, init = {}) {
       Authorization: `Bearer ${token}`,
     },
   });
-  let body = {};
+  let body = null;
   try {
     body = await response.json();
   } catch {
-    // A non-JSON body means something upstream of the app answered (a proxy,
-    // a captive portal). Fall through to the status-based message below.
+    // Something upstream of the app answered — a proxy, a captive portal, or
+    // the wrong host typed into the App URL field.
   }
   if (!response.ok) {
-    throw new Error(body.error ?? `Request failed (${response.status}).`);
+    throw new Error(body?.error ?? `Request failed (${response.status}).`);
+  }
+  if (body === null || typeof body !== 'object') {
+    // Saying so beats returning {} and letting the caller trip over a missing
+    // field with "cannot read properties of undefined".
+    throw new Error(`${appUrl} did not answer like Trip Planner.`);
   }
   return body;
 }
@@ -178,4 +183,9 @@ async function init() {
   }
 }
 
-init();
+// A rejection here would leave the popup completely blank — both sections
+// start hidden, and whichever one should be shown is chosen inside init().
+init().catch((err) => {
+  show('setup');
+  setError('setup-error', err.message);
+});

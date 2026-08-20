@@ -220,6 +220,28 @@ test.describe('extension API', () => {
     expect(list.status()).toBe(401);
   });
 
+  test('answers 400, not 500, for JSON that is not an object', async ({
+    page,
+    context,
+    request,
+  }) => {
+    const token = await generateToken(page, context);
+
+    // `null`, `[]` and `"str"` are all valid JSON, so parsing succeeding does
+    // not mean there are fields to read. A body of literal `null` used to
+    // reach `body.tripId` and throw.
+    for (const data of ['null', '[]', '"str"', '123']) {
+      const response = await request.post('/api/extension/places', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data,
+      });
+      expect(response.status()).toBe(400);
+    }
+  });
+
   test('rejects a javascript: URL', async ({ page, context, request }) => {
     const token = await generateToken(page, context);
 

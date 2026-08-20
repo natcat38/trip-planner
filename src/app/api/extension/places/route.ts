@@ -25,20 +25,31 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: Record<string, unknown>;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Expected JSON.' }, { status: 400 });
   }
+  // `null`, `[]`, `"str"` and `123` are all valid JSON, so parsing succeeding
+  // does not mean there is an object to read fields off. Without this, a body
+  // of literal `null` reaches `body.tripId` and throws — a 500 for what is
+  // plainly a bad request.
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Expected a JSON object.' },
+      { status: 400 },
+    );
+  }
+  const fields = body as Record<string, unknown>;
 
   try {
     const place = await savePlaceFromPage(identity.userId, identity.email, {
-      tripId: String(body.tripId ?? ''),
-      name: String(body.name ?? ''),
-      url: String(body.url ?? ''),
-      category: body.category == null ? undefined : String(body.category),
-      notes: body.notes == null ? undefined : String(body.notes),
+      tripId: String(fields.tripId ?? ''),
+      name: String(fields.name ?? ''),
+      url: String(fields.url ?? ''),
+      category: fields.category == null ? undefined : String(fields.category),
+      notes: fields.notes == null ? undefined : String(fields.notes),
     });
     return NextResponse.json({ place: { id: place.id, name: place.name } });
   } catch (err) {
