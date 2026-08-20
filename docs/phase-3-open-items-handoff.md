@@ -129,6 +129,32 @@ strange place to introduce the change.
 against a dev server. Harmless for a personal tool; **drop it if the extension is ever packaged for
 anyone else.**
 
+### 2.10 The extension's save-success path is only covered locally, never in CI
+Saving a place needs a real geocode, and `geocode()` returns `null` without `MAPBOX_TOKEN`. CI does
+not have one, deliberately — this repo keeps live third-party calls out of CI (`transit.spec.ts`
+asserts Transitous is never called on page load).
+
+So `e2e/extension-api.spec.ts` splits: the two save-success tests skip unless `MAPBOX_TOKEN` is
+present, and a complementary test asserts the honest-degradation path (**422**, "couldn't find that
+on the map", no row written) which is what runs in CI. Both are correct behaviour; each test asserts
+the one that applies to its environment.
+
+**The consequence to know:** a regression that broke saving *only* when geocoding succeeds would go
+green in CI and be caught only by running `npm run test:e2e` locally, where `.env` has a token. Both
+branches were verified by masking `MAPBOX_TOKEN` in `.env` and re-running.
+
+If this ever needs closing, the options are a `MAPBOX_TOKEN` repo secret (accepting a live API call
+per CI run) or a seam for injecting a fake geocoder in tests. Neither was worth it for one path.
+
+### 2.11 Production has been smoke-tested, not functionally tested
+After each merge, verification is: the deploy job reports the migration applied to Neon, and `/`,
+`/trips`, `/settings` return the expected status codes. **Nobody has uploaded an attachment, gone
+offline, or saved a place from the extension against production.** The features are covered by e2e
+locally and the schema is confirmed migrated, but the end-to-end production paths are unexercised.
+
+Worth 5 minutes with a real browser after the next deploy, particularly for attachments (Vercel's
+4.5 MB body limit is enforced by the platform, not by this app, so it only really exists in prod).
+
 ---
 
 ## 3. Deferred with the decision already recorded — don't re-litigate without a reason

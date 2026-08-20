@@ -77,11 +77,20 @@ test.describe('extension API', () => {
     return token;
   }
 
+  // Saving needs a real geocode, and geocode() returns null without
+  // MAPBOX_TOKEN — which CI deliberately does not have, because this repo
+  // keeps live third-party calls out of CI (see transit.spec.ts asserting
+  // Transitous is never called). So the save-success path runs locally, where
+  // .env has a token, and the honest-degradation path runs in CI. Both are
+  // correct behaviour; each test asserts the one that applies.
+  const hasGeocoder = Boolean(process.env.MAPBOX_TOKEN);
+
   test('a generated token lists the user trips and saves a place', async ({
     page,
     context,
     request,
   }) => {
+    test.skip(!hasGeocoder, 'needs MAPBOX_TOKEN to geocode the saved place');
     const token = await generateToken(page, context);
 
     const list = await request.get('/api/extension/trips', {
@@ -121,6 +130,7 @@ test.describe('extension API', () => {
     context,
     request,
   }) => {
+    test.skip(!hasGeocoder, 'needs MAPBOX_TOKEN to geocode the saved place');
     const token = await generateToken(page, context);
     const body = {
       tripId,
@@ -140,6 +150,35 @@ test.describe('extension API', () => {
     const places = await db.place.findMany({ where: { tripId } });
     expect(places).toHaveLength(1);
     expect(places[0].name).toBe('Fukuoka Tower (renamed)');
+  });
+
+  test('reports a place it cannot locate instead of failing opaquely', async ({
+    page,
+    context,
+    request,
+  }) => {
+    test.skip(
+      hasGeocoder,
+      'the geocoder is configured, so this cannot be provoked',
+    );
+    // The complement of the two tests above, and what actually runs in CI.
+    // Without a Mapbox token geocode() returns null rather than throwing, and
+    // Place.lat/lng are non-null — so the only correct answer is to say so.
+    // A 500 here would mean that null was reaching the database layer.
+    const token = await generateToken(page, context);
+
+    const response = await request.post('/api/extension/places', {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        tripId,
+        name: 'Fukuoka Tower',
+        url: 'https://example.com/fukuoka-guide',
+      },
+    });
+
+    expect(response.status()).toBe(422);
+    expect(await response.text()).toMatch(/couldn.t find/i);
+    expect(await db.place.count({ where: { tripId } })).toBe(0);
   });
 
   test('refuses every request without a valid token', async ({ request }) => {
