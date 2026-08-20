@@ -1,4 +1,12 @@
-'use server';
+// Deliberately NOT a `'use server'` module, unlike its siblings here.
+// `'use server'` turns every export into a Server Action, and Next's own
+// guidance is to treat Server Actions as public HTTP endpoints — which would
+// publish `getDecryptedKey` (below) as an endpoint returning the user's
+// plaintext API key to anyone signed in, and hand any XSS on any page a
+// one-call exfiltration route. The route's own `src/app/settings/actions.ts`
+// carries `'use server'` and exposes only the safe operations; this module is
+// imported server-side by that file, by the settings page, and by
+// guideSummary.ts. Do not add the directive here.
 
 /**
  * BYOK AI key settings (Phase 3 M3, ADR-0011): store, mask, and retrieve the
@@ -59,11 +67,18 @@ async function loadDecryptedKey(userId: string): Promise<{
       aiKeyUpdatedAt: true,
     },
   });
+  // aiKeyUpdatedAt is guarded alongside the ciphertext fields rather than
+  // assumed present: a row carrying ciphertext but no timestamp (a partial
+  // restore, or a migration that adds these columns separately) would
+  // otherwise reach the client typed as a Date but holding null, and
+  // AiKeyPanel's toLocaleDateString() would break the one page the user
+  // could fix their key from.
   if (
     !user?.aiProvider ||
     !user.aiKeyCiphertext ||
     !user.aiKeyIv ||
-    !user.aiKeyTag
+    !user.aiKeyTag ||
+    !user.aiKeyUpdatedAt
   ) {
     return null;
   }
@@ -78,9 +93,7 @@ async function loadDecryptedKey(userId: string): Promise<{
     plaintext,
     provider: user.aiProvider as AiProvider,
     model: user.aiModel,
-    // Always written alongside the ciphertext fields in saveApiKey, so it's
-    // never null when we've already confirmed those three are present above.
-    updatedAt: user.aiKeyUpdatedAt as Date,
+    updatedAt: user.aiKeyUpdatedAt,
   };
 }
 
@@ -120,7 +133,11 @@ export async function saveApiKey(rawKey: string): Promise<void> {
   // request. A rejected key is never written.
   const result = await testKey(rawKey);
   if (!result.ok) {
-    throw new ValidationError(`That key was rejected: ${result.reason}`);
+    // "Couldn't verify", not "was rejected": testKey returns the same shape
+    // for a provider that's down as for a bad key, and telling someone their
+    // valid key was rejected during an outage invites them to revoke and
+    // regenerate it for nothing.
+    throw new ValidationError(`Couldn't verify that key: ${result.reason}`);
   }
 
   const encrypted = encryptSecret(rawKey);
