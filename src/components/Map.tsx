@@ -14,6 +14,11 @@ export interface MapPin {
   lat: number;
   lng: number;
   title: string;
+  // Optional per-pin colour override (e.g. a hex like "#e11d48"). Falls back
+  // to the default/selected colours below when absent — Map.tsx stays a dumb
+  // pins-in, map-out component with no idea what a "custom pin colour"
+  // feature even is; validating/interpreting that string is the caller's job.
+  color?: string | null;
 }
 
 const PIN_COLOR = '#2563eb';
@@ -38,7 +43,7 @@ export function Map({
   });
 
   const pinsKey = pins
-    .map((p) => `${p.id}:${p.lat}:${p.lng}:${p.title}`)
+    .map((p) => `${p.id}:${p.lat}:${p.lng}:${p.title}:${p.color ?? ''}`)
     .join('|');
 
   useEffect(() => {
@@ -77,7 +82,7 @@ export function Map({
         el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
         el.style.cursor = 'pointer';
         el.style.background =
-          pin.id === selectedId ? SELECTED_PIN_COLOR : PIN_COLOR;
+          pin.id === selectedId ? SELECTED_PIN_COLOR : (pin.color ?? PIN_COLOR);
         el.addEventListener('click', () => onSelectPinRef.current?.(pin.id));
 
         const marker = new mapboxgl.Marker({ element: el })
@@ -101,8 +106,9 @@ export function Map({
 
   useEffect(() => {
     markersRef.current.forEach((marker, id) => {
+      const pin = pins.find((p) => p.id === id);
       marker.getElement().style.background =
-        id === selectedId ? SELECTED_PIN_COLOR : PIN_COLOR;
+        id === selectedId ? SELECTED_PIN_COLOR : (pin?.color ?? PIN_COLOR);
     });
     const pin = pins.find((p) => p.id === selectedId);
     if (pin) mapRef.current?.flyTo({ center: [pin.lng, pin.lat], zoom: 15 });

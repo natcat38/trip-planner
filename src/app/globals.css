@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+/* Switches the `dark:` variant from following `prefers-color-scheme`
+ * unconditionally to following the `.dark` class on <html> instead. The
+ * class itself is still driven by the OS preference when the user's stored
+ * choice is "system" (or unset) — see the inline script in
+ * src/app/layout.tsx — so out-of-the-box behaviour for anyone who never
+ * touches the toggle is unchanged. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,11 +20,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {

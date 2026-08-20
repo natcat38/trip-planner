@@ -63,6 +63,22 @@ export async function ensureDaysForTrip(tripId: string) {
   });
 }
 
+// Day.notes is exposed on the public /shared/[token] route (see the schema
+// comment) — itinerary content, like Activity.notes, is deliberately public.
+export async function updateDayNotes(
+  tripId: string,
+  dayId: string,
+  notes: string,
+  updatedAt: Date,
+) {
+  const day = await requireDay(tripId, dayId);
+  const result = await db.day.updateMany({
+    where: { id: day.id, updatedAt },
+    data: { notes: notes || null },
+  });
+  if (result.count === 0) throw new StaleWriteError();
+}
+
 export interface ActivityInput {
   title: string;
   placeName?: string;
@@ -176,6 +192,28 @@ export async function updateActivity(
 export async function deleteActivity(tripId: string, activityId: string) {
   const activity = await requireActivity(tripId, activityId);
   await db.activity.delete({ where: { id: activity.id } });
+}
+
+// Client-supplied FormData, ultimately rendered straight into a marker's
+// style.background (src/components/Map.tsx) — an unvalidated string here is
+// a CSS-injection vector, so only a short hex triplet/sextuplet is accepted.
+const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$/;
+
+export async function setActivityPinColor(
+  tripId: string,
+  activityId: string,
+  color: string | null,
+) {
+  const activity = await requireActivity(tripId, activityId);
+  if (color != null && !HEX_COLOR_PATTERN.test(color)) {
+    throw new ValidationError(
+      'Pin colour must be a hex code like #e11d48, or left as default.',
+    );
+  }
+  await db.activity.update({
+    where: { id: activity.id },
+    data: { pinColor: color },
+  });
 }
 
 export async function moveActivity(
