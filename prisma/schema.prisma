@@ -89,6 +89,7 @@ model Trip {
   expenses      Expense[]
   collaborators TripCollaborator[]
   places        Place[]
+  checklist     ChecklistItem[]
 
   @@index([userId])
 }
@@ -97,6 +98,11 @@ model Day {
   id         String     @id @default(cuid())
   tripId     String
   date       DateTime
+  // Itinerary content, like Activity.notes — and like it, this IS exposed on
+  // the public /shared/[token] route. Deliberate: a shared itinerary that
+  // hides the day's own plan is less useful than one that shows it. Do not
+  // put anything private here.
+  notes      String?
   updatedAt  DateTime   @updatedAt
   trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
   activities Activity[]
@@ -105,7 +111,7 @@ model Day {
 }
 
 model Activity {
-  id           String   @id @default(cuid())
+  id           String         @id @default(cuid())
   dayId        String
   title        String
   placeName    String?
@@ -118,10 +124,12 @@ model Activity {
   costMinor    Int? // in costCurrency MINOR units
   costCurrency String? // ISO 4217 of the original cost
   sortOrder    Int
+  pinColor     String? // hex like "#e11d48"; null = the map's default pin
   placeId      String?
-  updatedAt    DateTime @updatedAt
-  day          Day      @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  place        Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  updatedAt    DateTime       @updatedAt
+  day          Day            @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  votes        ActivityVote[]
+  place        Place?         @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   @@index([dayId])
   @@index([placeId])
@@ -166,6 +174,37 @@ model Place {
 
   @@unique([tripId, source, sourceId])
   @@index([tripId])
+}
+
+model ChecklistItem {
+  // Packing lists and to-dos, scoped to a trip rather than a day: "pack the
+  // charger" isn't a Tuesday thing.
+  id        String   @id @default(cuid())
+  tripId    String
+  label     String
+  done      Boolean  @default(false)
+  sortOrder Int
+  updatedAt DateTime @updatedAt
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+model ActivityVote {
+  // A single thumbs-up per person per activity — presence IS the vote, so
+  // un-voting is a delete and there's no value column to keep in sync.
+  // Keyed by email, not a User FK, for the same reason as TripCollaborator
+  // (ADR-0006): collaborators are matched by their verified OAuth email and
+  // may not have an account row at invite time.
+  id         String   @id @default(cuid())
+  activityId String
+  voterEmail String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, voterEmail])
+  @@index([activityId])
 }
 
 model TripCollaborator {

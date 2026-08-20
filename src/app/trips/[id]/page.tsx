@@ -13,9 +13,12 @@ import {
 } from '@/server/auth-scope';
 import { geocode } from '@/lib/geocode';
 import { getTripWeather } from '@/lib/research/weather';
+import { listChecklist } from '@/server/checklist';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { getShareStatus } from '@/server/sharing';
+import { listVotesForTrip } from '@/server/votes';
 import { BudgetPanel } from './BudgetPanel';
+import { Checklist } from './Checklist';
 import { ItineraryDays } from './ItineraryDays';
 import { SharingPanel } from './SharingPanel';
 
@@ -105,7 +108,10 @@ export default async function TripItineraryPage({
           tripId={trip.id}
           days={days}
           weather={weather ? Object.fromEntries(weather) : null}
+          votes={await listVotesForTrip(trip.id)}
         />
+
+        <Checklist tripId={trip.id} items={await listChecklist(trip.id)} />
       </main>
     </div>
   );

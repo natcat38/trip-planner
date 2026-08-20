@@ -8,6 +8,7 @@ import {
   ensureDaysForTrip,
   moveActivity,
   updateActivity,
+  updateDayNotes,
 } from './itinerary';
 
 // Real Postgres, only next-auth's session lookup stubbed — same rationale as trips.db.test.ts.
@@ -142,6 +143,10 @@ describe('itinerary against a real database', () => {
           category: 'Food',
         }),
       ).rejects.toBeInstanceOf(ForbiddenOrNotFoundError);
+
+      await expect(
+        updateDayNotes(tripId, otherDay.id, 'Sneaky notes', otherDay.updatedAt),
+      ).rejects.toBeInstanceOf(ForbiddenOrNotFoundError);
     } finally {
       await db.trip.deleteMany({ where: { userId: otherUser.id } });
       await db.user.delete({ where: { id: otherUser.id } });
@@ -165,6 +170,22 @@ describe('itinerary against a real database', () => {
     expect(
       await db.activity.findMany({ where: { dayId: day.id } }),
     ).toHaveLength(0);
+  });
+
+  it('round-trips day notes and rejects a stale write', async () => {
+    const [day] = await ensureDaysForTrip(tripId);
+    expect(day.notes).toBeNull();
+
+    await updateDayNotes(tripId, day.id, 'bring an umbrella', day.updatedAt);
+
+    const reloaded = await db.day.findUniqueOrThrow({ where: { id: day.id } });
+    expect(reloaded.notes).toBe('bring an umbrella');
+
+    await expect(
+      updateDayNotes(tripId, day.id, 'stale edit', day.updatedAt),
+    ).rejects.toThrow(
+      'This trip was changed elsewhere — reload and try again.',
+    );
   });
 
   it('geocodes and persists real lat/lng when a placeName is set, and skips re-geocoding on an unrelated edit', async () => {

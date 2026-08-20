@@ -11,12 +11,12 @@ block — an orientation gap, not an omission by the generator.
 | Directory | Source files | Purpose |
 | --- | ---: | --- |
 | `src` | 2 | Application-root wiring shared by every request: the Auth.js (Google + GitHub, database sessions) configuration here, plus the route-protection proxy in `src/proxy.ts` that gates access before a request reaches a page. |
-| `src/app` | 2 | The App Router route tree: the root HTML shell/fonts in this file, and the trips list, trip detail, and trip/activity create-edit pages nested below it. |
+| `src/app` | 3 | Light/dark/system theme toggle. |
 | `src/app/api/auth/[...nextauth]` | 1 | The Auth.js catch-all API route: forwards GET/POST to the handlers built from the shared config in `src/auth.ts`, giving every OAuth callback a URL. |
 | `src/app/settings` | 3 | Server Actions for the Settings route (Phase 3 M3, ADR-0011): save/replace the user's own Groq/OpenRouter API key, remove it, choose a model, or retry fetching the model list after a transient provider failure. |
 | `src/app/shared/[token]` | 3 | The public share-link route: a fully anonymous, session-less read-only view of a trip's itinerary and budget, reached only by its `shareToken`. |
 | `src/app/trips` | 4 | The trips list route: the signed-in user's trips overview and create/edit entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself. |
-| `src/app/trips/[id]` | 9 | Renders between two consecutive activities on a day (ItineraryDays.tsx), only when both have coordinates. |
+| `src/app/trips/[id]` | 11 | Renders between two consecutive activities on a day (ItineraryDays.tsx), only when both have coordinates. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/calendar.ics` | 1 | The .ics calendar export for one trip: every activity across all of the trip's days as an RFC 5545 VEVENT, downloadable/subscribable into any calendar app. |
 | `src/app/trips/[id]/edit` | 1 | The trip edit/delete route: loads a trip via `requireTripAccess`, then binds its `updatedAt` into the update action so a stale-write attempt is rejected per the optimistic-locking rule (ADR-0003). |
@@ -24,11 +24,11 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
 | `src/components` | 1 | Shared presentational components used across trip pages: currently the Mapbox pin map that plots an itinerary's geocoded activity places. |
-| `src/lib` | 7 | AES-256-GCM encryption for user-supplied secrets (BYOK provider API keys) at rest in Postgres. |
+| `src/lib` | 8 | AES-256-GCM encryption for user-supplied secrets (BYOK provider API keys) at rest in Postgres. |
 | `src/lib/ai` | 1 | BYOK AI layer: talks to the user's own Groq or OpenRouter API key over their shared OpenAI-compatible surface (`POST {base}/chat/completions`, `GET {base}/models`, `Authorization: Bearer {key}`) — see docs/adr/0009-gemini-free-tier-unusable-eea.md for why these two providers and not a Gemini-direct or app-held-key design. |
 | `src/lib/dayPlan` | 1 | Algorithmic day-plan candidate generation — the keyless path for Phase 3 M4. |
 | `src/lib/research` | 6 | Free, keyless destination-research data sources — currently OpenStreetMap via the Overpass API. |
-| `src/server` | 12 | BYOK AI key settings (Phase 3 M3, ADR-0011): store, mask, and retrieve the user's own Groq/OpenRouter API key. |
+| `src/server` | 14 | BYOK AI key settings (Phase 3 M3, ADR-0011): store, mask, and retrieve the user's own Groq/OpenRouter API key. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-20 source directories, 64 files, 0 without a declared purpose.
+20 source directories, 70 files, 0 without a declared purpose.
