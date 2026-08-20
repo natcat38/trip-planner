@@ -126,10 +126,31 @@ interface ChatCompletionResponse {
   choices?: { message?: { content?: string }; finish_reason?: string }[];
 }
 
-export interface Completion {
-  text: string;
-  /** The model hit the output cap mid-thought; the text is incomplete. */
-  truncated: boolean;
+export type CompletionResult =
+  | { ok: true; text: string; truncated: boolean }
+  /**
+   * The provider answered, but the model produced no usable text because it
+   * exhausted the token budget before emitting any. Reasoning models spend
+   * that budget on hidden chain-of-thought first: measured live on
+   * dots-3-note-preview, 868 of 957 completion tokens went to reasoning and
+   * only ~89 to the answer, and at a small cap `content` comes back null with
+   * finish_reason 'length'. That is a completely different fix for the user
+   * ("ask for less, or pick another model") than a provider being down, so it
+   * must not collapse into the same failure.
+   */
+  | { ok: false; reason: 'no_room' }
+  | { ok: false; reason: 'unavailable' };
+
+export interface CompleteOptions {
+  /** Output budget. Reasoning models spend most of it thinking, not answering. */
+  maxTokens?: number;
+  /**
+   * Ask the provider to constrain output to a JSON object. Verified live: with
+   * this set the model returned clean, schema-shaped JSON; without it the same
+   * model rambled through its whole budget and produced no answer at all. Both
+   * providers accept OpenAI's `response_format`.
+   */
+  jsonMode?: boolean;
 }
 
 export async function complete(
@@ -137,9 +158,11 @@ export async function complete(
   model: string,
   system: string,
   user: string,
-): Promise<Completion | null> {
+  opts: CompleteOptions = {},
+): Promise<CompletionResult> {
+  const { maxTokens = MAX_OUTPUT_TOKENS, jsonMode = false } = opts;
   const provider = detectProvider(apiKey);
-  if (!provider) return null;
+  if (!provider) return { ok: false, reason: 'unavailable' };
 
   const result = await request(provider, apiKey, '/chat/completions', {
     method: 'POST',
@@ -152,18 +175,27 @@ export async function complete(
       // Without this the model uses whatever default the provider picks, which
       // is often small enough to stop a summary mid-sentence. Observed live:
       // a Fukuoka summary cut off at "This area is located next to".
-      max_tokens: MAX_OUTPUT_TOKENS,
+      max_tokens: maxTokens,
+      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
     }),
   });
-  if (!result || result.status !== 200) return null;
+  if (!result || result.status !== 200)
+    return { ok: false, reason: 'unavailable' };
 
   const choice = (result.body as ChatCompletionResponse | null)?.choices?.[0];
   const content = choice?.message?.content;
-  if (typeof content !== 'string' || content.length === 0) return null;
+  const hitCap = choice?.finish_reason === 'length';
 
-  // finish_reason 'length' means the model was still going when it hit the cap.
-  // Callers surface that rather than presenting a half-sentence as the answer.
-  return { text: content, truncated: choice?.finish_reason === 'length' };
+  if (typeof content !== 'string' || content.length === 0) {
+    // Empty content after hitting the cap means the budget went entirely on
+    // reasoning — the provider is fine, the model just never got to answering.
+    return { ok: false, reason: hitCap ? 'no_room' : 'unavailable' };
+  }
+
+  // finish_reason 'length' with text present means the model was still going
+  // when it hit the cap. Callers surface that rather than presenting a
+  // half-sentence as the answer.
+  return { ok: true, text: content, truncated: hitCap };
 }
 
 // Dedicated, idempotent, zero-cost credential-check endpoints — deliberately not
