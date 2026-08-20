@@ -8,6 +8,7 @@ import { formatMoney } from '@/lib/money';
 import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
 import { InvitesBanner } from './InvitesBanner';
+import { duplicateTripAction } from './actions';
 
 function formatDateRange(start: Date, end: Date): string {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -64,11 +65,11 @@ export default async function TripsPage() {
         ) : (
           <ul className="flex flex-col gap-3">
             {trips.map((trip) => (
-              <li key={trip.id}>
-                <Link
-                  href={`/trips/${trip.id}`}
-                  className="block rounded-lg border border-black/[.08] p-5 hover:bg-black/[.02] dark:border-white/[.145] dark:hover:bg-white/[.03]"
-                >
+              <li
+                key={trip.id}
+                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/[.145] dark:hover:bg-white/[.03]"
+              >
+                <Link href={`/trips/${trip.id}`} className="block flex-1 p-5">
                   <div className="flex items-baseline justify-between gap-4">
                     <h2 className="font-medium text-black dark:text-zinc-50">
                       {trip.name}
@@ -82,6 +83,17 @@ export default async function TripsPage() {
                     {formatDateRange(trip.startDate, trip.endDate)}
                   </p>
                 </Link>
+                <form
+                  action={duplicateTripAction.bind(null, trip.id)}
+                  className="shrink-0 pr-5"
+                >
+                  <button
+                    type="submit"
+                    className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                  >
+                    Duplicate
+                  </button>
+                </form>
               </li>
             ))}
           </ul>

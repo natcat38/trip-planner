@@ -19,10 +19,7 @@
  */
 
 import { complete } from '../lib/ai/provider';
-import {
-  buildCandidates,
-  type PlanCandidate,
-} from '../lib/dayPlan/algorithmic';
+import { buildCandidates } from '../lib/dayPlan/algorithmic';
 import { getDecryptedKey } from './aiSettings';
 import { requireTripAccess } from './auth-scope';
 import { listPlaces } from './places';

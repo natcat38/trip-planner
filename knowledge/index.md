@@ -24,6 +24,7 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 - [Research sources](/integrations/research-sources.md) — keyless Overpass/OSM places + Wikivoyage guide prose.
 - [Transit routing](/integrations/transit-routing.md) — keyless Transitous journeys + map deep-link fallback.
 - [BYOK AI](/integrations/byok-ai.md) — user-supplied Groq/OpenRouter key, encrypted at rest, grounded use only.
+- [Weather](/integrations/weather.md) — keyless Open-Meteo forecast, degrading to last year's actuals.
 
 ## Infra
 

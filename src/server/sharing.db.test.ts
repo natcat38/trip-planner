@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from '../auth';
 import { db } from '../lib/db';
+import { UnauthenticatedError } from './auth-scope';
 import { InvalidShareLinkError } from './errors';
 import {
   acceptInvite,
   declineInvite,
+  duplicateSharedTrip,
   enableShareLink,
   getSharedTrip,
   inviteCollaborator,
@@ -138,4 +140,146 @@ describe('collaborator invite flow against a real database', () => {
     const remaining = await db.tripCollaborator.findMany({ where: { tripId } });
     expect(remaining).toHaveLength(0);
   });
+});
+
+describe('duplicateSharedTrip against a real database', () => {
+  async function withVisitor<T>(
+    fn: (visitorId: string, visitorEmail: string) => Promise<T>,
+  ): Promise<T> {
+    const visitor = await db.user.create({
+      data: { email: `visitor-${crypto.randomUUID()}@example.com` },
+    });
+    try {
+      return await fn(visitor.id, visitor.email);
+    } finally {
+      // Cascades to the copied trip's days/activities — Trip's child
+      // relations are all onDelete: Cascade.
+      await db.trip.deleteMany({ where: { userId: visitor.id } });
+      await db.user.delete({ where: { id: visitor.id } });
+    }
+  }
+
+  it('requires a signed-in user even though the source link is public', async () => {
+    signInAsOwner();
+    const token = await enableShareLink(tripId);
+
+    vi.mocked(auth).mockResolvedValue(null as never);
+
+    await expect(duplicateSharedTrip(token)).rejects.toBeInstanceOf(
+      UnauthenticatedError,
+    );
+  });
+
+  it('refuses an unknown or disabled share token', () =>
+    withVisitor(async (visitorId, visitorEmail) => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: visitorId, email: visitorEmail },
+      } as never);
+
+      await expect(
+        duplicateSharedTrip('not-a-real-token'),
+      ).rejects.toBeInstanceOf(InvalidShareLinkError);
+
+      // Same for a token that used to work but was revoked.
+      signInAsOwner();
+      const token = await enableShareLink(tripId);
+      signInAsOwner();
+      await revokeShareLink(tripId);
+
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: visitorId, email: visitorEmail },
+      } as never);
+      await expect(duplicateSharedTrip(token)).rejects.toBeInstanceOf(
+        InvalidShareLinkError,
+      );
+    }));
+
+  it(
+    'copies days and activities but never places or expenses, even when the ' +
+      'source trip has both — this is the sharing security boundary',
+    () =>
+      withVisitor(async (visitorId, visitorEmail) => {
+        // The source trip has a saved place, an activity pointing at it, and
+        // a big-ticket expense — none of which getSharedTrip's public
+        // include exposes, so none of it should survive into the copy.
+        const place = await db.place.create({
+          data: {
+            tripId,
+            source: 'manual',
+            name: 'Ichiran',
+            lat: 1,
+            lng: 2,
+            category: 'Food',
+          },
+        });
+        const day = await db.day.create({
+          data: { tripId, date: new Date('2026-09-01') },
+        });
+        await db.activity.create({
+          data: {
+            dayId: day.id,
+            title: 'Ramen',
+            category: 'Food',
+            sortOrder: 0,
+            placeId: place.id,
+          },
+        });
+        await db.expense.create({
+          data: {
+            tripId,
+            label: 'Flights',
+            category: 'Transport',
+            costMinor: 500000,
+            costCurrency: 'JPY',
+          },
+        });
+        await db.tripCollaborator.create({
+          data: {
+            tripId,
+            email: `collab-${crypto.randomUUID()}@example.com`,
+            status: 'ACCEPTED',
+          },
+        });
+
+        signInAsOwner();
+        const token = await enableShareLink(tripId);
+
+        vi.mocked(auth).mockResolvedValue({
+          user: { id: visitorId, email: visitorEmail },
+        } as never);
+        const newTrip = await duplicateSharedTrip(token);
+
+        expect(newTrip.id).not.toBe(tripId);
+        expect(newTrip.userId).toBe(visitorId);
+        expect(newTrip.name).toBe('Shared Trip (copy)');
+        expect(newTrip.shareToken).toBeNull();
+
+        const newDays = await db.day.findMany({
+          where: { tripId: newTrip.id },
+          include: { activities: true },
+        });
+        expect(newDays).toHaveLength(1);
+        expect(newDays[0].activities).toHaveLength(1);
+        expect(newDays[0].activities[0].title).toBe('Ramen');
+        // The security assertion: the activity is copied, but NOT its
+        // placeId — there is no Place row for it to point at, because
+        // Places were never part of the public share surface.
+        expect(newDays[0].activities[0].placeId).toBeNull();
+
+        const newPlaces = await db.place.findMany({
+          where: { tripId: newTrip.id },
+        });
+        expect(newPlaces).toHaveLength(0);
+
+        const newExpenses = await db.expense.findMany({
+          where: { tripId: newTrip.id },
+        });
+        expect(newExpenses).toHaveLength(0);
+
+        const newCollaborators = await db.tripCollaborator.findMany({
+          where: { tripId: newTrip.id },
+        });
+        expect(newCollaborators).toHaveLength(0);
+      }),
+  );
 });

@@ -6,6 +6,7 @@
  * @packageDocumentation
  */
 import type { Metadata } from 'next';
+import { currentUserId, UnauthenticatedError } from '@/server/auth-scope';
 import { InvalidShareLinkError } from '@/server/errors';
 import {
   getSharedBudgetSummary,
@@ -13,6 +14,21 @@ import {
   listSharedExpenses,
 } from '@/server/sharing';
 import { SharedTripView } from './SharedTripView';
+
+// The share route has no auth gate at all (see the file header below), so a
+// visitor may or may not be signed in. "Save a copy" only makes sense for a
+// signed-in visitor — duplicateSharedTrip requires an account to own the
+// copy — so the page checks this itself rather than letting an anonymous
+// visitor hit a broken button.
+async function isSignedIn(): Promise<boolean> {
+  try {
+    await currentUserId();
+    return true;
+  } catch (err) {
+    if (err instanceof UnauthenticatedError) return false;
+    throw err;
+  }
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   return { robots: { index: false, follow: false } };
@@ -38,11 +54,13 @@ export default async function SharedTripPage({
   let data;
   let budget;
   let expenses;
+  let canSaveCopy;
   try {
-    [data, budget, expenses] = await Promise.all([
+    [data, budget, expenses, canSaveCopy] = await Promise.all([
       getSharedTrip(token),
       getSharedBudgetSummary(token),
       listSharedExpenses(token),
+      isSignedIn(),
     ]);
   } catch (err) {
     if (err instanceof InvalidShareLinkError) {
@@ -55,5 +73,13 @@ export default async function SharedTripPage({
     throw err;
   }
 
-  return <SharedTripView data={data} budget={budget} expenses={expenses} />;
+  return (
+    <SharedTripView
+      data={data}
+      budget={budget}
+      expenses={expenses}
+      token={token}
+      canSaveCopy={canSaveCopy}
+    />
+  );
 }

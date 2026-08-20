@@ -88,3 +88,100 @@ export async function deleteTrip(tripId: string) {
   const trip = await requireTripOwner(tripId);
   await db.trip.delete({ where: { id: trip.id } });
 }
+
+// Deep-copies a trip the caller can already access (owner or accepted
+// collaborator) into a brand new trip owned by *them*. Everything is
+// re-created under the new trip: Days, Activities, Places, and Expenses.
+// Wrapped in one transaction so a failure partway through (e.g. a bad
+// Activity row) can't leave an orphaned half-copied trip behind.
+//
+// Deliberately NOT copied, each for its own reason:
+// - shareToken: it's @unique on Trip, so copying it would throw a unique
+//   constraint violation, and — far worse — would hand the copy someone
+//   else's public share URL. Every duplicate starts unshared (null).
+// - collaborators: they agreed to be on the ORIGINAL trip, not on a copy
+//   someone else made of it. The copy starts with no collaborators.
+// - userId: the copy belongs to whoever ran this action, via currentUserId(),
+//   not to the original trip's owner.
+export async function duplicateTrip(tripId: string) {
+  const trip = await requireTripAccess(tripId);
+  const userId = await currentUserId();
+
+  return db.$transaction(async (tx) => {
+    const newTrip = await tx.trip.create({
+      data: {
+        userId,
+        name: `${trip.name} (copy)`,
+        destinations: trip.destinations,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        baseCurrency: trip.baseCurrency,
+        budgetMinor: trip.budgetMinor,
+      },
+    });
+
+    // Copy Places first and remember old id -> new id, so the Activities
+    // copied below can be repointed at the COPIED place instead of the
+    // original one. Getting this backwards is silent at copy time — it only
+    // surfaces later, e.g. when the original trip (and its places) is
+    // deleted and the copy's activities are left pointing at rows that no
+    // longer exist.
+    const places = await tx.place.findMany({ where: { tripId: trip.id } });
+    const placeIdMap = new Map<string, string>();
+    for (const place of places) {
+      const {
+        id: _id,
+        tripId: _tripId,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        ...rest
+      } = place;
+      const newPlace = await tx.place.create({
+        data: { ...rest, tripId: newTrip.id },
+      });
+      placeIdMap.set(place.id, newPlace.id);
+    }
+
+    const days = await tx.day.findMany({
+      where: { tripId: trip.id },
+      orderBy: { date: 'asc' },
+      include: { activities: { orderBy: { sortOrder: 'asc' } } },
+    });
+    for (const day of days) {
+      const newDay = await tx.day.create({
+        data: { tripId: newTrip.id, date: day.date },
+      });
+      for (const activity of day.activities) {
+        const {
+          id: _id,
+          dayId: _dayId,
+          updatedAt: _updatedAt,
+          placeId,
+          ...rest
+        } = activity;
+        await tx.activity.create({
+          data: {
+            ...rest,
+            dayId: newDay.id,
+            placeId: placeId ? (placeIdMap.get(placeId) ?? null) : null,
+          },
+        });
+      }
+    }
+
+    const expenses = await tx.expense.findMany({
+      where: { tripId: trip.id },
+    });
+    for (const expense of expenses) {
+      const {
+        id: _id,
+        tripId: _tripId,
+        updatedAt: _updatedAt,
+        ...rest
+      } = expense;
+      await tx.expense.create({ data: { ...rest, tripId: newTrip.id } });
+    }
+
+    return newTrip;
+  });
+}

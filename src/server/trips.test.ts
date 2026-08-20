@@ -2,17 +2,36 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
 import {
   currentUserId,
+  ForbiddenOrNotFoundError,
   requireTripAccess,
   requireTripOwner,
 } from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
-import { createTrip, deleteTrip, listTrips, updateTrip } from './trips';
+import {
+  createTrip,
+  deleteTrip,
+  duplicateTrip,
+  listTrips,
+  updateTrip,
+} from './trips';
 
-vi.mock('./auth-scope', () => ({
-  currentUserId: vi.fn(),
-  requireTripAccess: vi.fn(),
-  requireTripOwner: vi.fn(),
-}));
+vi.mock('./auth-scope', () => {
+  // Mirrors auth-scope.ts's real ForbiddenOrNotFoundError shape without
+  // importing the real module, which pulls in next-auth (and, transitively,
+  // next/server) — not resolvable in this unit-test environment. The real
+  // module is exercised instead by trips.db.test.ts against a live db.
+  class ForbiddenOrNotFoundError extends Error {
+    constructor() {
+      super("That trip doesn't exist or you don't have access.");
+    }
+  }
+  return {
+    ForbiddenOrNotFoundError,
+    currentUserId: vi.fn(),
+    requireTripAccess: vi.fn(),
+    requireTripOwner: vi.fn(),
+  };
+});
 vi.mock('../lib/db', () => ({
   db: {
     trip: {
@@ -170,6 +189,18 @@ describe('updateTrip', () => {
       }),
     ).rejects.toThrow(ValidationError);
     expect(db.trip.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('duplicateTrip', () => {
+  it('refuses when requireTripAccess rejects', async () => {
+    vi.mocked(requireTripAccess).mockRejectedValue(
+      new ForbiddenOrNotFoundError(),
+    );
+
+    await expect(duplicateTrip('trip-1')).rejects.toBeInstanceOf(
+      ForbiddenOrNotFoundError,
+    );
   });
 });
 
