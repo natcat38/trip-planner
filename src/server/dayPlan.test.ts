@@ -190,6 +190,55 @@ describe('generateDayPlans', () => {
     expect(buildCandidates).not.toHaveBeenCalled();
   });
 
+  it('drops a repeated id rather than listing the same place twice', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(listPlaces).mockResolvedValue(pool as never);
+    vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
+    vi.mocked(complete).mockResolvedValue({
+      ok: true,
+      truncated: false,
+      text: JSON.stringify({
+        plans: [{ label: 'Repeats', placeIds: ['p1', 'p1', 'p2'] }],
+      }),
+    });
+
+    const result = await generateDayPlans({
+      tripId: 'trip-1',
+      focus: [],
+      pace: 'relaxed',
+    });
+
+    // Accepting a plan loops addActivityFromPlace over these ids, so a repeat
+    // would create two identical activities on the same day.
+    const ids = ('candidates' in result ? result.candidates[0].places : []).map(
+      (p) => p.id,
+    );
+    expect(ids).toEqual(['p1', 'p2']);
+  });
+
+  it('reports a truncated answer as a budget problem, not a bad answer', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(listPlaces).mockResolvedValue(pool as never);
+    vi.mocked(getDecryptedKey).mockResolvedValue(storedKey);
+    vi.mocked(buildCandidates).mockReturnValue([
+      { label: 'Nearby', placeIds: ['p1', 'p2'] },
+    ]);
+    vi.mocked(complete).mockResolvedValue({
+      ok: true,
+      truncated: true,
+      text: '{"plans":[{"label":"Cut off","placeIds":["p1","p',
+    });
+
+    const result = await generateDayPlans({
+      tripId: 'trip-1',
+      focus: [],
+      pace: 'relaxed',
+    });
+
+    expect('candidates' in result && result.source).toBe('algorithmic');
+    expect('candidates' in result && result.notice).toMatch(/ran out of room/i);
+  });
+
   it('drops invented ids that are not in the saved-places pool', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(listPlaces).mockResolvedValue(pool);

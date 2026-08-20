@@ -168,45 +168,44 @@ function parseAiPlans(text: string): RawPlan[] | null {
 // filtered out here and never reaches the caller. The response is built by
 // mapping surviving ids back to the real Place rows, never by trusting any
 // string the model produced as if it already described a place.
-function resolveAiCandidates(
-  rawPlans: RawPlan[],
+// Resolves a list of ids to real Place rows, dropping any that aren't in the
+// pool and any repeat of one already used in this plan. De-duplication matters
+// as much as the pool check: a model that repeats an id would otherwise put the
+// same place in a day twice, and accepting that creates two identical
+// activities the user has to delete by hand.
+function resolvePlaceIds(
+  placeIds: string[],
+  poolMap: Map<string, PoolPlace>,
+): DayPlanCandidate['places'] {
+  const seen = new Set<string>();
+  const places: DayPlanCandidate['places'] = [];
+  for (const id of placeIds) {
+    if (seen.has(id)) continue;
+    const place = poolMap.get(id);
+    if (!place) continue;
+    seen.add(id);
+    places.push({ id: place.id, name: place.name, category: place.category });
+  }
+  return places;
+}
+
+// Both paths go through the same resolution and the same floor. They used to
+// differ — the AI path discarded a plan under MIN_PLAN_PLACES while the
+// algorithmic one passed anything through — which meant places saved across
+// separate cities (each its own single-place cluster) produced "day plans" of
+// one stop, and a plan whose ids all failed lookup rendered empty with a
+// button that did nothing. One standard for what counts as a plan.
+function toCandidates(
+  plans: { label: string; placeIds: string[] }[],
   poolMap: Map<string, PoolPlace>,
 ): DayPlanCandidate[] {
   const candidates: DayPlanCandidate[] = [];
-  for (const plan of rawPlans) {
-    const places = plan.placeIds
-      .map((id) => poolMap.get(id))
-      .filter((place): place is PoolPlace => place != null)
-      .map((place) => ({
-        id: place.id,
-        name: place.name,
-        category: place.category,
-      }));
+  for (const plan of plans) {
+    const places = resolvePlaceIds(plan.placeIds, poolMap);
     if (places.length < MIN_PLAN_PLACES) continue;
     candidates.push({ label: plan.label, places });
   }
   return candidates;
-}
-
-// Same id-to-real-row resolution as resolveAiCandidates, for the
-// algorithmic path's own PlanCandidate output — buildCandidates deals only
-// in ids too, so this module is the single place that ever turns an id into
-// a Place the caller can render.
-function resolveAlgorithmicCandidates(
-  planCandidates: PlanCandidate[],
-  poolMap: Map<string, PoolPlace>,
-): DayPlanCandidate[] {
-  return planCandidates.map((candidate) => ({
-    label: candidate.label,
-    places: candidate.placeIds
-      .map((id) => poolMap.get(id))
-      .filter((place): place is PoolPlace => place != null)
-      .map((place) => ({
-        id: place.id,
-        name: place.name,
-        category: place.category,
-      })),
-  }));
 }
 
 function algorithmicFallback(
@@ -221,7 +220,7 @@ function algorithmicFallback(
     pace: req.pace,
   });
   return {
-    candidates: resolveAlgorithmicCandidates(planCandidates, poolMap),
+    candidates: toCandidates(planCandidates, poolMap),
     source: 'algorithmic',
     ...(notice ? { notice } : {}),
   };
@@ -269,10 +268,18 @@ export async function generateDayPlans(
 
   const rawPlans = parseAiPlans(result.text);
   if (!rawPlans) {
-    return algorithmicFallback(pool, poolMap, req, AI_INVALID_NOTICE);
+    // A truncated answer is a budget problem, not a bad answer — saying
+    // "didn't hold up to validation" would point the user at model quality
+    // and hide the one thing that actually fixes it.
+    return algorithmicFallback(
+      pool,
+      poolMap,
+      req,
+      result.truncated ? NO_ROOM_NOTICE : AI_INVALID_NOTICE,
+    );
   }
 
-  const candidates = resolveAiCandidates(rawPlans, poolMap);
+  const candidates = toCandidates(rawPlans, poolMap);
   if (candidates.length === 0) {
     return algorithmicFallback(pool, poolMap, req, AI_INVALID_NOTICE);
   }
