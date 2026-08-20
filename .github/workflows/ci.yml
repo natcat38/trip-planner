@@ -27,6 +27,12 @@ jobs:
       # Auth.js only auto-trusts the Host header in dev or on Vercel; e2e runs
       # `next start` on a bare runner, which is neither. Never set on Vercel.
       AUTH_TRUST_HOST: true
+      # AES-256 key for the BYOK provider keys (ADR-0011). Base64 for exactly
+      # 32 bytes, as src/lib/crypto.ts validates. A throwaway CI value — the
+      # real one is set in Vercel and encrypts real user credentials, so it
+      # must never be this. Needed because aiSettings.db.test.ts round-trips a
+      # key through real Postgres.
+      ENCRYPTION_KEY: Y2ktdGVzdC1ub3QtYS1yZWFsLXNlY3JldGNpLXRlc3Q=
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
