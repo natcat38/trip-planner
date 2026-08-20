@@ -216,6 +216,15 @@ export async function duplicateSharedTrip(token: string) {
   const userId = await currentUserId();
   const { trip, days } = await getSharedTrip(token);
 
+  // An explicit budget, not Prisma's 5s default: this is one sequential create
+  // per place, day, activity and expense, and a two-week trip is easily 100+
+  // round trips. That is quick against local Postgres and much slower against
+  // Neon over the network, where the default would roll the whole copy back on
+  // a trip that is merely well-planned.
+  // ponytail: raising the ceiling, not removing it — if trips ever get big
+  // enough to strain this, batch with createMany and pre-generated ids.
+  const TRANSACTION_OPTIONS = { timeout: 20_000, maxWait: 10_000 };
+
   return db.$transaction(async (tx) => {
     const newTrip = await tx.trip.create({
       data: {
@@ -252,5 +261,5 @@ export async function duplicateSharedTrip(token: string) {
     }
 
     return newTrip;
-  });
+  }, TRANSACTION_OPTIONS);
 }
