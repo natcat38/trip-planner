@@ -1,0 +1,149 @@
+import 'dotenv/config';
+import crypto from 'node:crypto';
+import { expect, test, type BrowserContext } from '@playwright/test';
+import { db } from '../src/lib/db';
+
+// Signs in the same way export.spec.ts / places.spec.ts / settings.spec.ts do:
+// write an Auth.js database session straight into Postgres and set its cookie,
+// rather than clicking through a real OAuth provider (which this repo has no
+// test account for; see e2e/sharing.spec.ts).
+//
+// Worth driving through real HTTP rather than trusting the unit tests: the
+// upload path crosses a Server Action body limit, a bytea column and a route
+// handler's response headers, and none of those exist in a unit test.
+const SESSION_COOKIE = 'authjs.session-token';
+
+// A real 1x1 PNG — the bytes a browser would actually upload.
+const PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+async function signIn(context: BrowserContext, userId: string) {
+  const sessionToken = crypto.randomUUID();
+  await db.session.create({
+    data: {
+      sessionToken,
+      userId,
+      expires: new Date(Date.now() + 60 * 60 * 1000),
+    },
+  });
+  await context.addCookies([
+    {
+      name: SESSION_COOKIE,
+      value: sessionToken,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+}
+
+test.describe('attachments', () => {
+  let userId: string;
+  let tripId: string;
+
+  test.beforeEach(async () => {
+    const user = await db.user.create({
+      data: { email: `attach-e2e-${crypto.randomUUID()}@example.com` },
+    });
+    userId = user.id;
+    const trip = await db.trip.create({
+      data: {
+        userId,
+        name: 'Attachment E2E Trip',
+        destinations: ['Fukuoka'],
+        startDate: new Date('2026-11-14'),
+        endDate: new Date('2026-11-14'),
+        baseCurrency: 'JPY',
+        budgetMinor: 0,
+      },
+    });
+    tripId = trip.id;
+  });
+
+  test.afterEach(async () => {
+    await db.trip.deleteMany({ where: { userId } });
+    await db.session.deleteMany({ where: { userId } });
+    await db.user.delete({ where: { id: userId } });
+  });
+
+  test('uploads a file and serves it back with safe headers', async ({
+    page,
+    context,
+  }) => {
+    await signIn(context, userId);
+    await page.goto(`/trips/${tripId}`);
+
+    await page.getByText('Attachments', { exact: false }).first().click();
+    await page.setInputFiles('input[type="file"]', {
+      name: 'boarding-pass.png',
+      mimeType: 'image/png',
+      buffer: PNG_1X1,
+    });
+    await page.getByRole('button', { name: /upload/i }).click();
+
+    const link = page.getByRole('link', { name: 'boarding-pass.png' });
+    await expect(link).toBeVisible();
+
+    const href = await link.getAttribute('href');
+    const response = await page.request.get(href!);
+
+    expect(response.status()).toBe(200);
+    expect(Buffer.from(await response.body())).toEqual(PNG_1X1);
+    // The headers here are the security boundary for user-uploaded bytes
+    // served from this app's own origin (ADR-0016).
+    expect(response.headers()['content-type']).toBe('image/png');
+    expect(response.headers()['x-content-type-options']).toBe('nosniff');
+    expect(response.headers()['content-disposition']).toContain('attachment;');
+    expect(response.headers()['cache-control']).toContain('no-store');
+  });
+
+  test('refuses a file type that is not on the allowlist', async ({
+    page,
+    context,
+  }) => {
+    await signIn(context, userId);
+    await page.goto(`/trips/${tripId}`);
+
+    await page.getByText('Attachments', { exact: false }).first().click();
+    // HTML claiming to be a PNG. Served back from this origin it would be
+    // same-origin script, so the server reads the bytes rather than believing
+    // the declared type.
+    await page.setInputFiles('input[type="file"]', {
+      name: 'photo.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('<html><script>alert(1)</script></html>'),
+    });
+    await page.getByRole('button', { name: /upload/i }).click();
+
+    // Matched by text, not by role: Next renders its own always-present
+    // role="alert" route announcer, so getByRole('alert') is ambiguous here.
+    await expect(page.getByText(/only JPEG, PNG, WebP and PDF/i)).toBeVisible();
+    expect(await db.attachment.count({ where: { tripId } })).toBe(0);
+  });
+
+  test('does not serve an attachment to a signed-out visitor', async ({
+    page,
+  }) => {
+    const attachment = await db.attachment.create({
+      data: {
+        tripId,
+        filename: 'flight-confirmation.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: PNG_1X1.byteLength,
+        data: PNG_1X1,
+      },
+    });
+
+    // No session cookie set on this context.
+    const response = await page.goto(
+      `/trips/${tripId}/attachments/${attachment.id}`,
+    );
+
+    // src/proxy.ts matches /trips/:path*, so this never reaches the handler.
+    await expect(page).toHaveURL(/\/api\/auth\/signin/);
+    expect(await response!.text()).not.toContain('flight-confirmation');
+  });
+});

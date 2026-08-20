@@ -90,6 +90,7 @@ model Trip {
   collaborators TripCollaborator[]
   places        Place[]
   checklist     ChecklistItem[]
+  attachments   Attachment[]
 
   @@index([userId])
 }
@@ -224,4 +225,41 @@ model TripCollaborator {
   @@unique([tripId, email])
   @@index([tripId])
   @@index([email])
+}
+
+model Attachment {
+  // Booking confirmations, tickets, screenshots — the paperwork of a trip,
+  // kept beside it. Stored as bytea in this database rather than in object
+  // storage (ADR-0016): no new service, cascade-deleted with the trip, and
+  // reachable only through the same requireTripAccess gate as everything else.
+  //
+  // The caps in src/server/attachments.ts are not a style choice. Neon's free
+  // plan allows 0.5 GB for this ENTIRE database, and Vercel rejects any
+  // function request or response over 4.5 MB — so a single file can never
+  // exceed that no matter what this schema permits.
+  //
+  // Deliberately NOT exposed on /shared/[token]: a booking confirmation is
+  // exactly the sort of thing that must not be world-readable. Per CLAUDE.md
+  // that boundary is decided here and in src/server/sharing.ts, never at the
+  // component layer.
+  id         String   @id @default(cuid())
+  tripId     String
+  filename   String
+  // Always one of ALLOWED_MIME_TYPES — never echoed back to a browser from
+  // this column without re-checking, since a stored text/html would otherwise
+  // be same-origin script. See the download route.
+  mimeType   String
+  sizeBytes  Int
+  data       Bytes
+  // Verified OAuth email of whoever uploaded it, like TripCollaborator
+  // (ADR-0006) — a collaborator may have no User row. Nullable because
+  // requireTripAccess authorises an owner on userId alone, so a session
+  // carrying no email is still a legitimate uploader; provenance is a nicety
+  // here, not an authorization input, and must never block the upload.
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  trip       Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
 }

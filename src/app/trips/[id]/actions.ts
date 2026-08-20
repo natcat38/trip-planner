@@ -11,6 +11,7 @@ import {
   updateActivity,
   updateDayNotes,
 } from '@/server/itinerary';
+import { addAttachment, deleteAttachment } from '@/server/attachments';
 import {
   addChecklistItem,
   deleteChecklistItem,
@@ -35,6 +36,10 @@ export interface DayNotesFormState {
 }
 
 export interface ChecklistFormState {
+  error?: string;
+}
+
+export interface AttachmentFormState {
   error?: string;
 }
 
@@ -250,4 +255,35 @@ export async function planTransitAction(
     toActivityId,
   );
   return { journeys };
+}
+
+// Uploads run through a Server Action rather than the download route's shape
+// because that is how every other mutation in this app is written. Note
+// next.config.ts raises serverActions.bodySizeLimit — the 1 MB default would
+// reject a file well under the per-attachment cap before this ever runs.
+export async function addAttachmentAction(
+  tripId: string,
+  _prevState: AttachmentFormState,
+  formData: FormData,
+): Promise<AttachmentFormState> {
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    return { error: 'Choose a file to upload.' };
+  }
+  try {
+    await addAttachment(tripId, file);
+  } catch (err) {
+    if (err instanceof ValidationError) return { error: err.message };
+    throw err;
+  }
+  revalidatePath(`/trips/${tripId}`);
+  return {};
+}
+
+export async function deleteAttachmentAction(
+  tripId: string,
+  attachmentId: string,
+): Promise<void> {
+  await ignoreIfMissing(deleteAttachment(tripId, attachmentId));
+  revalidatePath(`/trips/${tripId}`);
 }
