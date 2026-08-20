@@ -18,6 +18,7 @@ import {
 import { db } from '../lib/db';
 import {
   currentUserEmail,
+  currentUserId,
   ForbiddenOrNotFoundError,
   requireTripOwner,
 } from './auth-scope';
@@ -190,4 +191,75 @@ export async function listSharedExpenses(token: string): Promise<Expense[]> {
     where: { tripId: trip.id },
     orderBy: { id: 'asc' },
   });
+}
+
+// Clones a trip from its public share link into a brand new trip owned by
+// the signed-in caller. Requires currentUserId() even though the source
+// link itself is public — an anonymous visitor has no account to own the
+// copy.
+//
+// THE SECURITY BOUNDARY: this is built on top of getSharedTrip() rather than
+// re-querying the trip/days/activities directly, specifically so it can only
+// ever copy what getSharedTrip already exposes publicly. If this instead ran
+// its own `db.day.findMany`/`db.place.findMany` queries, the two read paths
+// could silently drift apart over time — that drift is exactly how a field
+// meant to stay private (the saved-places tray, Expenses, collaborators, the
+// share token itself) ends up leaking into a "copy" anyone with the link can
+// make. So: NOT copied here, on purpose —
+// - Places (the saved-places tray): a private research workspace, never
+//   part of getSharedTrip's public include (see its own comment above).
+// - Expenses: not part of getSharedTrip's return shape either.
+// - collaborators / shareToken: same reasoning as duplicateTrip in
+//   src/server/trips.ts — a copy is a new trip, not a fork of who can see
+//   or share the original.
+export async function duplicateSharedTrip(token: string) {
+  const userId = await currentUserId();
+  const { trip, days } = await getSharedTrip(token);
+
+  // An explicit budget, not Prisma's 5s default: this is one sequential create
+  // per place, day, activity and expense, and a two-week trip is easily 100+
+  // round trips. That is quick against local Postgres and much slower against
+  // Neon over the network, where the default would roll the whole copy back on
+  // a trip that is merely well-planned.
+  // ponytail: raising the ceiling, not removing it — if trips ever get big
+  // enough to strain this, batch with createMany and pre-generated ids.
+  const TRANSACTION_OPTIONS = { timeout: 20_000, maxWait: 10_000 };
+
+  return db.$transaction(async (tx) => {
+    const newTrip = await tx.trip.create({
+      data: {
+        userId,
+        name: `${trip.name} (copy)`,
+        destinations: trip.destinations,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        baseCurrency: trip.baseCurrency,
+        budgetMinor: trip.budgetMinor,
+      },
+    });
+
+    for (const day of days) {
+      const newDay = await tx.day.create({
+        data: { tripId: newTrip.id, date: day.date },
+      });
+      for (const activity of day.activities) {
+        const {
+          id: _id,
+          dayId: _dayId,
+          updatedAt: _updatedAt,
+          // placeId is never carried over: getSharedTrip doesn't expose
+          // Place rows at all, so there is nothing of the caller's to point
+          // it at — and pointing it at the ORIGINAL trip's place would leak
+          // a row across trip boundaries.
+          placeId: _placeId,
+          ...rest
+        } = activity;
+        await tx.activity.create({
+          data: { ...rest, dayId: newDay.id },
+        });
+      }
+    }
+
+    return newTrip;
+  }, TRANSACTION_OPTIONS);
 }

@@ -2,7 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createTrip, deleteTrip, updateTrip } from '@/server/trips';
+import {
+  createTrip,
+  deleteTrip,
+  duplicateTrip,
+  updateTrip,
+} from '@/server/trips';
 import { acceptInvite, declineInvite } from '@/server/sharing';
 import { ignoreIfMissing } from '@/server/auth-scope';
 import { StaleWriteError, ValidationError } from '@/server/errors';
@@ -60,6 +65,11 @@ export async function updateTripAction(
 export async function deleteTripAction(tripId: string): Promise<void> {
   await deleteTrip(tripId);
   redirect('/trips');
+}
+
+export async function duplicateTripAction(tripId: string): Promise<void> {
+  const newTrip = await duplicateTrip(tripId);
+  redirect(`/trips/${newTrip.id}`);
 }
 
 export async function acceptInviteAction(tripId: string): Promise<void> {

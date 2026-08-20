@@ -6,6 +6,7 @@ import type {
   listSharedExpenses,
 } from '@/server/sharing';
 import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
+import { duplicateSharedTripAction } from './actions';
 
 type SharedTripData = Awaited<ReturnType<typeof getSharedTrip>>;
 type BudgetSummary = Awaited<ReturnType<typeof getSharedBudgetSummary>>;
@@ -26,10 +27,14 @@ export function SharedTripView({
   data,
   budget,
   expenses,
+  token,
+  canSaveCopy,
 }: {
   data: SharedTripData;
   budget: BudgetSummary;
   expenses: SharedExpenses;
+  token: string;
+  canSaveCopy: boolean;
 }) {
   const { trip, days } = data;
 
@@ -49,9 +54,21 @@ export function SharedTripView({
         <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
           Read-only shared view
         </p>
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">
-          {trip.name}
-        </h1>
+        <div className="flex items-baseline justify-between gap-4 mb-8">
+          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+            {trip.name}
+          </h1>
+          {canSaveCopy && (
+            <form action={duplicateSharedTripAction.bind(null, token)}>
+              <button
+                type="submit"
+                className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              >
+                Save a copy
+              </button>
+            </form>
+          )}
+        </div>
 
         <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
