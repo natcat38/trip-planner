@@ -9,7 +9,9 @@
  */
 import Link from 'next/link';
 import { getKeyStatus, listAvailableModels } from '@/server/aiSettings';
+import { getExtensionTokenStatus } from '@/server/extensionToken';
 import { AiKeyPanel } from './AiKeyPanel';
+import { ExtensionTokenPanel } from './ExtensionTokenPanel';
 
 export default async function SettingsPage() {
   const status = await getKeyStatus();
@@ -42,6 +44,19 @@ export default async function SettingsPage() {
             once saved.
           </p>
           <AiKeyPanel status={status} models={models} />
+        </section>
+
+        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+            Browser extension
+          </h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+            Save a place to a trip from any webpage. Generate a token here and
+            paste it into the extension once — it authenticates the extension
+            without giving it your session, and you can revoke it at any time
+            without signing out anywhere.
+          </p>
+          <ExtensionTokenPanel status={await getExtensionTokenStatus()} />
         </section>
       </main>
     </div>

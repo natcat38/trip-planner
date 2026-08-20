@@ -1,11 +1,11 @@
 # Phase 3 Handoff — Destination Research & Saved-Places Tray
 
-> **Status:** **Milestones 1-6 (§5, §8) are implemented** (2026-08-20) — see ADR-0008 through
-> ADR-0016. M2's live re-verification findings are in §10 and **correct §3.8**; M6's are in §11
-> and **correct §8's M6 entry**. **M7 (the browser extension) remains planned, not built**; it
-> still needs its own planning pass at execution time, re-verifying third-party API shapes live
-> rather than from training memory. That discipline has invalidated a plan assumption in every
-> milestone so far — it is not a formality.
+> **Status:** **Phase 3 is complete — Milestones 1-7 (§5, §8) are all implemented** (2026-08-20),
+> see ADR-0008 through ADR-0017. Live re-verification findings that **correct this document** are
+> in §10 (M2, corrects §3.8), §11 (M6, corrects §8's M6 entry) and §12 (M7, corrects §8's M7
+> entry). That discipline invalidated a plan assumption in **every single milestone** — it is not
+> a formality. Open items, deferred decisions and what is still unverified are collected in
+> `docs/phase-3-open-items-handoff.md`.
 > **Written:** 2026-08-19. **Revised same day** after a second research pass (four web-research
 > agents) and a decision round with the user: Milestone 1 is **approved as written**, its open
 > questions are resolved (§9), and §8 is now a decided M2–M7 roadmap, not a deferral list.
@@ -704,3 +704,52 @@ connectivity and retries blocked requests. Not enabled; `navigator.onLine` cover
 - **A sign-out control.** The app still has none — noticed while deciding where to clear the
   offline cache. The worker clears on the redirect to `/api/auth/*` instead, which works today and
   keeps working once a control is added.
+
+
+---
+
+## 12. M7 live re-verification (2026-08-20) — corrections to §8's M7 entry
+
+§8 described M7 in one sentence: "MV3 extension: save a place to a trip from any webpage via the
+app's own API; geocode via Nominatim (fits existing OSM usage)." Two thirds of that was wrong. Full
+reasoning in ADR-0017.
+
+### 12.1 Nominatim was never this app's geocoder
+
+`src/lib/geocode.ts` geocodes with **Mapbox**, server-side, with a token that deliberately never
+reaches the browser. This app's OSM usage is **Overpass** — place *search*, a different service under
+a different policy. "Fits existing OSM usage" described something the app does not do.
+
+### 12.2 Nominatim's policy forbids the pattern anyway
+
+> No heavy uses (an absolute maximum of 1 request per second) … limit your requests to a single
+> thread … **1 machine only, no distributed scripts** … Results must be **cached on your side**.
+
+An extension installed on N machines, each geocoding directly with its own fragmented cache, is
+precisely a distributed script. Violations "will get you banned", and the ban would land on a free
+service other people depend on.
+
+**Consequence:** the extension sends a name and a page URL; **the server geocodes**, through the
+cache it already keeps. Fewer moving parts, no API token in the extension, and the policy question
+disappears. The lookup is biased with the trip's destination first — `"Fuglen, Fukuoka"` before
+`"Fuglen"` — because a blog post names a place, not a location.
+
+### 12.3 The session cookie is the wrong credential for an extension
+
+Not just portability (the extension's origin is `chrome-extension://`, treated as cross-site, and the
+Auth.js cookie is `SameSite=Lax` — sources disagree on whether browsers make an exception). The
+deciding reason is that **a cookie is ambient authority**: a cookie-authenticated write endpoint is
+reachable by every page in the browser and needs CSRF defence. A bearer token is never attached
+automatically, which removes the class instead of defending against it.
+
+### 12.4 `/api/*` is not behind the proxy
+
+`src/proxy.ts`'s matcher is `/trips` and `/settings`. Routes under `/api` are reachable with no
+session and **must authenticate themselves** — the same property `/shared/[token]` has. Worth
+knowing before adding any future API route.
+
+### 12.5 Not verified
+
+**The extension popup has no automated test.** Chromium could not be made to load an unpacked
+extension on the development machine. See `docs/phase-3-open-items-handoff.md` §2.7 for the full
+symptom list and the 30-second manual check.

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <!-- Setup: shown until an app URL and token are stored. -->
+    <section id="setup" hidden>
+      <h1>Connect to Trip Planner</h1>
+      <label for="app-url">App URL</label>
+      <input
+        id="app-url"
+        type="url"
+        value="https://trip-planner-cyan-five.vercel.app"
+      />
+      <label for="token">Token</label>
+      <input id="token" type="password" placeholder="tp_…" autocomplete="off" />
+      <p class="hint">
+        Generate one in the app under Settings → Browser extension.
+      </p>
+      <button id="connect" type="button">Connect</button>
+      <p id="setup-error" class="error" role="alert" hidden></p>
+    </section>
+
+    <!-- Save: the normal path. -->
+    <section id="save" hidden>
+      <label for="name">Place</label>
+      <input id="name" type="text" />
+      <label for="trip">Trip</label>
+      <select id="trip"></select>
+      <label for="category">Category</label>
+      <select id="category">
+        <option>Food</option>
+        <option>Sightseeing</option>
+        <option>Lodging</option>
+        <option>Transport</option>
+        <option selected>Other</option>
+      </select>
+      <label for="notes">Notes</label>
+      <textarea id="notes" rows="3"></textarea>
+      <button id="submit" type="button">Save to trip</button>
+      <p id="status" role="status" hidden></p>
+      <p id="save-error" class="error" role="alert" hidden></p>
+      <button id="disconnect" type="button" class="link">Disconnect</button>
+    </section>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
