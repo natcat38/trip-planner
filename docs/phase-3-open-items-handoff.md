@@ -1,7 +1,7 @@
 # Phase 3 — open items, deferred decisions, and things that need research
 
-> **Status:** written 2026-08-20, after Milestone 6 (PR #36). Phase 3 M1–M6 are built; **M7 (the
-> browser extension) is the only roadmap milestone not started**.
+> **Status:** written 2026-08-20 after Milestone 6, updated the same day after **Milestone 7**.
+> **Phase 3 is complete — M1–M7 are all built.**
 > **Audience:** a fresh session picking this up cold.
 > **Read first:** `CLAUDE.md`, `docs/phase-3-research-layer-handoff.md` (especially §3, §10, §11),
 > `docs/adr/`.
@@ -79,6 +79,55 @@ correct handling and should not be "fixed".
 deliberately stopped at two rungs — Wikivoyage's *Get around* prose plus map deep links already cover
 the degraded path, so a third was not justified (handoff §8 close-out). It remains available if the
 gap in 2.5 ever needs a better answer.
+
+### 2.7 The browser extension's popup is not covered by any automated test
+The most important thing in this document, because it is the one place where shipped code has not
+been proven to work.
+
+`e2e/extension-api.spec.ts` covers the entire server surface over real HTTP — generating a token
+through the Settings UI, listing trips, saving a place, rejecting bad tokens, cross-user isolation,
+revocation, `javascript:` URLs, non-object JSON. What none of it reaches is `extension/popup.js`
+itself, and specifically: **whether MV3's `host_permissions` actually let the popup's `fetch` reach
+the app**, which sends no CORS headers.
+
+A Playwright spec was written and then removed, because Chromium could not be made to load an
+unpacked extension on the development machine:
+
+- `launchPersistentContext` with `--load-extension` failed with `spawn UNKNOWN` under several flag
+  combinations, while the same call without those args launched fine.
+- `channel: 'chromium'` failed every time; dropping it let the browser start.
+- Playwright passes `--disable-extensions` by default, which suppresses `--load-extension`. Removing
+  that default via `ignoreDefaultArgs` still produced no extension and no service worker.
+- `chrome://extensions` — the documented way to read an unpacked extension's id when it has no
+  background service worker — returns `ERR_INVALID_URL` in headless.
+
+The manifest was checked and is valid UTF-8 and structurally correct, so this looks environmental
+rather than a defect in what ships. It would also need the **full** Chromium build in CI rather than
+the headless shell installed today, in a pipeline that has already had a run cancelled by a hanging
+Playwright install step.
+
+**Verify by hand in about 30 seconds:** load `extension/` unpacked at `chrome://extensions`, generate
+a token in Settings → Browser extension, and save any page. If `host_permissions` turns out not to
+grant the CORS bypass, the fix is CORS headers on the two `/api/extension/*` routes — safe to add
+there specifically *because* they authenticate with a bearer token rather than cookies.
+
+If someone does get Playwright loading extensions (a different machine, a newer Playwright), the
+removed spec is recoverable from this branch's history and was close to working.
+
+### 2.8 The extension lists owned trips only
+Its trip picker mirrors `listTrips` in `src/server/trips.ts`, which is owner-scoped — so a
+collaborator cannot save a place to a trip shared with them, even though `requireTripAccess` would
+allow it. That is **pre-existing app behaviour surfaced, not introduced**: the app's own dashboard
+does not list trips shared with you either.
+
+Worth deciding deliberately at some point. Whichever way it goes, the fix belongs in the app's trip
+list first and the extension second — an extension that showed more than the app does would be a
+strange place to introduce the change.
+
+### 2.9 The extension ships pointing at localhost as well as production
+`extension/manifest.json`'s `host_permissions` includes `http://localhost:3000/*` so one build works
+against a dev server. Harmless for a personal tool; **drop it if the extension is ever packaged for
+anyone else.**
 
 ---
 
@@ -180,17 +229,7 @@ should measure the payload cost first** (ADR-0010).
 
 ## 5. Not built at all
 
-### 5.1 M7 — the browser extension (the one remaining roadmap milestone)
-MV3 extension: save a place to a trip from any webpage via the app's own API, geocoding via Nominatim
-(fits the existing OSM usage). Highest-effort item on the roadmap and the most direct hit on the
-"never open another tab" goal.
-
-**Not yet planned in any detail.** It needs its own planning pass with live re-verification first —
-see §7 below. Open questions a plan would have to answer: how the extension authenticates against a
-database-session app, whether it needs a new API surface or can reuse Server Actions (it can't —
-those are same-origin POSTs), and Nominatim's usage policy, which is stricter than Overpass's.
-
-### 5.2 Explicitly skipped, with the reasoning recorded
+### 5.1 Explicitly skipped, with the reasoning recorded
 From the handoff doc §8. These were researched and ruled out — **read §3 of that doc before
 re-proposing any of them**:
 
@@ -201,7 +240,7 @@ re-proposing any of them**:
 | Gmail auto-scan | Google OAuth sensitive-scope compliance isn't worth it | Manual forward-and-parse could ride on M3's LLM later |
 | Imported reviews/ratings | Structurally unfree (handoff §3.10) | Deep-link to the place's Google Maps page |
 
-### 5.3 Unscheduled, never decided either way
+### 5.2 Unscheduled, never decided either way
 - **Wikipedia enrichment** for saved places.
 - **Place photos** — Wikimedia Commons is the $0 source when wanted.
 - **Drag-and-drop reordering** of activities (today: up/down buttons).
@@ -211,9 +250,9 @@ re-proposing any of them**:
 ## 6. Small, cheap, and probably worth doing
 
 - **A sign-out control** (§2.1). Smallest effort, clearest gap.
-- **Extract the e2e sign-in helper.** Five specs now hand-roll the same "create a Session row, set
-  `authjs.session-token`" preamble: `export`, `places`, `settings`, `transit`, `attachments`. Pull it
-  into `e2e/auth.ts`. Noted during M6's review; skipped there to keep the diff on-topic.
+- **Extract the e2e sign-in helper.** Now **six** specs hand-roll the same "create a Session row, set
+  `authjs.session-token`" preamble: `export`, `places`, `settings`, `transit`, `attachments`,
+  `extension-api`. Pull it into `e2e/auth.ts`. Noted during M6's review and grown by one since.
 - **A database-size check** against Neon's 0.5 GB (§3.2), so the wall is seen coming.
 - **Bump `CACHE_NAME` in `public/sw.js`** after any change to the root layout, or users keep old
   shells until the worker updates for another reason.
@@ -234,8 +273,16 @@ milestone so far:
 | M4 | A small token cap is enough | Reasoning models spend the whole budget thinking and return nothing |
 | M5 | Weather forecasts cover a trip | They stop at 16 days, so "no forecast" is the common case |
 | M6 | Map tiles can be cached offline | 12-hour TTL, no offline mode, no retention right |
+| M7 | Geocode via Nominatim, "fits existing OSM usage" | The app geocodes with Mapbox, and Nominatim's policy forbids the distributed pattern outright |
 
-In all six the mocked test suites were green. **The tests never caught any of them.**
+In all seven the mocked test suites were green. **The tests never caught any of them.**
+
+M7's is the sharpest illustration, because the plan was wrong about *this repo*, not about a third
+party: it said to geocode via Nominatim "(fits existing OSM usage)", when the app geocodes with
+**Mapbox** and its OSM usage is Overpass — a different service entirely. Checking the third party
+then found Nominatim's policy (**"1 machine only, no distributed scripts"**, results **"cached on
+your side"**) forbids an extension geocoding from many machines anyway. One sentence of plan, two
+independent errors, neither visible without looking.
 
 M6 added a corollary worth keeping: **when a control has no visible symptom when it's broken, measure
 what the API actually returns rather than trusting the reading that looks obvious.** The offline
