@@ -103,6 +103,10 @@ export async function deleteTrip(tripId: string) {
 //   someone else made of it. The copy starts with no collaborators.
 // - userId: the copy belongs to whoever ran this action, via currentUserId(),
 //   not to the original trip's owner.
+// - attachments: a booking confirmation is a record of the ORIGINAL trip, not
+//   a template to plan a new one with — the same reasoning that keeps votes
+//   out (ADR-0014). Copying them would also duplicate every byte against a
+//   0.5 GB database (ADR-0016).
 export async function duplicateTrip(tripId: string) {
   const trip = await requireTripAccess(tripId);
   const userId = await currentUserId();

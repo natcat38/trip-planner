@@ -172,7 +172,9 @@ export async function getSharedTrip(token: string): Promise<{
   // them. Don't narrow requireShareToken's own query: getSharedBudgetSummary
   // and listSharedExpenses need the full trip row. The saved-places research
   // tray (Trip.places) is a planning workspace, not published output — it is
-  // deliberately left out of this include and must stay that way.
+  // deliberately left out of this include and must stay that way. So are
+  // Trip.attachments (ADR-0016): a booking confirmation is precisely the sort
+  // of document that must not be readable by anyone holding a link.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit fields from the response, not to use them
   const { userId, shareToken, ...publicTrip } = trip;
   return { trip: publicTrip, days };
@@ -209,6 +211,9 @@ export async function listSharedExpenses(token: string): Promise<Expense[]> {
 // - Places (the saved-places tray): a private research workspace, never
 //   part of getSharedTrip's public include (see its own comment above).
 // - Expenses: not part of getSharedTrip's return shape either.
+// - Attachments: booking confirmations and tickets (ADR-0016). Not in
+//   getSharedTrip's return shape, and not something to transplant onto a copy
+//   even if they were.
 // - collaborators / shareToken: same reasoning as duplicateTrip in
 //   src/server/trips.ts — a copy is a new trip, not a fork of who can see
 //   or share the original.

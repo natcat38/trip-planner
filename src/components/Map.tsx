@@ -8,6 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Map as MapboxMap, Marker } from 'mapbox-gl';
+import { useIsOffline } from '@/lib/useIsOffline';
 
 export interface MapPin {
   id: string;
@@ -33,6 +34,11 @@ export function Map({
   selectedId?: string | null;
   onSelectPin?: (id: string) => void;
 }) {
+  // Map tiles are deliberately not cached for offline use (ADR-0015): Mapbox
+  // sets a 12-hour device TTL and GL JS has no supported offline mode. Without
+  // this the offline map initialises and renders an empty grey square, which
+  // reads as a broken app rather than an unavailable feature.
+  const offline = useIsOffline();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const markersRef = useRef(new globalThis.Map<string, Marker>());
@@ -47,7 +53,7 @@ export function Map({
     .join('|');
 
   useEffect(() => {
-    if (!containerRef.current || pins.length === 0) return;
+    if (!containerRef.current || pins.length === 0 || offline) return;
     let cancelled = false;
     const markers = markersRef.current;
 
@@ -101,8 +107,9 @@ export function Map({
       mapRef.current = null;
     };
     // pinsKey is the intentional dependency — re-init only when the pin set itself changes.
+    // `offline` joins it so reconnecting builds the map that was skipped.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pinsKey]);
+  }, [pinsKey, offline]);
 
   useEffect(() => {
     markersRef.current.forEach((marker, id) => {
@@ -121,6 +128,14 @@ export function Map({
       <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/[.145] dark:text-zinc-400">
         No geocoded places yet — add a place to an activity to see it on the
         map.
+      </div>
+    );
+  }
+
+  if (offline) {
+    return (
+      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/[.145] dark:text-zinc-400">
+        The map needs a connection. Your itinerary below is available offline.
       </div>
     );
   }

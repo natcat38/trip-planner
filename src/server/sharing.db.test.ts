@@ -77,6 +77,30 @@ describe('share link against a real database', () => {
     );
   });
 
+  it('never exposes trip attachments on the public link', async () => {
+    // Attachments are booking confirmations and tickets (ADR-0016). They are
+    // excluded structurally — getSharedTrip's include simply doesn't reach
+    // them — so this asserts the payload rather than a filter, and would fail
+    // the moment someone widened that include.
+    signInAsOwner();
+    await db.attachment.create({
+      data: {
+        tripId,
+        filename: 'flight-confirmation.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 5,
+        data: Buffer.from('%PDF-'),
+        uploadedBy: 'owner@example.com',
+      },
+    });
+    const token = await enableShareLink(tripId);
+
+    const shared = await getSharedTrip(token);
+
+    expect(JSON.stringify(shared)).not.toContain('flight-confirmation.pdf');
+    expect(shared.trip).not.toHaveProperty('attachments');
+  });
+
   it('regenerating invalidates the previous token', async () => {
     signInAsOwner();
     const firstToken = await enableShareLink(tripId);

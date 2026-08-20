@@ -1,9 +1,11 @@
 # Phase 3 Handoff — Destination Research & Saved-Places Tray
 
-> **Status:** **Milestones 1 (§5) and 2 (§8) are implemented** (2026-08-20) — see ADR-0008,
-> ADR-0009 and ADR-0010. M2's live re-verification findings are in §10 and **correct §3.8**.
-> M3-M7 (§8) remain planned, not built; each still needs its own planning pass at execution
-> time, re-verifying third-party API shapes live rather than from training memory.
+> **Status:** **Milestones 1-6 (§5, §8) are implemented** (2026-08-20) — see ADR-0008 through
+> ADR-0016. M2's live re-verification findings are in §10 and **correct §3.8**; M6's are in §11
+> and **correct §8's M6 entry**. **M7 (the browser extension) remains planned, not built**; it
+> still needs its own planning pass at execution time, re-verifying third-party API shapes live
+> rather than from training memory. That discipline has invalidated a plan assumption in every
+> milestone so far — it is not a formality.
 > **Written:** 2026-08-19. **Revised same day** after a second research pass (four web-research
 > agents) and a decision round with the user: Milestone 1 is **approved as written**, its open
 > questions are resolved (§9), and §8 is now a decided M2–M7 roadmap, not a deferral list.
@@ -645,3 +647,60 @@ consecutive activities that fetches only on click.
 **Not built, deliberately:** the nearest-OSM-station rung of §8's fallback chain. `nearestStation`
 has existed unused since M1; the Wikivoyage *Get around* prose and the map deep links already
 cover the degraded path, so wiring a third rung was not justified. It remains available.
+
+
+---
+
+## 11. M6 live re-verification (2026-08-20) — corrections to §8's M6 entry
+
+§8 described M6 as "service worker + IndexedDB caching of already-viewed itinerary, notes, and map
+tiles" plus "attachments as Postgres `bytea` with a per-file and per-trip cap". Checking each part
+against the live platform before building changed three of them. Recorded here for the same reason
+§10 exists. Full reasoning in ADR-0015 and ADR-0016.
+
+### 11.1 Map tiles cannot be cached — the biggest finding
+
+Mapbox's own caching documentation sets a **12-hour device TTL** on vector tiles, GL JS has no
+supported offline mode (that feature exists only in the Mobile SDKs), and neither the Terms of
+Service nor the Product Terms grant a right to retain tiles beyond it.
+
+**Consequence:** tiles are out of scope, and `public/sw.js` caches **same-origin requests only** so
+that every third-party host is excluded by construction rather than by a hostname list. Offline
+shows the itinerary text — which is what a traveller with no signal actually needs — and the map
+area says it needs a connection instead of rendering an empty grey square.
+
+### 11.2 IndexedDB has nothing to cache
+
+This app is server-rendered end to end; there is no client data layer for an IndexedDB copy of the
+itinerary to feed, and building one would mean a second renderer that could disagree with the
+server. The pages the user already visited **are** a correct rendering of their data, so the Cache
+API holds those instead.
+
+### 11.3 The attachment caps were decided without the numbers
+
+The `bytea` choice (§4) survived, but its caps did not exist yet. Two external ceilings set them:
+
+| Ceiling | Value | Consequence |
+| --- | --- | --- |
+| Vercel function request **and response** body | 4.5 MB | No attachment can exceed it in either direction → **4 MB per file** |
+| Neon free plan storage, whole database | 0.5 GB | Shared with all trip data → **20 MB per trip** |
+
+Next's `serverActions.bodySizeLimit` also defaults to **1 MB**, which would have rejected a
+legitimate upload before the action ran.
+
+### 11.4 Next 16's `useOffline` does not do what its name suggests
+
+It exists, but it is flagged "not recommended for production" and **caches nothing** — it detects
+connectivity and retries blocked requests. Not enabled; `navigator.onLine` covers the banner.
+
+### 11.5 Not built, deliberately
+
+- **Encryption at rest for attachments.** `src/lib/crypto.ts` exists and could be applied, but
+  encrypting the column needs a key-rotation story for data that is useless once lost. Until that
+  exists the UI says plainly that identity documents don't belong here.
+- **Caching RSC payloads.** Offline in-app `<Link>` navigation is therefore not guaranteed; a full
+  page load of a visited URL always works. Those responses `Vary` on the router state tree, so
+  caching them needs care.
+- **A sign-out control.** The app still has none — noticed while deciding where to clear the
+  offline cache. The worker clears on the redirect to `/api/auth/*` instead, which works today and
+  keeps working once a control is added.
