@@ -3,8 +3,9 @@
  * trips list, trip detail, and trip/activity create-edit pages nested below it.
  * @packageDocumentation
  */
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { OfflineReady } from './OfflineReady';
 import { ThemeToggle } from './ThemeToggle';
 import './globals.css';
 
@@ -44,6 +45,17 @@ export const metadata: Metadata = {
   title: 'Trip Planner',
   description:
     'Plan a multi-city trip: day-by-day itinerary, multi-currency budget, and maps.',
+  // `src/app/manifest.ts` is linked automatically by Next's file convention;
+  // this block is the iOS half, which reads its own meta tags rather than the
+  // manifest. Worth the three lines: a phone on a foreign network is the
+  // whole reason the offline layer exists.
+  appleWebApp: { capable: true, title: 'Trips', statusBarStyle: 'default' },
+};
+
+export const viewport: Viewport = {
+  // Matches the manifest's theme_color. Lives here rather than in `metadata`
+  // because Next moved themeColor to the viewport export.
+  themeColor: '#2563eb',
 };
 
 export default function RootLayout({
@@ -64,6 +76,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <OfflineReady />
         {children}
         <ThemeToggle />
       </body>

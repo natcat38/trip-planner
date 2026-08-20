@@ -1,0 +1,46 @@
+'use client';
+
+/**
+ * Registers the offline service worker (public/sw.js) and shows a banner when
+ * the connection drops. Rendered once from the root layout, like ThemeToggle,
+ * so both apply on every route.
+ *
+ * Next 16 ships an experimental `useOffline` hook, but it is flagged "not
+ * recommended for production" and caches nothing — it detects connectivity and
+ * retries requests. The banner below is the only part of it this app needs,
+ * and `navigator.onLine` gives that without an experimental config flag
+ * (ADR-0015).
+ * @packageDocumentation
+ */
+import { useEffect } from 'react';
+import { useIsOffline } from '@/lib/useIsOffline';
+
+export function OfflineReady() {
+  const offline = useIsOffline();
+
+  useEffect(() => {
+    // Registration is best-effort by design. It fails on unsupported browsers,
+    // on http:// origins other than localhost, and when the user has disabled
+    // service workers — in every one of those cases the app still works, it
+    // just isn't available offline, so there is nothing to report.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .catch(() => {});
+    }
+  }, []);
+
+  if (!offline) return null;
+
+  return (
+    <div
+      role="status"
+      // print:hidden for the same reason as ThemeToggle — this renders on
+      // /trips/[id]/print too, and a PDF export shouldn't carry a banner.
+      className="fixed inset-x-0 top-0 z-50 bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 print:hidden dark:bg-amber-950 dark:text-amber-200"
+    >
+      You&rsquo;re offline — showing the last version of pages you&rsquo;ve
+      opened. Edits won&rsquo;t save until you reconnect.
+    </div>
+  );
+}
