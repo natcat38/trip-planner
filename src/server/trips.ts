@@ -11,8 +11,10 @@ import { db } from '../lib/db';
 import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import {
   currentUserId,
+  currentUserIdentity,
   requireTripAccess,
   requireTripOwner,
+  tripAccessWhere,
 } from './auth-scope';
 import { ValidationError, StaleWriteError } from './errors';
 
@@ -44,18 +46,9 @@ function validateTripInput(input: TripInput) {
 }
 
 export async function listTrips() {
-  const userId = await currentUserId();
-  const user = await db.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { email: true },
-  });
+  const { userId, email } = await currentUserIdentity();
   return db.trip.findMany({
-    where: {
-      OR: [
-        { userId },
-        { collaborators: { some: { email: user.email, status: 'ACCEPTED' } } },
-      ],
-    },
+    where: tripAccessWhere(userId, email),
     orderBy: { startDate: 'desc' },
   });
 }

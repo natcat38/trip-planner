@@ -14,7 +14,24 @@ vi.mock('./auth-scope', () => {
       super("That trip doesn't exist or you don't have access.");
     }
   }
-  return { requireTripAccessForUser: vi.fn(), ForbiddenOrNotFoundError };
+  // Mirrors auth-scope.ts's real tripAccessWhere shape without importing the
+  // real module (see trips.test.ts for why: it pulls in next-auth/next/server,
+  // not resolvable in this unit-test environment).
+  function tripAccessWhere(userId: string, email: string | undefined) {
+    return {
+      OR: [
+        { userId },
+        ...(email
+          ? [{ collaborators: { some: { email, status: 'ACCEPTED' } } }]
+          : []),
+      ],
+    };
+  }
+  return {
+    requireTripAccessForUser: vi.fn(),
+    ForbiddenOrNotFoundError,
+    tripAccessWhere,
+  };
 });
 vi.mock('../lib/geocode', () => ({ geocode: vi.fn() }));
 vi.mock('../lib/db', () => ({

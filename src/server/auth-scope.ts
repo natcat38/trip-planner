@@ -33,27 +33,53 @@ export async function currentUserEmail(): Promise<string> {
   return session.user.email.toLowerCase();
 }
 
+// Like currentUserId, but also carries the session's email (lowercased, the
+// same normalization every other consumer of a session email applies —
+// TripCollaborator.email is normalized at invite time, but the session's
+// User.email is not, so callers that skip this end up comparing
+// differently-cased strings and silently failing to match a real
+// collaborator). Unlike currentUserEmail, a missing email is not an error:
+// some accounts genuinely have none, and a caller building a "what can this
+// user see" query should degrade to owner-only, not throw.
+export async function currentUserIdentity(): Promise<{
+  userId: string;
+  email: string | undefined;
+}> {
+  const session = await getSession();
+  if (!session?.user?.id) throw new UnauthenticatedError();
+  return {
+    userId: session.user.id,
+    email: session.user.email?.toLowerCase() ?? undefined,
+  };
+}
+
 // "Owner OR an accepted collaborator", as a query — separated from *where the
 // identity came from* so there is exactly one definition of trip access in
-// the codebase. requireTripAccess below supplies the identity from the
-// session; the browser extension's route handlers supply it from a bearer
-// token (ADR-0017), because they run outside any session. A second copy of
-// this predicate is precisely how the two paths would drift.
+// the codebase. Every caller (requireTripAccessForUser below, and the trip
+// list queries in trips.ts/extensionApi.ts) builds its `where` from this one
+// helper instead of writing the OR shape out again — a second copy of this
+// predicate is precisely how those paths would drift.
+export function tripAccessWhere(userId: string, email: string | undefined) {
+  return {
+    OR: [
+      { userId },
+      ...(email
+        ? [{ collaborators: { some: { email, status: 'ACCEPTED' as const } } }]
+        : []),
+    ],
+  };
+}
+
+// requireTripAccess below supplies the identity from the session; the
+// browser extension's route handlers supply it from a bearer token
+// (ADR-0017), because they run outside any session.
 export async function requireTripAccessForUser(
   userId: string,
   email: string | undefined,
   tripId: string,
 ) {
   const trip = await db.trip.findFirst({
-    where: {
-      id: tripId,
-      OR: [
-        { userId },
-        ...(email
-          ? [{ collaborators: { some: { email, status: 'ACCEPTED' } } }]
-          : []),
-      ],
-    },
+    where: { id: tripId, ...tripAccessWhere(userId, email) },
   });
   if (!trip) throw new ForbiddenOrNotFoundError();
   return trip;
@@ -67,13 +93,8 @@ export async function requireTripAccessForUser(
 // one per call site, without weakening the check itself — every call site
 // still runs the full authorization logic, just sharing its result.
 export const requireTripAccess = cache(async (tripId: string) => {
-  const session = await getSession();
-  if (!session?.user?.id) throw new UnauthenticatedError();
-  return requireTripAccessForUser(
-    session.user.id,
-    session.user.email?.toLowerCase() ?? undefined,
-    tripId,
-  );
+  const { userId, email } = await currentUserIdentity();
+  return requireTripAccessForUser(userId, email, tripId);
 });
 
 // Swallows a race where the target was already deleted/revoked by someone
