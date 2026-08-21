@@ -38,6 +38,8 @@ navigation.
 
 This is probably the smallest-effort, highest-value item in this document.
 
+**Closed in Phase 4 M8:** `AppHeader` + `SignOutButton` on every authed route, clearing caches directly.
+
 ### 2.2 The app has never stored a destination timezone
 `Day.date` is UTC midnight and `Activity.startTime` is a bare `"09:30"`. Consequences already
 absorbed:
@@ -141,6 +143,10 @@ Worth deciding deliberately at some point. Whichever way it goes, the fix belong
 list first and the extension second — an extension that showed more than the app does would be a
 strange place to introduce the change.
 
+**Closed in Phase 4 M8 (ADR-0018):** both lists now include accepted-collaborator trips, app and
+extension together, through one shared `tripAccessWhere` predicate in `src/server/auth-scope.ts`.
+Listing only — no write path was widened.
+
 ### 2.9 The extension ships pointing at localhost as well as production
 `extension/manifest.json`'s `host_permissions` includes `http://localhost:3000/*` so one build works
 against a dev server. Harmless for a personal tool; **drop it if the extension is ever packaged for
@@ -197,6 +203,9 @@ and exceeding the Hobby allowance **locks Blob out for 30 days**. `src/server/at
 single place that would change (ADR-0016 §1).
 
 Nobody is currently monitoring headroom. A `SELECT pg_database_size(...)` check would be cheap.
+
+**Closed in Phase 4 M8 (ADR-0018):** `npm run db:size`. It is a trend check, not the billing truth —
+Neon measures the cap as "logical data size" in its own console.
 
 ### 3.3 Map tiles cannot be cached offline — this is a licence limit, not a technical one
 Mapbox sets a **12-hour device TTL** on vector tiles, GL JS has no supported offline mode (that
