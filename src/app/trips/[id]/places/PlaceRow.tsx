@@ -49,7 +49,7 @@ export function PlaceRow({
   );
 
   return (
-    <li className="rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
+    <li className="rounded-lg border border-black/[.08] p-4 dark:border-white/25">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-medium text-black dark:text-zinc-50">
@@ -86,7 +86,7 @@ export function PlaceRow({
               <select
                 name="dayId"
                 required
-                className="rounded border border-black/[.08] px-2 py-1 text-sm dark:border-white/[.145] dark:bg-transparent"
+                className="rounded border border-black/[.08] px-2 py-1 text-sm dark:border-white/25 dark:bg-transparent"
               >
                 {days.map((day) => (
                   <option key={day.id} value={day.id}>
@@ -138,7 +138,7 @@ export function PlaceRow({
                 autoComplete="off"
                 placeholder="Notes (optional)"
                 defaultValue={place.notes ?? ''}
-                className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
               />
             </label>
             <div className="flex gap-3">
@@ -161,7 +161,7 @@ export function PlaceRow({
                         )
                       : ''
                   }
-                  className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                  className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
                 />
               </label>
               <label className="flex flex-col gap-1">
@@ -175,7 +175,7 @@ export function PlaceRow({
                   autoCapitalize="characters"
                   placeholder="Currency"
                   defaultValue={place.costCurrency ?? ''}
-                  className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
+                  className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/25 dark:bg-transparent"
                 />
               </label>
             </div>

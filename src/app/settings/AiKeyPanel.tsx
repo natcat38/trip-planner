@@ -60,7 +60,7 @@ function ApiKeyForm() {
           name="apiKey"
           autoComplete="off"
           placeholder="gsk_… or sk-or-v1-…"
-          className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </div>
 
@@ -132,15 +132,15 @@ function StoredKeyPanel({
       </p>
 
       {models === null ? (
-        <div className="rounded border border-dashed border-black/[.08] p-4 dark:border-white/[.145]">
-          <p className="mb-3 text-sm text-amber-600 dark:text-amber-400">
+        <div className="rounded border border-dashed border-black/[.08] p-4 dark:border-white/25">
+          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
             Couldn&apos;t load models from the provider right now — the key may
             be temporarily unreachable or no longer valid.
           </p>
           <form action={refreshModelsAction}>
             <SubmitButton
               pendingLabel="Retrying…"
-              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/[.145] dark:text-zinc-50"
+              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/25 dark:text-zinc-50"
             >
               Retry
             </SubmitButton>
@@ -170,7 +170,7 @@ function StoredKeyPanel({
             name="model"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
-            className="w-full max-w-md rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
+            className="w-full max-w-md rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
           >
             <option value="" disabled className="bg-white dark:bg-zinc-900">
               Choose a model…

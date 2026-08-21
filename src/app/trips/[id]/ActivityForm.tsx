@@ -59,7 +59,7 @@ export function ActivityForm({
             autoComplete="off"
             placeholder="Title"
             defaultValue={defaults.title}
-            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -69,7 +69,7 @@ export function ActivityForm({
           <select
             name="category"
             defaultValue={defaults.category}
-            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -89,7 +89,7 @@ export function ActivityForm({
           autoComplete="off"
           placeholder="Place (optional)"
           defaultValue={defaults.placeName}
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </label>
 
@@ -102,7 +102,7 @@ export function ActivityForm({
             type="time"
             name="startTime"
             defaultValue={defaults.startTime}
-            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
           />
         </label>
         <label className="flex flex-1 flex-col gap-1">
@@ -113,7 +113,7 @@ export function ActivityForm({
             type="time"
             name="endTime"
             defaultValue={defaults.endTime}
-            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
           />
         </label>
       </div>
@@ -131,7 +131,7 @@ export function ActivityForm({
             inputMode="decimal"
             placeholder="Cost (optional)"
             defaultValue={defaults.costAmount}
-            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -145,7 +145,7 @@ export function ActivityForm({
             autoCapitalize="characters"
             placeholder="Currency"
             defaultValue={defaults.costCurrency}
-            className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
+            className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/25 dark:bg-transparent"
           />
         </label>
       </div>
@@ -159,7 +159,7 @@ export function ActivityForm({
           autoComplete="off"
           placeholder="Notes (optional)"
           defaultValue={defaults.notes}
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </label>
 

@@ -43,7 +43,7 @@ export function Attachments({
   );
 
   return (
-    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
+    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/25">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         Attachments{attachments.length > 0 ? ` (${attachments.length})` : ''}
       </summary>

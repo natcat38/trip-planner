@@ -35,7 +35,7 @@ export function SharingPanel({
     : null;
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-4">Sharing</h2>
 
       <div className="mb-6">
@@ -136,7 +136,7 @@ export function SharingPanel({
               inputMode="email"
               spellCheck={false}
               placeholder="friend@example.com"
-              className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+              className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
             />
           </label>
           <SubmitButton

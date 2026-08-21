@@ -55,7 +55,7 @@ export function TransitLeg({
   );
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-dashed border-black/[.08] px-4 py-3 text-sm dark:border-white/[.145]">
+    <li className="flex flex-col gap-2 rounded-lg border border-dashed border-black/[.08] px-4 py-3 text-sm dark:border-white/25">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-zinc-500 dark:text-zinc-400">Getting there</span>
         <a
@@ -116,7 +116,7 @@ export function TransitLeg({
                 {state.journeys.map((journey, i) => (
                   <li
                     key={i}
-                    className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+                    className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25"
                   >
                     <details>
                       <summary className="cursor-pointer text-black dark:text-zinc-50">

@@ -32,7 +32,7 @@ export function ExpenseForm({
           required
           autoComplete="off"
           placeholder="Label (e.g. Flights)"
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -44,7 +44,7 @@ export function ExpenseForm({
           required
           autoComplete="off"
           placeholder="Category"
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -59,7 +59,7 @@ export function ExpenseForm({
           step="any"
           inputMode="decimal"
           placeholder="Amount"
-          className="w-28 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="w-28 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -73,7 +73,7 @@ export function ExpenseForm({
           spellCheck={false}
           autoCapitalize="characters"
           placeholder="Currency"
-          className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
+          className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/25 dark:bg-transparent"
         />
       </label>
       <button

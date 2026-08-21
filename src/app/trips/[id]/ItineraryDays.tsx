@@ -116,7 +116,7 @@ export function ItineraryDays({
               <p
                 className={`text-sm mb-3 ${
                   dayWeather.kind === 'historical'
-                    ? 'italic text-zinc-500 dark:text-zinc-500'
+                    ? 'italic text-zinc-500 dark:text-zinc-400'
                     : 'text-zinc-600 dark:text-zinc-400'
                 }`}
               >
@@ -141,7 +141,7 @@ export function ItineraryDays({
                         className={`flex items-start justify-between gap-4 rounded-lg border p-4 ${
                           activity.id === selectedActivityId
                             ? 'border-red-400 dark:border-red-500'
-                            : 'border-black/[.08] dark:border-white/[.145]'
+                            : 'border-black/[.08] dark:border-white/25'
                         }`}
                       >
                         <div className="flex-1 flex flex-col gap-2">
@@ -193,10 +193,10 @@ export function ItineraryDays({
                                 pendingLabel="Voting…"
                                 aria-pressed={votes[activity.id]?.mine ?? false}
                                 aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
-                                className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
+                                className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
                                   votes[activity.id]?.mine
                                     ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
-                                    : 'border-black/[.08] text-zinc-500 dark:border-white/[.145] dark:text-zinc-400'
+                                    : 'border-black/[.08] text-zinc-500 dark:border-white/25 dark:text-zinc-400'
                                 }`}
                               >
                                 <span aria-hidden>👍</span>{' '}
@@ -208,14 +208,14 @@ export function ItineraryDays({
                               <summary className="cursor-pointer list-none">
                                 <span
                                   aria-hidden
-                                  className="inline-block h-4 w-4 rounded-full border border-black/[.08] align-middle dark:border-white/[.145]"
+                                  className="inline-block h-6 w-6 rounded-full border border-black/[.08] align-middle dark:border-white/25"
                                   style={{
                                     background: activity.pinColor ?? '#2563eb',
                                   }}
                                 />
                                 <span className="sr-only">Pin colour</span>
                               </summary>
-                              <div className="absolute z-10 mt-1 flex items-center gap-1 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/[.145]">
+                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/25">
                                 {PIN_COLOR_PALETTE.map((color) => (
                                   <form
                                     key={color}
@@ -228,11 +228,11 @@ export function ItineraryDays({
                                   >
                                     <SubmitButton
                                       aria-label={`Set pin colour ${color}`}
-                                      pendingLabel="…"
-                                      className={`h-5 w-5 rounded-full border ${
+                                      pendingLabel=""
+                                      className={`h-6 w-6 rounded-full border ${
                                         activity.pinColor === color
                                           ? 'border-black dark:border-white'
-                                          : 'border-black/[.08] dark:border-white/[.145]'
+                                          : 'border-black/[.08] dark:border-white/25'
                                       }`}
                                       style={{ background: color }}
                                     >
@@ -272,7 +272,7 @@ export function ItineraryDays({
                               disabled={index === 0}
                               aria-label="Move up"
                               pendingLabel="…"
-                              className="text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                              className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                             >
                               ↑
                             </SubmitButton>
@@ -289,7 +289,7 @@ export function ItineraryDays({
                               disabled={index === day.activities.length - 1}
                               aria-label="Move down"
                               pendingLabel="…"
-                              className="text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                              className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                             >
                               ↓
                             </SubmitButton>
@@ -346,7 +346,7 @@ export function ItineraryDays({
               </ul>
             )}
 
-            <details className="rounded-lg border border-dashed border-black/[.08] p-4 dark:border-white/[.145]">
+            <details className="rounded-lg border border-dashed border-black/[.08] p-4 dark:border-white/25">
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 Add activity
               </summary>
@@ -369,7 +369,7 @@ export function ItineraryDays({
       })}
 
       {weather && Object.keys(weather).length > 0 && (
-        <p className="text-xs text-zinc-400 dark:text-zinc-600">
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Weather data by{' '}
           <a
             href="https://open-meteo.com/"

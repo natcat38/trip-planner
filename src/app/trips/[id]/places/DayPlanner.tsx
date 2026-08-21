@@ -56,7 +56,7 @@ export function DayPlanner({
   >(generateDayPlanAction.bind(null, tripId), INITIAL_STATE);
 
   return (
-    <section className="mt-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+    <section className="mt-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
         Plan a day
       </h2>
@@ -97,7 +97,7 @@ export function DayPlanner({
             id="pace"
             name="pace"
             defaultValue="relaxed"
-            className="rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
+            className="rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
           >
             <option value="relaxed" className="bg-white dark:bg-zinc-900">
               Relaxed
@@ -156,7 +156,7 @@ export function DayPlanner({
             </div>
 
             {state.notice && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+              <p className="text-xs text-amber-700 dark:text-amber-400">
                 {state.notice}
               </p>
             )}
@@ -200,7 +200,7 @@ function CandidateCard({
   >(acceptDayPlanAction.bind(null, tripId), ACCEPT_INITIAL_STATE);
 
   return (
-    <div className="rounded border border-black/[.08] p-4 dark:border-white/[.145]">
+    <div className="rounded border border-black/[.08] p-4 dark:border-white/25">
       <p className="font-medium text-black dark:text-zinc-50">
         {candidate.label}
       </p>
@@ -208,7 +208,7 @@ function CandidateCard({
         {candidate.places.map((place) => (
           <li key={place.id}>
             {place.name}{' '}
-            <span className="text-zinc-500 dark:text-zinc-500">
+            <span className="text-zinc-500 dark:text-zinc-400">
               ({place.category})
             </span>
           </li>
@@ -231,7 +231,7 @@ function CandidateCard({
         <select
           name="dayId"
           required
-          className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
+          className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
         >
           {days.map((day) => (
             <option

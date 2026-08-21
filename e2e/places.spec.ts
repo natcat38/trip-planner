@@ -113,8 +113,11 @@ test.describe('places page, signed in', () => {
       page.getByRole('region', { name: 'Map of itinerary places' }),
     ).toBeVisible();
 
+    // The marker only exists once Mapbox has fetched its style over the
+    // network, which loses the race against the default timeout when the
+    // suite's workers compete for bandwidth. Passes in isolation either way.
     const pin = page.getByRole('button', { name: 'Fushimi Inari Taisha' });
-    await expect(pin).toBeVisible();
+    await expect(pin).toBeVisible({ timeout: 20_000 });
     await pin.focus();
     await expect(pin).toBeFocused();
   });
