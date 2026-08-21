@@ -8,25 +8,19 @@ import {
 import { ValidationError } from './errors';
 import { listTripsForExtension, savePlaceFromPage } from './extensionApi';
 
-vi.mock('./auth-scope', () => {
+vi.mock('./auth-scope', async () => {
   class ForbiddenOrNotFoundError extends Error {
     constructor() {
       super("That trip doesn't exist or you don't have access.");
     }
   }
-  // Mirrors auth-scope.ts's real tripAccessWhere shape without importing the
-  // real module (see trips.test.ts for why: it pulls in next-auth/next/server,
-  // not resolvable in this unit-test environment).
-  function tripAccessWhere(userId: string, email: string | undefined) {
-    return {
-      OR: [
-        { userId },
-        ...(email
-          ? [{ collaborators: { some: { email, status: 'ACCEPTED' } } }]
-          : []),
-      ],
-    };
-  }
+  // tripAccessWhere is the REAL implementation (from trip-access-where.ts,
+  // which has no auth/db imports and is safe to load here — see
+  // trips.test.ts for why the rest of auth-scope.ts isn't) rather than a
+  // second copy reimplemented in this factory.
+  const { tripAccessWhere } = await vi.importActual<
+    typeof import('./trip-access-where')
+  >('./trip-access-where');
   return {
     requireTripAccessForUser: vi.fn(),
     ForbiddenOrNotFoundError,

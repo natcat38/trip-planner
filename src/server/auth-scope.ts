@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { auth } from '../auth';
 import { db } from '../lib/db';
+import { tripAccessWhere } from './trip-access-where';
 
 export class UnauthenticatedError extends Error {
   constructor() {
@@ -58,17 +59,10 @@ export async function currentUserIdentity(): Promise<{
 // the codebase. Every caller (requireTripAccessForUser below, and the trip
 // list queries in trips.ts/extensionApi.ts) builds its `where` from this one
 // helper instead of writing the OR shape out again — a second copy of this
-// predicate is precisely how those paths would drift.
-export function tripAccessWhere(userId: string, email: string | undefined) {
-  return {
-    OR: [
-      { userId },
-      ...(email
-        ? [{ collaborators: { some: { email, status: 'ACCEPTED' as const } } }]
-        : []),
-    ],
-  };
-}
+// predicate is precisely how those paths would drift. Re-exported here (the
+// implementation lives in trip-access-where.ts, see that file for why) so
+// existing callers keep importing it from auth-scope.ts.
+export { tripAccessWhere } from './trip-access-where';
 
 // requireTripAccess below supplies the identity from the session; the
 // browser extension's route handlers supply it from a bearer token

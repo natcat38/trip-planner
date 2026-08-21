@@ -16,7 +16,7 @@ import {
   updateTrip,
 } from './trips';
 
-vi.mock('./auth-scope', () => {
+vi.mock('./auth-scope', async () => {
   // Mirrors auth-scope.ts's real ForbiddenOrNotFoundError shape without
   // importing the real module, which pulls in next-auth (and, transitively,
   // next/server) — not resolvable in this unit-test environment. The real
@@ -26,19 +26,14 @@ vi.mock('./auth-scope', () => {
       super("That trip doesn't exist or you don't have access.");
     }
   }
-  // Mirrors auth-scope.ts's real tripAccessWhere shape (a pure function, but
-  // reimplemented here rather than imported so this mock stays independent
-  // of the real module's auth/db imports — see the comment above).
-  function tripAccessWhere(userId: string, email: string | undefined) {
-    return {
-      OR: [
-        { userId },
-        ...(email
-          ? [{ collaborators: { some: { email, status: 'ACCEPTED' } } }]
-          : []),
-      ],
-    };
-  }
+  // tripAccessWhere is the REAL implementation (from trip-access-where.ts,
+  // which has no auth/db imports and is safe to load here) rather than a
+  // second copy reimplemented in this factory — a reimplementation only
+  // proves the mock agrees with itself, not that listTrips still builds the
+  // real access predicate.
+  const { tripAccessWhere } = await vi.importActual<
+    typeof import('./trip-access-where')
+  >('./trip-access-where');
   return {
     ForbiddenOrNotFoundError,
     currentUserId: vi.fn(),
