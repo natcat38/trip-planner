@@ -32,7 +32,6 @@ export function Select({
   required,
   className = '',
   options,
-  suppressHydrationWarning,
 }: {
   id?: string;
   name?: string;
@@ -42,10 +41,6 @@ export function Select({
   required?: boolean;
   className?: string;
   options: SelectOption[];
-  // ThemeToggle only: its value is lazily read from localStorage on the
-  // client's first render, so it can legitimately differ from the server-
-  // rendered default — see the comment on ThemeToggle's own useState call.
-  suppressHydrationWarning?: boolean;
 }) {
   return (
     <select
@@ -55,7 +50,6 @@ export function Select({
       defaultValue={defaultValue}
       onChange={onChange}
       required={required}
-      suppressHydrationWarning={suppressHydrationWarning}
       className={`rounded border border-black/[.08] bg-white dark:border-white/25 dark:bg-zinc-900 ${className}`}
     >
       {options.map((option) => (

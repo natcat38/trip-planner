@@ -6,6 +6,7 @@ import type {
   getSharedTrip,
   listSharedExpenses,
 } from '@/server/sharing';
+import { ThemeToggle } from '@/app/ThemeToggle';
 import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
 import { duplicateSharedTripAction } from './actions';
 
@@ -51,7 +52,17 @@ export function SharedTripView({
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      {/* No AppHeader — this route is the one other unauthenticated page
+          (src/proxy.ts doesn't match /shared/*), so it gets the same
+          minimal chrome as the public landing page. */}
+      <div className="flex w-full justify-end px-8 py-3 print:hidden">
+        <ThemeToggle />
+      </div>
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
+      >
         <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
           Read-only shared view
         </p>

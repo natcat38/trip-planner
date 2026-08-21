@@ -6,7 +6,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { OfflineReady } from './OfflineReady';
-import { ThemeToggle } from './ThemeToggle';
 import './globals.css';
 
 // Runs before first paint (a plain <script> in <head> is render-blocking;
@@ -53,9 +52,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Matches the manifest's theme_color. Lives here rather than in `metadata`
-  // because Next moved themeColor to the viewport export.
-  themeColor: '#2563eb',
+  // Media-split so the browser chrome (Android's status/toolbar tint, iOS
+  // Safari's top bar) follows the resolved theme instead of always painting
+  // the light-mode manifest colour behind a dark-mode page. Lives here
+  // rather than in `metadata` because Next moved themeColor to the viewport
+  // export. Note this only tracks the OS-level `prefers-color-scheme` media
+  // query, not the in-app "light"/"dark" override the anti-flash script and
+  // ThemeToggle apply to `<html>` — a real media query is the only selector
+  // this meta tag understands, so an explicit in-app choice that fights the
+  // OS preference won't repaint the chrome to match. Matching the manifest's
+  // theme_color would need the same split; out of scope here since M9 does
+  // not touch `src/app/manifest.ts`.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 };
 
 export default function RootLayout({
@@ -74,11 +85,26 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+        {/* The Map component (src/components/Map.tsx) loads Mapbox GL JS and
+            tiles from this origin on every trip/places/shared page. A
+            preconnect here overlaps that connection's DNS/TLS/TCP setup with
+            the rest of the page load instead of paying for it only once the
+            map component itself gets around to the first tile request. */}
+        <link rel="preconnect" href="https://api.mapbox.com" />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* Keyboard-only escape hatch past the header/nav chrome straight to
+            each page's main content landmark. Must be the very first
+            focusable thing in the body so it's reachable on the first Tab
+            press from anywhere in the document. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-2 dark:focus:bg-zinc-900"
+        >
+          Skip to content
+        </a>
         <OfflineReady />
         {children}
-        <ThemeToggle />
       </body>
     </html>
   );
