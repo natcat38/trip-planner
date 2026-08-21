@@ -111,8 +111,25 @@ a token in Settings → Browser extension, and save any page. If `host_permissio
 grant the CORS bypass, the fix is CORS headers on the two `/api/extension/*` routes — safe to add
 there specifically *because* they authenticate with a bearer token rather than cookies.
 
-If someone does get Playwright loading extensions (a different machine, a newer Playwright), the
-removed spec is recoverable from this branch's history and was close to working.
+If someone does get Playwright loading extensions (a different machine, a newer Playwright), note
+that the removed spec is **not** recoverable from this branch's history — it was never `git add`ed
+before deletion, so no commit, stash, or dangling object contains it (verified exhaustively: every
+ref, `--diff-filter=A` across all history, and every dangling/stash object). It would need to be
+rewritten from scratch, using this ADR/handoff description and `e2e/extension-api.spec.ts` as the
+reference for the token/sign-in idiom.
+
+A follow-up attempt on this machine (Windows 10) found the blocker one level lower than a
+Playwright flag: full Chromium (`chromium-1228\chrome-win64\chrome.exe`) cannot be spawned at all —
+headed or headless, persistent context or plain launch, with or without extension flags — failing
+every time with `spawn UNKNOWN` (matching [playwright#35363](https://github.com/microsoft/playwright/issues/35363)).
+The one binary that *can* spawn, `chromium_headless_shell-1228\chrome-headless-shell.exe`, launches
+fine but silently ignores `--load-extension`: no error, no service worker, no CDP target, no
+extension entry ever written to the profile. So the extension-capable binary won't start, and the
+binary that starts doesn't support extensions — a dead end on this machine specifically, not a
+flag combination to keep retrying. The suggested next step is a Windows Defender exclusion for
+`%USERPROFILE%\AppData\Local\ms-playwright`, then re-running with **no** `channel` override and
+`headless: false` (the `channel: 'chromium'` option resolves to the same blocked binary, so it
+isn't the variable). Until then, the 30-second manual check above remains the control.
 
 ### 2.8 The extension lists owned trips only
 Its trip picker mirrors `listTrips` in `src/server/trips.ts`, which is owner-scoped — so a
