@@ -78,10 +78,14 @@ test.describe('print page, signed in', () => {
     await expect(
       page.getByRole('button', { name: 'Export PDF' }),
     ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
 
     await page.emulateMedia({ media: 'print' });
     await expect(page.getByRole('link', { name: 'Back to trip' })).toBeHidden();
     await expect(page.getByRole('button', { name: 'Export PDF' })).toBeHidden();
+    // The authed header wraps every /trips route, this one included; an
+    // exported PDF must not carry a sign-out control and the owner's email.
+    await expect(page.getByRole('button', { name: 'Sign out' })).toBeHidden();
     await expect(page.getByText('Fushimi Inari')).toBeVisible();
   });
 

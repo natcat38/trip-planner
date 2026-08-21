@@ -8,7 +8,9 @@ export async function AppHeader() {
     await signOut({ redirectTo: '/' });
   }
   return (
-    <header className="w-full border-b border-black/[.08] dark:border-white/[.145]">
+    // print:hidden — /trips/[id]/print is a nav-free print surface and
+    // hides its own controls the same way.
+    <header className="w-full border-b border-black/[.08] print:hidden dark:border-white/[.145]">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-3">
         <span className="text-sm text-zinc-600 dark:text-zinc-400">
           {session?.user?.email}
