@@ -118,19 +118,27 @@ export function SharingPanel({
             ))}
           </ul>
         )}
-        <form action={formAction} className="flex gap-2">
+        <form action={formAction} className="flex items-end gap-2">
           {state.error && (
             <p className="text-sm text-red-600 dark:text-red-400" role="alert">
               {state.error}
             </p>
           )}
-          <input
-            type="email"
-            name="email"
-            required
-            placeholder="friend@example.com"
-            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-          />
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-black dark:text-zinc-50">
+              Email
+            </span>
+            <input
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+              inputMode="email"
+              spellCheck={false}
+              placeholder="friend@example.com"
+              className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            />
+          </label>
           <SubmitButton
             pendingLabel="Inviting…"
             className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"

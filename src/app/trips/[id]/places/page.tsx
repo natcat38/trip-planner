@@ -282,25 +282,32 @@ export default async function PlacesPage({
           ) : (
             <>
               <form method="get" className="flex flex-wrap gap-3 mb-4">
-                <input
-                  type="text"
-                  name="q"
-                  defaultValue={q ?? ''}
-                  placeholder="Search (e.g. ramen)"
-                  className="flex-1 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-                />
-                <select
-                  name="category"
-                  defaultValue={category ?? ''}
-                  className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-                >
-                  <option value="">All categories</option>
-                  <option value="Food">Food</option>
-                  <option value="Sightseeing">Sightseeing</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Lodging">Lodging</option>
-                  <option value="Other">Other</option>
-                </select>
+                <label className="flex flex-1 flex-col gap-1">
+                  <span className="sr-only">Search places</span>
+                  <input
+                    type="search"
+                    name="q"
+                    autoComplete="off"
+                    defaultValue={q ?? ''}
+                    placeholder="Search (e.g. ramen)"
+                    className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="sr-only">Category</span>
+                  <select
+                    name="category"
+                    defaultValue={category ?? ''}
+                    className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                  >
+                    <option value="">All categories</option>
+                    <option value="Food">Food</option>
+                    <option value="Sightseeing">Sightseeing</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Lodging">Lodging</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
                 <button
                   type="submit"
                   className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
