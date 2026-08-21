@@ -191,6 +191,7 @@ export function ItineraryDays({
                             >
                               <SubmitButton
                                 pendingLabel="Voting…"
+                                aria-pressed={votes[activity.id]?.mine ?? false}
                                 className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
                                   votes[activity.id]?.mine
                                     ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
@@ -223,16 +224,18 @@ export function ItineraryDays({
                                       color,
                                     )}
                                   >
-                                    <button
-                                      type="submit"
+                                    <SubmitButton
                                       aria-label={`Set pin colour ${color}`}
+                                      pendingLabel="…"
                                       className={`h-5 w-5 rounded-full border ${
                                         activity.pinColor === color
                                           ? 'border-black dark:border-white'
                                           : 'border-black/[.08] dark:border-white/[.145]'
                                       }`}
                                       style={{ background: color }}
-                                    />
+                                    >
+                                      {null}
+                                    </SubmitButton>
                                   </form>
                                 ))}
                                 <form

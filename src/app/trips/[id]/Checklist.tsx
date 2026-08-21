@@ -50,6 +50,7 @@ export function Checklist({
               >
                 <SubmitButton
                   aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
+                  aria-pressed={item.done}
                   pendingLabel="…"
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs ${
                     item.done
