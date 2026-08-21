@@ -105,9 +105,7 @@ test.describe('attachments', () => {
     expect(row.sizeBytes).toBe(bigPdf.byteLength);
   });
 
-  test('refuses a file type that is not on the allowlist', async ({
-    page,
-  }) => {
+  test('refuses a file type that is not on the allowlist', async ({ page }) => {
     await page.goto(`/trips/${tripId}`);
 
     await page.getByText('Attachments', { exact: false }).first().click();
