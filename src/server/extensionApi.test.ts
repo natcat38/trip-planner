@@ -44,19 +44,39 @@ const input = (overrides = {}) => ({
 });
 
 describe('listTripsForExtension', () => {
-  it('scopes to the caller and never returns the whole trip row', async () => {
+  it('scopes to owned trips and accepted-collaborator trips, and never returns the whole trip row', async () => {
     vi.mocked(db.trip.findMany).mockResolvedValue([] as never);
 
-    await listTripsForExtension('user-1');
+    await listTripsForExtension('user-1', 'me@example.com');
 
     const call = vi.mocked(db.trip.findMany).mock.calls[0][0] as {
       where: unknown;
       select: Record<string, boolean>;
     };
-    expect(call.where).toEqual({ userId: 'user-1' });
+    expect(call.where).toEqual({
+      OR: [
+        { userId: 'user-1' },
+        {
+          collaborators: {
+            some: { email: 'me@example.com', status: 'ACCEPTED' },
+          },
+        },
+      ],
+    });
     // shareToken in particular must not travel to an extension.
     expect(call.select.shareToken).toBeUndefined();
     expect(call.select.name).toBe(true);
+  });
+
+  it('omits the collaborator clause entirely when the identity carries no email', async () => {
+    vi.mocked(db.trip.findMany).mockResolvedValue([] as never);
+
+    await listTripsForExtension('user-1', undefined);
+
+    const call = vi.mocked(db.trip.findMany).mock.calls[0][0] as {
+      where: unknown;
+    };
+    expect(call.where).toEqual({ OR: [{ userId: 'user-1' }] });
   });
 });
 

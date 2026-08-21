@@ -28,14 +28,22 @@ export interface ExtensionTripSummary {
 }
 
 // Mirrors src/server/trips.ts's listTrips exactly, including its
-// owner-only scope — the app's own dashboard lists owned trips and not ones
-// shared with you, and the extension picker showing MORE than the app does
-// would be a surprising place to fix that.
+// owned-or-accepted-collaborator scope — the app's own dashboard lists both,
+// and the extension picker showing fewer trips than the app does would be a
+// surprising place for that to diverge.
 export async function listTripsForExtension(
   userId: string,
+  email: string | undefined,
 ): Promise<ExtensionTripSummary[]> {
   return db.trip.findMany({
-    where: { userId },
+    where: {
+      OR: [
+        { userId },
+        ...(email
+          ? [{ collaborators: { some: { email, status: 'ACCEPTED' } } }]
+          : []),
+      ],
+    },
     orderBy: { startDate: 'desc' },
     select: { id: true, name: true, destinations: true },
   });

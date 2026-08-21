@@ -40,6 +40,9 @@ vi.mock('../lib/db', () => ({
       updateMany: vi.fn(),
       delete: vi.fn(),
     },
+    user: {
+      findUniqueOrThrow: vi.fn(),
+    },
   },
 }));
 
@@ -51,6 +54,7 @@ beforeEach(() => {
   vi.mocked(db.trip.create).mockReset();
   vi.mocked(db.trip.updateMany).mockReset();
   vi.mocked(db.trip.delete).mockReset();
+  vi.mocked(db.user.findUniqueOrThrow).mockReset();
 });
 
 const validInput = {
@@ -63,14 +67,30 @@ const validInput = {
 };
 
 describe('listTrips', () => {
-  it("queries the current user's trips ordered by start date", async () => {
+  it('queries owned trips and accepted-collaborator trips, ordered by start date', async () => {
     vi.mocked(currentUserId).mockResolvedValue('user-1');
+    vi.mocked(db.user.findUniqueOrThrow).mockResolvedValue({
+      email: 'me@example.com',
+    } as never);
     vi.mocked(db.trip.findMany).mockResolvedValue([] as never);
 
     await listTrips();
 
+    expect(db.user.findUniqueOrThrow).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      select: { email: true },
+    });
     expect(db.trip.findMany).toHaveBeenCalledWith({
-      where: { userId: 'user-1' },
+      where: {
+        OR: [
+          { userId: 'user-1' },
+          {
+            collaborators: {
+              some: { email: 'me@example.com', status: 'ACCEPTED' },
+            },
+          },
+        ],
+      },
       orderBy: { startDate: 'desc' },
     });
   });

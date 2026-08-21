@@ -45,8 +45,17 @@ function validateTripInput(input: TripInput) {
 
 export async function listTrips() {
   const userId = await currentUserId();
+  const user = await db.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { email: true },
+  });
   return db.trip.findMany({
-    where: { userId },
+    where: {
+      OR: [
+        { userId },
+        { collaborators: { some: { email: user.email, status: 'ACCEPTED' } } },
+      ],
+    },
     orderBy: { startDate: 'desc' },
   });
 }
