@@ -1,3 +1,4 @@
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { formatMoney } from '@/lib/money';
 import { getBudgetSummary } from '@/server/budget';
 import { listExpenses } from '@/server/expenses';
@@ -86,12 +87,13 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
                 <form
                   action={deleteExpenseAction.bind(null, tripId, expense.id)}
                 >
-                  <button
-                    type="submit"
+                  <ConfirmSubmitButton
+                    confirm="Delete this expense?"
+                    pendingLabel="Deleting…"
                     className="text-red-600 dark:text-red-400 underline"
                   >
                     Delete
-                  </button>
+                  </ConfirmSubmitButton>
                 </form>
               </li>
             ))}

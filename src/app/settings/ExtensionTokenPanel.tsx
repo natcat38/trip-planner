@@ -1,6 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { ExtensionTokenStatus } from '@/server/extensionToken';
 import {
   manageExtensionTokenAction,
@@ -23,10 +25,10 @@ export function ExtensionTokenPanel({
   // One form and one state for both buttons. With separate actions, revoking
   // could not clear the token generate had just displayed — so a revoked
   // token stayed on screen under "copy this now".
-  const [state, formAction, isPending] = useActionState<
-    ExtensionTokenFormState,
-    FormData
-  >(manageExtensionTokenAction, {});
+  const [state, formAction] = useActionState<ExtensionTokenFormState, FormData>(
+    manageExtensionTokenAction,
+    {},
+  );
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -57,29 +59,36 @@ export function ExtensionTokenPanel({
       )}
 
       <div className="flex items-center gap-4">
-        <button
-          type="submit"
-          name="intent"
-          value="generate"
-          disabled={isPending}
-          className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
-        >
-          {isPending
-            ? 'Working…'
-            : status.present
-              ? 'Generate a new token'
-              : 'Generate token'}
-        </button>
+        {status.present ? (
+          <ConfirmSubmitButton
+            confirm="Replace the existing token? The old one stops working."
+            pendingLabel="Working…"
+            name="intent"
+            value="generate"
+            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          >
+            Generate a new token
+          </ConfirmSubmitButton>
+        ) : (
+          <SubmitButton
+            pendingLabel="Working…"
+            name="intent"
+            value="generate"
+            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          >
+            Generate token
+          </SubmitButton>
+        )}
         {status.present && (
-          <button
-            type="submit"
+          <ConfirmSubmitButton
+            confirm="Revoke the token? Every installed extension disconnects."
+            pendingLabel="Revoking…"
             name="intent"
             value="revoke"
-            disabled={isPending}
             className="text-sm text-red-600 underline disabled:opacity-50 dark:text-red-400"
           >
             Revoke
-          </button>
+          </ConfirmSubmitButton>
         )}
       </div>
     </form>

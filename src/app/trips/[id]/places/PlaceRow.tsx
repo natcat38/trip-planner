@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { formatMoney, minorUnitExponent } from '@/lib/money';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import type { listPlaces } from '@/server/places';
@@ -169,12 +170,13 @@ export function PlaceRow({
         </details>
 
         <form action={deletePlaceAction.bind(null, tripId, place.id)}>
-          <button
-            type="submit"
+          <ConfirmSubmitButton
+            confirm="Delete this saved place?"
+            pendingLabel="Deleting…"
             className="text-sm text-red-600 dark:text-red-400 underline"
           >
             Delete
-          </button>
+          </ConfirmSubmitButton>
         </form>
       </div>
     </li>

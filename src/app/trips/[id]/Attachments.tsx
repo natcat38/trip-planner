@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { formatBytes } from '@/lib/bytes';
 import type { AttachmentSummary, AttachmentUsage } from '@/server/attachments';
 import {
@@ -73,12 +74,13 @@ export function Attachments({
                   attachment.id,
                 )}
               >
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirm="Delete this file? It cannot be recovered."
+                  pendingLabel="Deleting…"
                   className="text-sm text-red-600 underline dark:text-red-400"
                 >
                   Delete
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </li>
           ))}

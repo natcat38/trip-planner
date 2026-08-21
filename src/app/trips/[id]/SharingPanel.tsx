@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useSyncExternalStore } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import type { InviteFormState } from './sharing-actions';
 import {
   enableShareLinkAction,
@@ -44,20 +45,22 @@ export function SharingPanel({
             </p>
             <div className="flex gap-4">
               <form action={enableShareLinkAction.bind(null, tripId)}>
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirm="Regenerate the link? Every previously shared link stops working."
+                  pendingLabel="Regenerating…"
                   className="text-sm text-zinc-600 dark:text-zinc-400 underline"
                 >
                   Regenerate link
-                </button>
+                </ConfirmSubmitButton>
               </form>
               <form action={revokeShareLinkAction.bind(null, tripId)}>
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirm="Turn off the public link? Anyone holding it loses access."
+                  pendingLabel="Turning off…"
                   className="text-sm text-red-600 dark:text-red-400 underline"
                 >
                   Turn off link
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </div>
           </div>
@@ -101,12 +104,14 @@ export function SharingPanel({
                     collaborator.id,
                   )}
                 >
-                  <button
-                    type="submit"
+                  <ConfirmSubmitButton
+                    confirm="Remove this collaborator? They lose access immediately."
+                    pendingLabel="Removing…"
+                    aria-label={`Remove ${collaborator.email}`}
                     className="text-red-600 dark:text-red-400 underline"
                   >
                     Remove
-                  </button>
+                  </ConfirmSubmitButton>
                 </form>
               </li>
             ))}

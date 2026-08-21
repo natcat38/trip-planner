@@ -10,6 +10,7 @@ import {
   ForbiddenOrNotFoundError,
   requireTripAccess,
 } from '@/server/auth-scope';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { deleteTripAction, updateTripAction } from '../../actions';
 import { TripForm } from '../../TripForm';
 
@@ -69,12 +70,13 @@ export default async function EditTripPage({
         />
         {isOwner && (
           <form action={boundDelete} className="mt-8">
-            <button
-              type="submit"
+            <ConfirmSubmitButton
+              confirm="Delete this trip and all its days, activities, expenses and attachments? This cannot be undone."
+              pendingLabel="Deleting…"
               className="text-sm text-red-600 dark:text-red-400 underline"
             >
               Delete trip
-            </button>
+            </ConfirmSubmitButton>
           </form>
         )}
       </main>
