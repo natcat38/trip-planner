@@ -94,7 +94,7 @@ export default async function TripPrintPage({
             )}
           </p>
           {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-600">
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700">
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}

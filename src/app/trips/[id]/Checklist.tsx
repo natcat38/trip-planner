@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useTransition } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import type { listChecklist } from '@/server/checklist';
 import {
@@ -25,6 +25,14 @@ type ChecklistItem = ChecklistItems[number];
 // this correctly and gives disabled/aria-busy the same as the old
 // SubmitButton did. Real checkbox semantics (native `checked`) replace
 // `aria-pressed`, which doesn't belong on a checkbox.
+//
+// There's no useActionState here (the action isn't bound to a <form>), so a
+// StaleWriteError returned by toggleChecklistItemAction is held in local
+// state and rendered inline with role="alert", same convention as the other
+// stale-write-capable actions in this file. `checked` stays driven by
+// `item.done` (the server-confirmed value from props) rather than by
+// optimistic local state, so a rejected write can never leave the checkbox
+// showing something that didn't actually happen.
 function ChecklistCheckbox({
   tripId,
   item,
@@ -33,24 +41,34 @@ function ChecklistCheckbox({
   item: ChecklistItem;
 }) {
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string>();
   return (
-    <input
-      type="checkbox"
-      checked={item.done}
-      disabled={pending}
-      aria-busy={pending}
-      onChange={() => {
-        startTransition(async () => {
-          await toggleChecklistItemAction(
-            tripId,
-            item.id,
-            !item.done,
-            item.updatedAt.toISOString(),
-          );
-        });
-      }}
-      className="h-5 w-5 shrink-0 accent-black dark:accent-white"
-    />
+    <span className="flex flex-col gap-1">
+      <input
+        type="checkbox"
+        checked={item.done}
+        disabled={pending}
+        aria-busy={pending}
+        onChange={() => {
+          setError(undefined);
+          startTransition(async () => {
+            const result = await toggleChecklistItemAction(
+              tripId,
+              item.id,
+              !item.done,
+              item.updatedAt.toISOString(),
+            );
+            if (result.error) setError(result.error);
+          });
+        }}
+        className="h-5 w-5 shrink-0 accent-black dark:accent-white"
+      />
+      {error && (
+        <span className="text-xs text-red-600 dark:text-red-400" role="alert">
+          {error}
+        </span>
+      )}
+    </span>
   );
 }
 

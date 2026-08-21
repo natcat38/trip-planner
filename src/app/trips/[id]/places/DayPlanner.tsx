@@ -140,7 +140,7 @@ export function DayPlanner({
               <span
                 className={
                   state.source === 'ai'
-                    ? 'text-xs text-green-600 dark:text-green-400'
+                    ? 'text-xs text-green-700 dark:text-green-400'
                     : 'text-xs text-zinc-500 dark:text-zinc-400'
                 }
               >

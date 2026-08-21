@@ -17,6 +17,7 @@ import { signInAs } from './auth';
 test.describe('trip checklist toggle', () => {
   let userId: string;
   let tripId: string;
+  let itemId: string;
 
   test.beforeEach(async ({ context }) => {
     const { user } = await signInAs(db, context, 'checklist-e2e');
@@ -35,13 +36,14 @@ test.describe('trip checklist toggle', () => {
     });
     tripId = trip.id;
 
-    await db.checklistItem.create({
+    const item = await db.checklistItem.create({
       data: {
         tripId,
         label: 'Pack passport',
         sortOrder: 0,
       },
     });
+    itemId = item.id;
   });
 
   test.afterEach(async () => {
@@ -78,5 +80,48 @@ test.describe('trip checklist toggle', () => {
     await expect(
       page.getByRole('checkbox', { name: 'Pack passport' }),
     ).toBeChecked();
+  });
+
+  // Coverage for the stale-write path the useTransition rewrite introduced
+  // (review finding on B7): the page is holding an `updatedAt` that's gone
+  // stale because someone else (another collaborator, or this same person in
+  // another tab) touched the item after this page loaded. Simulate that by
+  // updating the row directly in the db, behind the page's back, then
+  // toggle. toggleChecklistItemAction must reject via StaleWriteError, and
+  // ChecklistCheckbox must (a) show that rejection to the user and (b) leave
+  // the checkbox showing what's actually true server-side, not what the
+  // click asked for.
+  test('toggling a stale item surfaces the conflict and leaves the checkbox unchanged', async ({
+    page,
+  }) => {
+    await page.goto(`/trips/${tripId}`);
+
+    const disclosure = page.getByText('Checklist (0/1)');
+    await expect(disclosure).toBeVisible();
+    await disclosure.click();
+
+    const checkbox = page.getByRole('checkbox', { name: 'Pack passport' });
+    await expect(checkbox).toBeVisible();
+    await expect(checkbox).not.toBeChecked();
+
+    // Simulate a concurrent change: bump updatedAt without touching `done`,
+    // so the page's in-memory item.updatedAt (captured at load) no longer
+    // matches the row the action's updateMany will look for.
+    await db.checklistItem.update({
+      where: { id: itemId },
+      data: { updatedAt: new Date() },
+    });
+
+    await checkbox.click();
+
+    // Next.js also renders its own (empty) route-announcer with
+    // role="alert", so scope to the one actually carrying text.
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'changed elsewhere' }),
+    ).toHaveText('This trip was changed elsewhere — reload and try again.');
+    // The write was rejected: the checkbox must not lie about having
+    // toggled, and the disclosure summary's count must not have moved.
+    await expect(checkbox).not.toBeChecked();
+    await expect(page.getByText('Checklist (0/1)')).toBeVisible();
   });
 });

@@ -211,18 +211,31 @@ export async function addChecklistItemAction(
 // going through Next's fetch-based action dispatch, which briefly re-showed
 // stale state after a genuinely successful write (see the comment on
 // ChecklistCheckbox). Each call passes the OPPOSITE of the item's current
-// done, so a stale write here (the trip changed elsewhere since the page
-// loaded) surfaces as an uncaught error rather than a silent no-op: there's
-// no useActionState wired to the checkbox to show it inline, and letting
-// the mutation silently fail would leave the checkbox visually wrong.
+// done. Unlike the other mutations in this file, there's no useActionState
+// wired to this control, so a StaleWriteError is returned (not thrown) for
+// ChecklistCheckbox to render inline near the item, same pattern as
+// updateActivityAction/updateDayNotesAction. Any other error still throws:
+// there's no established recovery story for it here, and swallowing it
+// would hide a real bug behind a misleading "someone else changed this"
+// message.
+export interface ToggleChecklistItemResult {
+  error?: string;
+}
+
 export async function toggleChecklistItemAction(
   tripId: string,
   itemId: string,
   done: boolean,
   updatedAt: string,
-): Promise<void> {
-  await toggleChecklistItem(tripId, itemId, done, new Date(updatedAt));
+): Promise<ToggleChecklistItemResult> {
+  try {
+    await toggleChecklistItem(tripId, itemId, done, new Date(updatedAt));
+  } catch (err) {
+    if (err instanceof StaleWriteError) return { error: err.message };
+    throw err;
+  }
   revalidatePath(`/trips/${tripId}`);
+  return {};
 }
 
 export async function deleteChecklistItemAction(
