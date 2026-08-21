@@ -1,4 +1,5 @@
 import { Map } from '@/components/Map';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import type {
   getSharedBudgetSummary,
@@ -60,12 +61,12 @@ export function SharedTripView({
           </h1>
           {canSaveCopy && (
             <form action={duplicateSharedTripAction.bind(null, token)}>
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Saving…"
                 className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
               >
                 Save a copy
-              </button>
+              </SubmitButton>
             </form>
           )}
         </div>

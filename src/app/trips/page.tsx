@@ -4,6 +4,7 @@
  * @packageDocumentation
  */
 import Link from 'next/link';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
@@ -87,12 +88,12 @@ export default async function TripsPage() {
                   action={duplicateTripAction.bind(null, trip.id)}
                   className="shrink-0 pr-5"
                 >
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingLabel="Duplicating…"
                     className="text-sm text-zinc-600 dark:text-zinc-400 underline"
                   >
                     Duplicate
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}

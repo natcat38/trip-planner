@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatBytes } from '@/lib/bytes';
 import type { AttachmentSummary, AttachmentUsage } from '@/server/attachments';
 import {
@@ -36,10 +37,10 @@ export function Attachments({
   attachments: AttachmentSummary[];
   usage: AttachmentUsage;
 }) {
-  const [state, formAction, isPending] = useActionState<
-    AttachmentFormState,
-    FormData
-  >(addAttachmentAction.bind(null, tripId), {});
+  const [state, formAction] = useActionState<AttachmentFormState, FormData>(
+    addAttachmentAction.bind(null, tripId),
+    {},
+  );
 
   return (
     <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
@@ -101,13 +102,12 @@ export function Attachments({
             accept={ACCEPT}
             className="flex-1 text-sm text-zinc-600 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:text-zinc-700 dark:text-zinc-400 dark:file:bg-zinc-800 dark:file:text-zinc-300"
           />
-          <button
-            type="submit"
-            disabled={isPending}
+          <SubmitButton
+            pendingLabel="Uploading…"
             className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
           >
-            {isPending ? 'Uploading…' : 'Upload'}
-          </button>
+            Upload
+          </SubmitButton>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           JPEG, PNG, WebP or PDF · up to {formatBytes(usage.maxFileBytes)} each

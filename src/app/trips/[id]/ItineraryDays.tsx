@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import type { DayWeather } from '@/lib/research/weather';
 import type { ensureDaysForTrip } from '@/server/itinerary';
@@ -188,13 +189,8 @@ export function ItineraryDays({
                                 activity.id,
                               )}
                             >
-                              <button
-                                type="submit"
-                                title={
-                                  votes[activity.id]?.mine
-                                    ? 'You voted for this — click to undo'
-                                    : 'Vote for this'
-                                }
+                              <SubmitButton
+                                pendingLabel="Voting…"
                                 className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
                                   votes[activity.id]?.mine
                                     ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
@@ -202,7 +198,7 @@ export function ItineraryDays({
                                 }`}
                               >
                                 👍 {votes[activity.id]?.count ?? 0}
-                              </button>
+                              </SubmitButton>
                             </form>
 
                             <details className="relative">
@@ -247,12 +243,12 @@ export function ItineraryDays({
                                     null,
                                   )}
                                 >
-                                  <button
-                                    type="submit"
+                                  <SubmitButton
+                                    pendingLabel="Clearing…"
                                     className="text-xs text-zinc-500 underline dark:text-zinc-400"
                                   >
                                     Default
-                                  </button>
+                                  </SubmitButton>
                                 </form>
                               </div>
                             </details>
@@ -267,14 +263,14 @@ export function ItineraryDays({
                               'up',
                             )}
                           >
-                            <button
-                              type="submit"
+                            <SubmitButton
                               disabled={index === 0}
                               aria-label="Move up"
+                              pendingLabel="…"
                               className="text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                             >
                               ↑
-                            </button>
+                            </SubmitButton>
                           </form>
                           <form
                             action={moveActivityAction.bind(
@@ -284,14 +280,14 @@ export function ItineraryDays({
                               'down',
                             )}
                           >
-                            <button
-                              type="submit"
+                            <SubmitButton
                               disabled={index === day.activities.length - 1}
                               aria-label="Move down"
+                              pendingLabel="…"
                               className="text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                             >
                               ↓
-                            </button>
+                            </SubmitButton>
                           </form>
                           <Link
                             href={`/trips/${tripId}/activities/${activity.id}/edit`}
