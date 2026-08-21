@@ -23,34 +23,59 @@ export function ExpenseForm({
           {state.error}
         </p>
       )}
-      <input
-        name="label"
-        required
-        placeholder="Label (e.g. Flights)"
-        className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-      />
-      <input
-        name="category"
-        required
-        placeholder="Category"
-        className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-      />
-      <input
-        type="number"
-        name="costAmount"
-        required
-        min="0"
-        step="any"
-        placeholder="Amount"
-        className="w-28 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-      />
-      <input
-        name="costCurrency"
-        required
-        maxLength={3}
-        placeholder="Currency"
-        className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
-      />
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-black dark:text-zinc-50">
+          Label
+        </span>
+        <input
+          name="label"
+          required
+          autoComplete="off"
+          placeholder="Label (e.g. Flights)"
+          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-black dark:text-zinc-50">
+          Category
+        </span>
+        <input
+          name="category"
+          required
+          autoComplete="off"
+          placeholder="Category"
+          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-black dark:text-zinc-50">
+          Amount
+        </span>
+        <input
+          type="number"
+          name="costAmount"
+          required
+          min="0"
+          step="any"
+          inputMode="decimal"
+          placeholder="Amount"
+          className="w-28 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-black dark:text-zinc-50">
+          Currency
+        </span>
+        <input
+          name="costCurrency"
+          required
+          maxLength={3}
+          spellCheck={false}
+          autoCapitalize="characters"
+          placeholder="Currency"
+          className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
+        />
+      </label>
       <button
         type="submit"
         disabled={isPending}

@@ -92,13 +92,19 @@ export function Checklist({
             {state.error}
           </p>
         )}
-        <div className="flex gap-3">
-          <input
-            name="label"
-            required
-            placeholder="Add an item"
-            className="flex-1 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-          />
+        <div className="flex items-end gap-3">
+          <label className="flex flex-1 flex-col gap-1">
+            <span className="text-sm font-medium text-black dark:text-zinc-50">
+              Item
+            </span>
+            <input
+              name="label"
+              required
+              autoComplete="off"
+              placeholder="Add an item"
+              className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+            />
+          </label>
           <button
             type="submit"
             disabled={isPending}

@@ -81,17 +81,20 @@ export function PlaceRow({
             action={addActivityFromPlaceAction.bind(null, tripId, place.id)}
             className="flex shrink-0 items-center gap-2"
           >
-            <select
-              name="dayId"
-              required
-              className="rounded border border-black/[.08] px-2 py-1 text-sm dark:border-white/[.145] dark:bg-transparent"
-            >
-              {days.map((day) => (
-                <option key={day.id} value={day.id}>
-                  {formatDayOption(day.date)}
-                </option>
-              ))}
-            </select>
+            <label className="flex items-center gap-2">
+              <span className="sr-only">Day</span>
+              <select
+                name="dayId"
+                required
+                className="rounded border border-black/[.08] px-2 py-1 text-sm dark:border-white/[.145] dark:bg-transparent"
+              >
+                {days.map((day) => (
+                  <option key={day.id} value={day.id}>
+                    {formatDayOption(day.date)}
+                  </option>
+                ))}
+              </select>
+            </label>
             <SubmitButton
               pendingLabel="Adding…"
               className="rounded-full bg-foreground px-3 py-1 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
@@ -126,36 +129,55 @@ export function PlaceRow({
             />
             <input type="hidden" name="website" value={place.website ?? ''} />
             <input type="hidden" name="phone" value={place.phone ?? ''} />
-            <textarea
-              name="notes"
-              placeholder="Notes (optional)"
-              defaultValue={place.notes ?? ''}
-              className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-            />
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-black dark:text-zinc-50">
+                Notes
+              </span>
+              <textarea
+                name="notes"
+                autoComplete="off"
+                placeholder="Notes (optional)"
+                defaultValue={place.notes ?? ''}
+                className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+              />
+            </label>
             <div className="flex gap-3">
-              <input
-                type="number"
-                name="costAmount"
-                min="0"
-                step="any"
-                placeholder="Cost (optional)"
-                defaultValue={
-                  place.costMinor != null && place.costCurrency
-                    ? String(
-                        place.costMinor /
-                          10 ** minorUnitExponent(place.costCurrency),
-                      )
-                    : ''
-                }
-                className="flex-1 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-              />
-              <input
-                name="costCurrency"
-                maxLength={3}
-                placeholder="Currency"
-                defaultValue={place.costCurrency ?? ''}
-                className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
-              />
+              <label className="flex flex-1 flex-col gap-1">
+                <span className="text-sm font-medium text-black dark:text-zinc-50">
+                  Cost
+                </span>
+                <input
+                  type="number"
+                  name="costAmount"
+                  min="0"
+                  step="any"
+                  inputMode="decimal"
+                  placeholder="Cost (optional)"
+                  defaultValue={
+                    place.costMinor != null && place.costCurrency
+                      ? String(
+                          place.costMinor /
+                            10 ** minorUnitExponent(place.costCurrency),
+                        )
+                      : ''
+                  }
+                  className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-black dark:text-zinc-50">
+                  Currency
+                </span>
+                <input
+                  name="costCurrency"
+                  maxLength={3}
+                  spellCheck={false}
+                  autoCapitalize="characters"
+                  placeholder="Currency"
+                  defaultValue={place.costCurrency ?? ''}
+                  className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/[.145] dark:bg-transparent"
+                />
+              </label>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               This is a price you noted yourself, not a computed average.

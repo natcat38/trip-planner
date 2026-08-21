@@ -37,14 +37,21 @@ export function ExtensionTokenPanel({
           <p className="text-sm font-medium text-black dark:text-zinc-50">
             Copy this now — it won&rsquo;t be shown again.
           </p>
-          <input
-            readOnly
-            value={state.token}
-            // Selected on focus so copying it is one click plus one keystroke,
-            // rather than a drag across 45 characters of base64.
-            onFocus={(event) => event.currentTarget.select()}
-            className="w-full rounded border border-black/[.08] bg-white px-3 py-2 font-mono text-xs text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
-          />
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-black dark:text-zinc-50">
+              Token
+            </span>
+            <input
+              readOnly
+              value={state.token}
+              translate="no"
+              spellCheck={false}
+              // Selected on focus so copying it is one click plus one
+              // keystroke, rather than a drag across 45 characters of base64.
+              onFocus={(event) => event.currentTarget.select()}
+              className="w-full rounded border border-black/[.08] bg-white px-3 py-2 font-mono text-xs text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
+            />
+          </label>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Paste it into the extension&rsquo;s popup. Only a hash of it is
             stored here, which is why it can&rsquo;t be shown again.

@@ -50,6 +50,7 @@ export function TripForm({
         <input
           name="name"
           required
+          autoComplete="off"
           defaultValue={defaults.name}
           className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
         />
@@ -62,6 +63,7 @@ export function TripForm({
         <input
           name="destinations"
           required
+          autoComplete="off"
           defaultValue={defaults.destinations}
           className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
         />
@@ -104,6 +106,8 @@ export function TripForm({
             required
             maxLength={3}
             placeholder="JPY"
+            spellCheck={false}
+            autoCapitalize="characters"
             defaultValue={defaults.baseCurrency}
             className="rounded border border-black/[.08] px-3 py-2 uppercase dark:border-white/[.145] dark:bg-transparent"
           />
@@ -118,6 +122,7 @@ export function TripForm({
             required
             min="0"
             step="any"
+            inputMode="decimal"
             defaultValue={defaults.budgetAmount}
             className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
           />
