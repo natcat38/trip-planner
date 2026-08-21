@@ -95,6 +95,14 @@ test.describe('places page, signed in', () => {
   test('the map renders a keyboard-focusable, labelled pin for each saved place', async ({
     page,
   }) => {
+    // Without a token Map.tsx renders its "no Mapbox token configured"
+    // fallback instead of a map, so there is no region and no pin to find.
+    // CI has no token by design (it is a paid quota, ADR-0001) — this runs
+    // locally, the same bargain e2e/extension-api.spec.ts makes for geocoding.
+    test.skip(
+      !process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+      'needs NEXT_PUBLIC_MAPBOX_TOKEN to render a real map',
+    );
     const response = await page.goto(`/trips/${tripId}/places`);
     expect(response?.ok()).toBe(true);
 
