@@ -14,6 +14,7 @@
  * @packageDocumentation
  */
 import { useState } from 'react';
+import { Select } from '@/components/Select';
 import {
   isThemePreference,
   resolveTheme,
@@ -77,27 +78,18 @@ export function ThemeToggle() {
       <label htmlFor="theme-preference" className="sr-only">
         Theme
       </label>
-      {/* The explicit background on the select (and its options) is required,
-          not cosmetic: a transparent select inherits the page's dark backdrop
-          for its native option list but keeps default dark text, leaving the
-          choices unreadable — see AiKeyPanel's model picker for the same fix. */}
-      <select
+      <Select
         id="theme-preference"
         value={preference}
         onChange={handleChange}
         suppressHydrationWarning
-        className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-zinc-600 shadow-sm dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-400"
-      >
-        <option value="system" className="bg-white dark:bg-zinc-900">
-          System theme
-        </option>
-        <option value="light" className="bg-white dark:bg-zinc-900">
-          Light
-        </option>
-        <option value="dark" className="bg-white dark:bg-zinc-900">
-          Dark
-        </option>
-      </select>
+        className="px-2 py-1 text-sm text-zinc-600 shadow-sm dark:text-zinc-400"
+        options={[
+          { value: 'system', label: 'System theme' },
+          { value: 'light', label: 'Light' },
+          { value: 'dark', label: 'Dark' },
+        ]}
+      />
     </div>
   );
 }

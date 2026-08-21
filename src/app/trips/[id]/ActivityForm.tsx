@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { Select } from '@/components/Select';
 import { CATEGORIES } from '@/lib/categories';
 import type { ActivityFormState } from './actions';
 
@@ -66,17 +67,12 @@ export function ActivityForm({
           <span className="text-sm font-medium text-black dark:text-zinc-50">
             Category
           </span>
-          <select
+          <Select
             name="category"
             defaultValue={defaults.category}
-            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+            options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+          />
         </label>
       </div>
 

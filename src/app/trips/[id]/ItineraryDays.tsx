@@ -215,7 +215,11 @@ export function ItineraryDays({
                                 />
                                 <span className="sr-only">Pin colour</span>
                               </summary>
-                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/25">
+                              {/* bg-background resolves to #0a0a0a in dark mode,
+                                  identical to the page's own dark:bg-black
+                                  backdrop — the popover was invisible against
+                                  itself without an explicit surface colour. */}
+                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/25 dark:bg-zinc-900">
                                 {PIN_COLOR_PALETTE.map((color) => (
                                   <form
                                     key={color}

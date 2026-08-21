@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { Select } from '@/components/Select';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney, minorUnitExponent } from '@/lib/money';
 import type { ensureDaysForTrip } from '@/server/itinerary';
@@ -83,17 +84,15 @@ export function PlaceRow({
           >
             <label className="flex items-center gap-2">
               <span className="sr-only">Day</span>
-              <select
+              <Select
                 name="dayId"
                 required
-                className="rounded border border-black/[.08] px-2 py-1 text-sm dark:border-white/25 dark:bg-transparent"
-              >
-                {days.map((day) => (
-                  <option key={day.id} value={day.id}>
-                    {formatDayOption(day.date)}
-                  </option>
-                ))}
-              </select>
+                className="px-2 py-1 text-sm text-black dark:text-zinc-50"
+                options={days.map((day) => ({
+                  value: day.id,
+                  label: formatDayOption(day.date),
+                }))}
+              />
             </label>
             <SubmitButton
               pendingLabel="Adding…"
