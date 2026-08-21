@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import crypto from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // Matches this repo's existing e2e pattern (see e2e/smoke.spec.ts,
 // e2e/sharing.spec.ts) of verifying the redirect/render boundary rather
@@ -24,22 +24,10 @@ test('the print page redirects to sign-in when signed out', async ({
 test.describe('print page, signed in', () => {
   let userId: string;
   let tripId: string;
-  let sessionToken: string;
 
-  test.beforeEach(async () => {
-    const user = await db.user.create({
-      data: { email: `print-e2e-${crypto.randomUUID()}@example.com` },
-    });
+  test.beforeEach(async ({ context }) => {
+    const { user } = await signInAs(db, context, 'print-e2e');
     userId = user.id;
-
-    sessionToken = crypto.randomUUID();
-    await db.session.create({
-      data: {
-        sessionToken,
-        userId,
-        expires: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
 
     const trip = await db.trip.create({
       data: {
@@ -76,18 +64,7 @@ test.describe('print page, signed in', () => {
 
   test('renders the itinerary and budget, hides nav on print', async ({
     page,
-    context,
   }) => {
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: sessionToken,
-        url: 'http://localhost:3000',
-        httpOnly: true,
-        sameSite: 'Lax',
-      },
-    ]);
-
     const response = await page.goto(`/trips/${tripId}/print`);
     expect(response?.ok()).toBe(true);
 
@@ -112,27 +89,8 @@ test.describe('print page, signed in', () => {
     page,
     context,
   }) => {
-    const otherUser = await db.user.create({
-      data: { email: `print-e2e-other-${crypto.randomUUID()}@example.com` },
-    });
+    const { user: otherUser } = await signInAs(db, context, 'print-e2e-other');
     try {
-      const otherToken = crypto.randomUUID();
-      await db.session.create({
-        data: {
-          sessionToken: otherToken,
-          userId: otherUser.id,
-          expires: new Date(Date.now() + 60 * 60 * 1000),
-        },
-      });
-
-      await context.addCookies([
-        {
-          name: 'authjs.session-token',
-          value: otherToken,
-          url: 'http://localhost:3000',
-        },
-      ]);
-
       const response = await page.goto(`/trips/${tripId}/print`);
       expect(response?.ok()).toBe(true);
       await expect(
