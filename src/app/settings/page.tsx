@@ -33,7 +33,7 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <section className="rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             AI key
           </h2>
@@ -46,7 +46,7 @@ export default async function SettingsPage() {
           <AiKeyPanel status={status} models={models} />
         </section>
 
-        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Browser extension
           </h2>

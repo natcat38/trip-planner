@@ -52,7 +52,7 @@ export default async function TripsPage() {
         </div>
 
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-black/[.08] p-12 text-center dark:border-white/[.145]">
+          <div className="rounded-lg border border-dashed border-black/[.08] p-12 text-center dark:border-white/25">
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
               You haven&apos;t planned any trips yet.
             </p>
@@ -68,7 +68,7 @@ export default async function TripsPage() {
             {trips.map((trip) => (
               <li
                 key={trip.id}
-                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/[.145] dark:hover:bg-white/[.03]"
+                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/25 dark:hover:bg-white/[.03]"
               >
                 <Link href={`/trips/${trip.id}`} className="block flex-1 p-5">
                   <div className="flex items-baseline justify-between gap-4">

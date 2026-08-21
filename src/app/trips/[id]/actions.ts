@@ -205,13 +205,16 @@ export async function addChecklistItemAction(
   return {};
 }
 
-// Bound per-checkbox with the item's current done/updatedAt (the checkbox
-// submits the OPPOSITE of its current state — see Checklist.tsx), the same
-// bind-per-instance pattern as moveActivityAction/setActivityPinColorAction
-// above. A stale write here (the trip changed elsewhere since the page
+// Called directly from Checklist.tsx's checkbox onChange (inside
+// useTransition), not bound to a <form>'s action — a raw form submission
+// here round-trips a full, unintercepted browser POST navigation instead of
+// going through Next's fetch-based action dispatch, which briefly re-showed
+// stale state after a genuinely successful write (see the comment on
+// ChecklistCheckbox). Each call passes the OPPOSITE of the item's current
+// done, so a stale write here (the trip changed elsewhere since the page
 // loaded) surfaces as an uncaught error rather than a silent no-op: there's
-// no useActionState wired to a bare checkbox toggle to show it inline, and
-// letting the mutation silently fail would leave the checkbox visually wrong.
+// no useActionState wired to the checkbox to show it inline, and letting
+// the mutation silently fail would leave the checkbox visually wrong.
 export async function toggleChecklistItemAction(
   tripId: string,
   itemId: string,

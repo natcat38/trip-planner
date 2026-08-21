@@ -10,7 +10,7 @@ export function InvitesBanner({ invites }: { invites: PendingInvite[] }) {
       {invites.map((invite) => (
         <li
           key={invite.tripId}
-          className="flex items-center justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]"
+          className="flex items-center justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/25"
         >
           <p className="text-sm text-black dark:text-zinc-50">
             You&apos;ve been invited to collaborate on{' '}

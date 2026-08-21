@@ -1,8 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useTransition } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
-import { SubmitButton } from '@/components/SubmitButton';
 import type { listChecklist } from '@/server/checklist';
 import {
   addChecklistItemAction,
@@ -12,6 +11,48 @@ import {
 } from './actions';
 
 type ChecklistItems = Awaited<ReturnType<typeof listChecklist>>;
+type ChecklistItem = ChecklistItems[number];
+
+// No <form> here on purpose: toggleChecklistItemAction is a Server Action,
+// callable directly from a Client Component as a plain async function
+// (docs: Server Actions aren't form-only). Wiring it through
+// form.requestSubmit() instead — the first thing tried — round-tripped a
+// full, unintercepted browser POST navigation (confirmed via e2e: a real
+// `framenavigated` fired), which re-rendered the page from data read before
+// the mutation had settled, so the checkbox visually reverted even though
+// the write succeeded. Calling the action directly inside useTransition
+// goes through Next's fetch-based action dispatch instead, which resolves
+// this correctly and gives disabled/aria-busy the same as the old
+// SubmitButton did. Real checkbox semantics (native `checked`) replace
+// `aria-pressed`, which doesn't belong on a checkbox.
+function ChecklistCheckbox({
+  tripId,
+  item,
+}: {
+  tripId: string;
+  item: ChecklistItem;
+}) {
+  const [pending, startTransition] = useTransition();
+  return (
+    <input
+      type="checkbox"
+      checked={item.done}
+      disabled={pending}
+      aria-busy={pending}
+      onChange={() => {
+        startTransition(async () => {
+          await toggleChecklistItemAction(
+            tripId,
+            item.id,
+            !item.done,
+            item.updatedAt.toISOString(),
+          );
+        });
+      }}
+      className="h-5 w-5 shrink-0 accent-black dark:accent-white"
+    />
+  );
+}
 
 // A calm <details> disclosure below the itinerary, matching the "Add
 // activity" and PlaceRow edit-form disclosures elsewhere on this route.
@@ -30,7 +71,7 @@ export function Checklist({
   const doneCount = items.filter((item) => item.done).length;
 
   return (
-    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
+    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/25">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         Checklist{items.length > 0 ? ` (${doneCount}/${items.length})` : ''}
       </summary>
@@ -39,37 +80,18 @@ export function Checklist({
         <ul className="mt-4 flex flex-col gap-2">
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-3">
-              <form
-                action={toggleChecklistItemAction.bind(
-                  null,
-                  tripId,
-                  item.id,
-                  !item.done,
-                  item.updatedAt.toISOString(),
-                )}
-              >
-                <SubmitButton
-                  aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
-                  aria-pressed={item.done}
-                  pendingLabel="…"
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs ${
+              <label className="flex flex-1 cursor-pointer items-center gap-3">
+                <ChecklistCheckbox tripId={tripId} item={item} />
+                <span
+                  className={`text-sm ${
                     item.done
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-black/[.2] dark:border-white/[.3]'
+                      ? 'text-zinc-500 line-through dark:text-zinc-400'
+                      : 'text-black dark:text-zinc-50'
                   }`}
                 >
-                  {item.done ? '✓' : ''}
-                </SubmitButton>
-              </form>
-              <span
-                className={`flex-1 text-sm ${
-                  item.done
-                    ? 'text-zinc-400 line-through dark:text-zinc-600'
-                    : 'text-black dark:text-zinc-50'
-                }`}
-              >
-                {item.label}
-              </span>
+                  {item.label}
+                </span>
+              </label>
               <form
                 action={deleteChecklistItemAction.bind(null, tripId, item.id)}
               >
@@ -102,7 +124,7 @@ export function Checklist({
               required
               autoComplete="off"
               placeholder="Add an item"
-              className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+              className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
             />
           </label>
           <button

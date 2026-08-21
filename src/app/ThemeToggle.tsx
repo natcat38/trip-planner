@@ -86,7 +86,7 @@ export function ThemeToggle() {
         value={preference}
         onChange={handleChange}
         suppressHydrationWarning
-        className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-zinc-600 shadow-sm dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-400"
+        className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-zinc-600 shadow-sm dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-400"
       >
         <option value="system" className="bg-white dark:bg-zinc-900">
           System theme

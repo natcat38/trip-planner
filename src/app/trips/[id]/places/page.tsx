@@ -55,7 +55,7 @@ function GuidePanel({
 }) {
   if (!destination) {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
@@ -71,11 +71,11 @@ function GuidePanel({
   // explicit message and point at OSM search instead of an empty panel.
   if (guide == null || guide.coverage === 'none') {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
-        <p className="text-sm text-amber-600 dark:text-amber-400">
+        <p className="text-sm text-amber-700 dark:text-amber-400">
           Limited guide data for {destination}. Use place search below instead.
         </p>
         {guide?.url && (
@@ -97,7 +97,7 @@ function GuidePanel({
   );
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
       <div className="flex items-baseline justify-between mb-2 gap-4">
         <h2 className="font-medium text-black dark:text-zinc-50">
           Destination guide — {guide.title}
@@ -105,8 +105,8 @@ function GuidePanel({
         <span
           className={
             guide.coverage === 'good'
-              ? 'shrink-0 text-xs text-green-600 dark:text-green-400'
-              : 'shrink-0 text-xs text-amber-600 dark:text-amber-400'
+              ? 'shrink-0 text-xs text-green-700 dark:text-green-400'
+              : 'shrink-0 text-xs text-amber-700 dark:text-amber-400'
           }
         >
           {guide.coverage === 'good' ? 'Good coverage' : 'Limited coverage'}
@@ -114,7 +114,7 @@ function GuidePanel({
       </div>
 
       {guide.coverage === 'thin' && (
-        <p className="mb-4 text-sm text-amber-600 dark:text-amber-400">
+        <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
           Limited guide data for {destination} — some sections may be missing.
           Place search below still works.
         </p>
@@ -129,7 +129,7 @@ function GuidePanel({
           {availableSections.map(({ key, label }) => (
             <details
               key={key}
-              className="rounded border border-dashed border-black/[.08] p-3 dark:border-white/[.145]"
+              className="rounded border border-dashed border-black/[.08] p-3 dark:border-white/25"
             >
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 {label}
@@ -268,7 +268,7 @@ export default async function PlacesPage({
           hasApiKey={keyStatus != null}
         />
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Search places
           </h2>
@@ -290,7 +290,7 @@ export default async function PlacesPage({
                     autoComplete="off"
                     defaultValue={q ?? ''}
                     placeholder="Search (e.g. ramen)"
-                    className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                    className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
@@ -298,7 +298,7 @@ export default async function PlacesPage({
                   <select
                     name="category"
                     defaultValue={category ?? ''}
-                    className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+                    className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
                   >
                     <option value="">All categories</option>
                     <option value="Food">Food</option>
@@ -327,7 +327,7 @@ export default async function PlacesPage({
                   {searchResults.map((place) => (
                     <li
                       key={place.id}
-                      className="flex items-start justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]"
+                      className="flex items-start justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/25"
                     >
                       <div>
                         <p className="font-medium text-black dark:text-zinc-50">

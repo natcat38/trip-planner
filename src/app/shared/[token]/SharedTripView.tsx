@@ -71,7 +71,7 @@ export function SharedTripView({
           )}
         </div>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
@@ -89,7 +89,7 @@ export function SharedTripView({
             )}
           </p>
           {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-600 dark:text-amber-400">
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700 dark:text-amber-400">
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}
@@ -130,7 +130,7 @@ export function SharedTripView({
                   {day.activities.map((activity) => (
                     <li
                       key={activity.id}
-                      className="rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]"
+                      className="rounded-lg border border-black/[.08] p-4 dark:border-white/25"
                     >
                       <p className="font-medium text-black dark:text-zinc-50">
                         {activity.title}{' '}
