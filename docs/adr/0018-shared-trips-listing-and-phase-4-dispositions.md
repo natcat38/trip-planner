@@ -68,6 +68,13 @@ Postgres approximation, close enough to watch a trend but not to gate on. The sc
 says so on every run. Building anything more than a manual trend check is not justified until the
 number is closer to the cap.
 
+### 4. A sign-out control now exists (supersedes ADR-0015 §5)
+Also closed this milestone, outside the three items above: `AppHeader` + `SignOutButton` on every
+authed route. ADR-0015 §5's "the app currently has no sign-out control anywhere" is left as-written
+— ADRs are historical records of a decision at the time — but that statement no longer holds; the
+button now clears the offline worker's caches directly via `postMessage`, and the redirect-based
+cleanup it describes is the fallback for a session that simply expires.
+
 ## Consequences
 - A collaborator's dashboard and the extension's trip picker now agree with each other and with
   `requireTripAccess` on which trips are visible; before this, three different scopes existed

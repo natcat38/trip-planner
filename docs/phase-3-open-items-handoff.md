@@ -301,13 +301,17 @@ re-proposing any of them**:
 
 ## 6. Small, cheap, and probably worth doing
 
-- **A sign-out control** (§2.1). Smallest effort, clearest gap.
+- **A sign-out control** (§2.1). Smallest effort, clearest gap. **Closed in Phase 4 M8** — see §2.1.
 - **Extract the e2e sign-in helper.** Now **six** specs hand-roll the same "create a Session row, set
   `authjs.session-token`" preamble: `export`, `places`, `settings`, `transit`, `attachments`,
   `extension-api`. Pull it into `e2e/auth.ts`. Noted during M6's review and grown by one since.
-- **A database-size check** against Neon's 0.5 GB (§3.2), so the wall is seen coming.
+  **Closed in Phase 4 M8** — `e2e/auth.ts`'s `signInAs`, used by all six specs plus `signout.spec.ts`
+  and `offline.spec.ts`.
+- **A database-size check** against Neon's 0.5 GB (§3.2), so the wall is seen coming. **Closed in
+  Phase 4 M8** — see §3.2.
 - **Bump `CACHE_NAME` in `public/sw.js`** after any change to the root layout, or users keep old
-  shells until the worker updates for another reason.
+  shells until the worker updates for another reason. Still open — no change to `src/app/layout.tsx`
+  has happened since, so there has been nothing to bump for yet.
 
 ---
 
