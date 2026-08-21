@@ -51,6 +51,24 @@ test.describe('settings, signed in', () => {
     await expect(field).toHaveValue('');
   });
 
+  test('the extension token panel is a live region already mounted before a token is generated', async ({
+    page,
+  }) => {
+    // B6: highest-stakes live region in the app — the token is shown exactly
+    // once (ExtensionTokenPanel.tsx) and never again, so this must already
+    // be in the DOM before "No token yet." flips to the token, or a screen
+    // reader user who generates one never hears it. Only the pre-generation
+    // state is asserted here: driving a real "Generate token" submit needs
+    // the manageExtensionTokenAction server action and its crypto, which is
+    // this panel's own action-layer concern, not this a11y task's.
+    await page.goto('/settings');
+    await expect(page).not.toHaveURL(/\/api\/auth\/signin/);
+
+    const liveRegion = page.locator('[aria-live="polite"]');
+    await expect(liveRegion).toHaveCount(1);
+    await expect(liveRegion.getByText('No token yet.')).toBeVisible();
+  });
+
   test('rejects a key with an unrecognised prefix without storing it', async ({
     page,
   }) => {

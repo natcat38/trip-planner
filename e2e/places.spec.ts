@@ -82,6 +82,33 @@ test.describe('places page, signed in', () => {
     await expect(
       page.getByText(/Limited guide data for Zzyzxnonexistent-/),
     ).toBeVisible();
+
+    // B6: DayPlanner's results area is a live region mounted at page load
+    // (this destination has no API key/guide, so GuideSummary never renders
+    // here — its own live region isn't exercisable without a live guide and
+    // a stored AI key, which would make this test flaky by design).
+    const liveRegion = page.locator('[aria-live="polite"]');
+    await expect(liveRegion).toHaveCount(1);
+    await expect(liveRegion).toHaveAttribute('aria-busy', 'false');
+  });
+
+  test('the map renders a keyboard-focusable, labelled pin for each saved place', async ({
+    page,
+  }) => {
+    const response = await page.goto(`/trips/${tripId}/places`);
+    expect(response?.ok()).toBe(true);
+
+    // B6: pins are real <button>s now, not inert <div>s — reachable by
+    // keyboard and named to assistive tech via aria-label. The container
+    // itself is a labelled region.
+    await expect(
+      page.getByRole('region', { name: 'Map of itinerary places' }),
+    ).toBeVisible();
+
+    const pin = page.getByRole('button', { name: 'Fushimi Inari Taisha' });
+    await expect(pin).toBeVisible();
+    await pin.focus();
+    await expect(pin).toBeFocused();
   });
 
   test('adding a saved place to a day puts it on the itinerary with its cost counted in the budget', async ({

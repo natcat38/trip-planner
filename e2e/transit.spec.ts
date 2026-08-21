@@ -127,6 +127,16 @@ test.describe('transit leg, signed in', () => {
       page.getByRole('button', { name: 'Find transit' }),
     ).toBeVisible();
 
+    // B6: the results area is a live region mounted at page load, not one
+    // that only appears once a result exists — a screen reader can only
+    // hear the eventual "Asking Transitous…"/results update if the region
+    // was already in the DOM to be updated. Asserted without clicking
+    // "Find transit" so this stays inside the "never call Transitous on
+    // page load" test above.
+    const liveRegion = page.locator('[aria-live="polite"]');
+    await expect(liveRegion).toHaveCount(1);
+    await expect(liveRegion).toHaveAttribute('aria-busy', 'false');
+
     expect(transitousRequests).toBe(0);
   });
 
