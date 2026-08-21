@@ -1,6 +1,9 @@
-// Canonical e2e sign-in: create a real User + Session row and hand the
-// browser the authjs session cookie. Extracted from six specs that each
-// hand-rolled this with three different cookie shapes (2026-08-20).
+/**
+ * Canonical e2e sign-in: create a real User + Session row and hand the
+ * browser the authjs session cookie. Extracted from six specs that each
+ * hand-rolled this with three different cookie shapes (2026-08-20).
+ * @packageDocumentation
+ */
 import { randomUUID } from 'node:crypto';
 import type { BrowserContext } from '@playwright/test';
 
