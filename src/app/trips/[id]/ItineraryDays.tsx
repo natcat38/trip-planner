@@ -3,6 +3,7 @@
 import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { formatMoney } from '@/lib/money';
 import type { DayWeather } from '@/lib/research/weather';
 import type { ensureDaysForTrip } from '@/server/itinerary';
@@ -305,12 +306,13 @@ export function ItineraryDays({
                               activity.id,
                             )}
                           >
-                            <button
-                              type="submit"
+                            <ConfirmSubmitButton
+                              confirm="Delete this activity?"
+                              pendingLabel="Deleting…"
                               className="text-sm text-red-600 dark:text-red-400 underline"
                             >
                               Delete
-                            </button>
+                            </ConfirmSubmitButton>
                           </form>
                         </div>
                       </li>

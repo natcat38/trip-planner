@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import type { listChecklist } from '@/server/checklist';
 import {
   addChecklistItemAction,
@@ -71,12 +72,13 @@ export function Checklist({
               <form
                 action={deleteChecklistItemAction.bind(null, tripId, item.id)}
               >
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirm="Delete this checklist item?"
+                  pendingLabel="Deleting…"
                   className="text-sm text-red-600 dark:text-red-400 underline"
                 >
                   Delete
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </li>
           ))}

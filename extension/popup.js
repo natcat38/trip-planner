@@ -159,6 +159,7 @@ async function init() {
   $('connect').addEventListener('click', connect);
   $('submit').addEventListener('click', save);
   $('disconnect').addEventListener('click', async () => {
+    if (!confirm('Disconnect from Trip Planner?')) return;
     await store.clear();
     show('setup');
   });
