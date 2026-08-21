@@ -123,6 +123,23 @@ test.describe('places page, signed in', () => {
     ).toBeVisible();
   });
 
+  // The search form is next/form, not a bare <form method="get">: a native
+  // GET submit is a full browser navigation that useFormStatus cannot see,
+  // which would make the "Searching…" pending state purely decorative. That
+  // swap changes how the form submits, so prove it still submits — the query
+  // must reach the URL the page reads its search params from.
+  test('submitting the search puts the query in the URL', async ({ page }) => {
+    await page.goto(`/trips/${tripId}/places`);
+
+    await page.getByRole('searchbox', { name: 'Search places' }).fill('ramen');
+    await page.getByRole('button', { name: 'Search' }).click();
+
+    await expect(page).toHaveURL(/[?&]q=ramen(&|$)/);
+    await expect(
+      page.getByRole('searchbox', { name: 'Search places' }),
+    ).toHaveValue('ramen');
+  });
+
   // B9: trips/[id]/page.tsx and places/page.tsx now call notFound() for
   // ForbiddenOrNotFoundError instead of rendering their own bare-<p>
   // message — this must render the app's shared not-found.tsx (not a 500,
