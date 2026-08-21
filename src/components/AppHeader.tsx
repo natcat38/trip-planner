@@ -1,8 +1,14 @@
-import { auth, signOut } from '@/auth';
+import { signOut } from '@/auth';
+import { currentUserIdentity } from '@/server/auth-scope';
 import { SignOutButton } from './SignOutButton';
 
+// AppHeader only renders on authed routes (trips/settings layouts, both
+// behind src/proxy.ts), so a session is guaranteed here — currentUserIdentity
+// throws UnauthenticatedError otherwise, same as every other authed reader.
+// Using it (rather than calling auth() directly) shares the request-memoized
+// session lookup those pages already did instead of costing a second one.
 export async function AppHeader() {
-  const session = await auth();
+  const { email } = await currentUserIdentity();
   async function doSignOut() {
     'use server';
     await signOut({ redirectTo: '/' });
@@ -13,7 +19,7 @@ export async function AppHeader() {
     <header className="w-full border-b border-black/[.08] print:hidden dark:border-white/[.145]">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-3">
         <span className="text-sm text-zinc-600 dark:text-zinc-400">
-          {session?.user?.email}
+          {email}
         </span>
         <SignOutButton action={doSignOut} />
       </div>
