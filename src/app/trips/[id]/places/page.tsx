@@ -7,7 +7,9 @@
  * saved tray with a day picker to promote a place onto the itinerary.
  * @packageDocumentation
  */
+import { Suspense } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import {
   ForbiddenOrNotFoundError,
   requireTripAccess,
@@ -20,6 +22,7 @@ import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
 import { Select } from '@/components/Select';
+import { SubmitButton } from '@/components/SubmitButton';
 import { saveOsmPlaceAction } from './actions';
 import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
@@ -181,6 +184,44 @@ function GuidePanel({
   );
 }
 
+// A skeleton, not a spinner: sized to GuidePanel's real "limited coverage"
+// shape (heading + a couple of text lines) so nothing shifts when the
+// streamed guide content swaps in.
+function GuideSkeleton() {
+  return (
+    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+      <div className="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-3" />
+      <div className="h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-2" />
+      <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+    </section>
+  );
+}
+
+// getGuide() is a live Wikivoyage fetch (see the module doc comment in
+// ../../../lib/research/wikivoyage.ts) — isolated here, unawaited by the
+// page itself, so the search form and saved-places map/list below render
+// immediately instead of waiting on it. Wrapped in <Suspense> at the call
+// site with GuideSkeleton as the fallback.
+async function GuidePanelAsync({
+  destination,
+  tripId,
+  hasApiKey,
+}: {
+  destination: string | null;
+  tripId: string;
+  hasApiKey: boolean;
+}) {
+  const guide = destination ? await getGuide(destination) : null;
+  return (
+    <GuidePanel
+      destination={destination}
+      guide={guide}
+      tripId={tripId}
+      hasApiKey={hasApiKey}
+    />
+  );
+}
+
 export default async function PlacesPage({
   params,
   searchParams,
@@ -201,20 +242,15 @@ export default async function PlacesPage({
     trip = await requireTripAccess(tripId);
     days = await ensureDaysForTrip(tripId);
   } catch (err) {
-    if (err instanceof ForbiddenOrNotFoundError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
-    }
+    // A forbidden trip and a missing trip render identically — notFound()
+    // never leaks which one it was.
+    if (err instanceof ForbiddenOrNotFoundError) notFound();
     throw err;
   }
 
   const destination = trip.destinations[0] ?? null;
 
-  const [guide, center, savedPlaces, keyStatus] = await Promise.all([
-    destination ? getGuide(destination) : null,
+  const [center, savedPlaces, keyStatus] = await Promise.all([
     destination ? geocode(destination) : null,
     listPlaces(tripId),
     getKeyStatus(),
@@ -262,12 +298,13 @@ export default async function PlacesPage({
           </Link>
         </div>
 
-        <GuidePanel
-          destination={destination}
-          guide={guide}
-          tripId={tripId}
-          hasApiKey={keyStatus != null}
-        />
+        <Suspense fallback={<GuideSkeleton />}>
+          <GuidePanelAsync
+            destination={destination}
+            tripId={tripId}
+            hasApiKey={keyStatus != null}
+          />
+        </Suspense>
 
         <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
@@ -310,12 +347,12 @@ export default async function PlacesPage({
                     ]}
                   />
                 </label>
-                <button
-                  type="submit"
+                <SubmitButton
+                  pendingLabel="Searching…"
                   className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
                 >
                   Search
-                </button>
+                </SubmitButton>
               </form>
 
               {searchResults.length === 0 ? (

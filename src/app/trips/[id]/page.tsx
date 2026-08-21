@@ -6,13 +6,14 @@
  * @packageDocumentation
  */
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import {
   currentUserId,
   ForbiddenOrNotFoundError,
   requireTripAccess,
 } from '@/server/auth-scope';
 import { geocode } from '@/lib/geocode';
-import { getTripWeather } from '@/lib/research/weather';
+import { getTripWeather, type DayWeather } from '@/lib/research/weather';
 import { getAttachmentUsage, listAttachments } from '@/server/attachments';
 import { listChecklist } from '@/server/checklist';
 import { ensureDaysForTrip } from '@/server/itinerary';
@@ -39,28 +40,32 @@ export default async function TripItineraryPage({
     days = await ensureDaysForTrip(id);
     isOwner = trip.userId === (await currentUserId());
   } catch (err) {
-    if (err instanceof ForbiddenOrNotFoundError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
-    }
+    // A forbidden trip and a missing trip render identically — notFound()
+    // never leaks which one it was.
+    if (err instanceof ForbiddenOrNotFoundError) notFound();
     throw err;
   }
 
   // The trip stores destination names, not coordinates — geocode() is
   // cached, so this is cheap on a warm cache. A null geocode (unresolvable
-  // destination) just means no weather renders; never an error.
+  // destination) just means no weather renders; never an error. This isn't
+  // awaited here: it's handed to ItineraryDays as a promise so the
+  // itinerary itself streams in immediately and each day's weather line
+  // resolves independently behind its own <Suspense> (see
+  // DayWeatherLine in ItineraryDays.tsx) instead of blocking the whole page
+  // on geocode()+getTripWeather().
   const destination = trip.destinations[0];
-  const geo = destination ? await geocode(destination) : null;
-  const weather = geo
-    ? await getTripWeather(
+  const weatherPromise: Promise<Record<string, DayWeather> | null> =
+    (async () => {
+      const geo = destination ? await geocode(destination) : null;
+      if (!geo) return null;
+      const weather = await getTripWeather(
         geo.lat,
         geo.lng,
         days.map((day) => day.date.toISOString().slice(0, 10)),
-      )
-    : null;
+      );
+      return Object.fromEntries(weather);
+    })();
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
@@ -109,7 +114,7 @@ export default async function TripItineraryPage({
         <ItineraryDays
           tripId={trip.id}
           days={days}
-          weather={weather ? Object.fromEntries(weather) : null}
+          weatherPromise={weatherPromise}
           votes={await listVotesForTrip(trip.id)}
         />
 

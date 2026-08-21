@@ -92,6 +92,67 @@ test.describe('places page, signed in', () => {
     await expect(liveRegion).toHaveAttribute('aria-busy', 'false');
   });
 
+  // B9: getGuide() is streamed behind its own <Suspense> boundary
+  // (GuidePanelAsync in page.tsx) instead of being awaited by the page
+  // component itself, so a slow/unreachable Wikivoyage fetch can no longer
+  // hold up the rest of the page. The random destination guarantees a real
+  // network round-trip to en.wikivoyage.org (same fetch the test above
+  // relies on) — that's genuine, uncontrolled latency this test leans on
+  // rather than mocks. `waitUntil: 'commit'` returns as soon as the
+  // navigation starts, well before the response body (let alone the guide's
+  // fetch) can have finished, so seeing the search section immediately
+  // after it — well inside the guide fetch's own round-trip time — is only
+  // possible if that section's HTML streamed in independently of the guide.
+  // If the streaming boundary regressed back to a blocking await, this
+  // section wouldn't paint until the guide fetch resolved too.
+  test('the search section streams in without waiting on the destination guide fetch', async ({
+    page,
+  }) => {
+    await page.goto(`/trips/${tripId}/places`, { waitUntil: 'commit' });
+
+    await expect(
+      page.getByRole('heading', { name: 'Search places' }),
+    ).toBeVisible({
+      timeout: 3_000,
+    });
+
+    // The guide fetch does eventually resolve and render its own content —
+    // this isn't a race the search section merely happened to win.
+    await expect(
+      page.getByText(/Limited guide data for Zzyzxnonexistent-/),
+    ).toBeVisible();
+  });
+
+  // B9: trips/[id]/page.tsx and places/page.tsx now call notFound() for
+  // ForbiddenOrNotFoundError instead of rendering their own bare-<p>
+  // message — this must render the app's shared not-found.tsx (not a 500,
+  // not a blank page), and must stay indistinguishable from a genuinely
+  // missing trip (ForbiddenOrNotFoundError deliberately conflates the two —
+  // see the class's own doc comment in src/server/auth-scope.ts).
+  test('a different signed-in user gets the same not-found page for a forbidden trip as for a missing one', async ({
+    page,
+    context,
+  }) => {
+    const { user: otherUser } = await signInAs(db, context, 'places-e2e-other');
+    try {
+      await page.goto(`/trips/${tripId}`);
+      await expect(
+        page.getByRole('heading', { name: 'Page not found' }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('link', { name: 'Back to trips' }),
+      ).toBeVisible();
+
+      await page.goto('/trips/does-not-exist-at-all/places');
+      await expect(
+        page.getByRole('heading', { name: 'Page not found' }),
+      ).toBeVisible();
+    } finally {
+      await db.session.deleteMany({ where: { userId: otherUser.id } });
+      await db.user.delete({ where: { id: otherUser.id } });
+    }
+  });
+
   test('the map renders a keyboard-focusable, labelled pin for each saved place', async ({
     page,
   }) => {

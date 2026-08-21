@@ -4,6 +4,7 @@
  * rejected per the optimistic-locking rule (ADR-0003).
  * @packageDocumentation
  */
+import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
 import {
   currentUserId,
@@ -29,13 +30,9 @@ export default async function EditTripPage({
   try {
     trip = await requireTripAccess(id);
   } catch (err) {
-    if (err instanceof ForbiddenOrNotFoundError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
-    }
+    // A forbidden trip and a missing trip render identically — notFound()
+    // never leaks which one it was.
+    if (err instanceof ForbiddenOrNotFoundError) notFound();
     throw err;
   }
 
