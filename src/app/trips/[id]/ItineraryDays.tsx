@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, Suspense, use, useState } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
@@ -70,15 +70,78 @@ function formatWeatherLine(weather: DayWeather): string {
     : parts.join(' · ');
 }
 
+// A skeleton, not a spinner: the weather line is a single row of text, so a
+// pulse block the same size as the real line avoids any layout shift when
+// it resolves.
+function WeatherLineSkeleton() {
+  return (
+    <span className="mb-3 block h-4 w-48 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+  );
+}
+
+// Reads the weather promise via `use()`, isolated in its own leaf component
+// so only this line suspends — the rest of the day (title, activities) is
+// plain props and renders immediately. `weatherPromise` is created once in
+// the parent Server Component (trips/[id]/page.tsx) and passed down
+// unawaited, which is what lets the itinerary stream in before
+// geocode()+getTripWeather() resolve.
+function DayWeatherLine({
+  weatherPromise,
+  dayKey,
+}: {
+  weatherPromise: Promise<Record<string, DayWeather> | null>;
+  dayKey: string;
+}) {
+  const weather = use(weatherPromise);
+  const dayWeather = weather?.[dayKey];
+  if (!dayWeather) return null;
+
+  return (
+    <p
+      className={`text-sm mb-3 ${
+        dayWeather.kind === 'historical'
+          ? 'italic text-zinc-500 dark:text-zinc-400'
+          : 'text-zinc-600 dark:text-zinc-400'
+      }`}
+    >
+      {formatWeatherLine(dayWeather)}
+    </p>
+  );
+}
+
+function WeatherAttribution({
+  weatherPromise,
+}: {
+  weatherPromise: Promise<Record<string, DayWeather> | null>;
+}) {
+  const weather = use(weatherPromise);
+  if (!weather || Object.keys(weather).length === 0) return null;
+
+  return (
+    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      Weather data by{' '}
+      <a
+        href="https://open-meteo.com/"
+        className="underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open-Meteo
+      </a>{' '}
+      (CC BY 4.0)
+    </p>
+  );
+}
+
 export function ItineraryDays({
   tripId,
   days,
-  weather,
+  weatherPromise,
   votes,
 }: {
   tripId: string;
   days: Days;
-  weather: Record<string, DayWeather> | null;
+  weatherPromise: Promise<Record<string, DayWeather> | null>;
   votes: Record<string, VoteSummary>;
 }) {
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
@@ -105,24 +168,17 @@ export function ItineraryDays({
       />
 
       {days.map((day) => {
-        const dayWeather = weather?.[dateKey(day.date)];
-
         return (
           <section key={day.id}>
             <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
               {formatDay(day.date)}
             </h2>
-            {dayWeather && (
-              <p
-                className={`text-sm mb-3 ${
-                  dayWeather.kind === 'historical'
-                    ? 'italic text-zinc-500 dark:text-zinc-400'
-                    : 'text-zinc-600 dark:text-zinc-400'
-                }`}
-              >
-                {formatWeatherLine(dayWeather)}
-              </p>
-            )}
+            <Suspense fallback={<WeatherLineSkeleton />}>
+              <DayWeatherLine
+                weatherPromise={weatherPromise}
+                dayKey={dateKey(day.date)}
+              />
+            </Suspense>
 
             {day.activities.length > 0 && (
               <ul className="flex flex-col gap-2 mb-4">
@@ -372,20 +428,11 @@ export function ItineraryDays({
         );
       })}
 
-      {weather && Object.keys(weather).length > 0 && (
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Weather data by{' '}
-          <a
-            href="https://open-meteo.com/"
-            className="underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open-Meteo
-          </a>{' '}
-          (CC BY 4.0)
-        </p>
-      )}
+      {/* No loading fallback: this line is pure attribution, not content —
+          nothing is lost by it simply appearing once weather resolves. */}
+      <Suspense fallback={null}>
+        <WeatherAttribution weatherPromise={weatherPromise} />
+      </Suspense>
     </div>
   );
 }

@@ -140,6 +140,37 @@ test.describe('transit leg, signed in', () => {
     expect(transitousRequests).toBe(0);
   });
 
+  // B9: geocode()+getTripWeather() are streamed behind a per-day <Suspense>
+  // boundary (DayWeatherLine in ItineraryDays.tsx) instead of being awaited
+  // by the page component, so the itinerary itself no longer waits on
+  // weather. Unlike the guide fetch in e2e/places.spec.ts, geocode() here
+  // fails closed (fast, no real network round-trip) whenever
+  // MAPBOX_TOKEN is unset — which is the case in CI by design (ADR-0001) —
+  // so this can't lean on real fetch latency to prove the race the way that
+  // test does. What it CAN assert unconditionally: the itinerary's own
+  // markup (title, activities) is present at `waitUntil: 'commit'`, i.e.
+  // before the page component's function body would have finished if
+  // weather were still awaited inline — and the weather Suspense boundary's
+  // fallback/resolved state never blocks it from appearing.
+  test('the itinerary renders without waiting on the weather Suspense boundary', async ({
+    page,
+  }) => {
+    await db.activity.create({
+      data: {
+        dayId,
+        title: 'Streaming Test Activity',
+        category: 'Sightseeing',
+        sortOrder: 0,
+      },
+    });
+
+    await page.goto(`/trips/${tripId}`, { waitUntil: 'commit' });
+
+    await expect(page.getByText('Streaming Test Activity')).toBeVisible({
+      timeout: 3_000,
+    });
+  });
+
   test('a trip whose activities lack coordinates renders no transit leg row', async ({
     page,
   }) => {

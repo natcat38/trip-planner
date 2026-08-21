@@ -6,6 +6,7 @@
  * @packageDocumentation
  */
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { currentUserId, UnauthenticatedError } from '@/server/auth-scope';
 import { InvalidShareLinkError } from '@/server/errors';
 import {
@@ -34,6 +35,33 @@ export async function generateMetadata(): Promise<Metadata> {
   return { robots: { index: false, follow: false } };
 }
 
+// Shared by both the empty-token guard and the InvalidShareLinkError catch
+// below. Deliberately does NOT link to /trips: a visitor here may well be
+// signed out (this is the one route with no auth gate — see the file header
+// comment), and /trips would just bounce them into sign-in over a dead link
+// they never meant to use the app from. "/" is the public, auth-free
+// landing page every visitor can actually load. The exact copy
+// ("This link is no longer valid.") is asserted by e2e/sharing.spec.ts —
+// keep it verbatim.
+function InvalidShareLink() {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center gap-4 bg-zinc-50 px-8 py-16 text-center dark:bg-black">
+      <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+        Link not found
+      </h1>
+      <p className="text-zinc-600 dark:text-zinc-400">
+        This link is no longer valid.
+      </p>
+      <Link
+        href="/"
+        className="text-sm text-zinc-600 underline dark:text-zinc-400"
+      >
+        Go to Trip Planner
+      </Link>
+    </div>
+  );
+}
+
 export default async function SharedTripPage({
   params,
 }: {
@@ -42,13 +70,7 @@ export default async function SharedTripPage({
   const { token } = await params;
 
   if (!token) {
-    return (
-      <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-600 dark:text-zinc-400">
-          This link is no longer valid.
-        </p>
-      </div>
-    );
+    return <InvalidShareLink />;
   }
 
   let data;
@@ -64,11 +86,7 @@ export default async function SharedTripPage({
     ]);
   } catch (err) {
     if (err instanceof InvalidShareLinkError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
+      return <InvalidShareLink />;
     }
     throw err;
   }
