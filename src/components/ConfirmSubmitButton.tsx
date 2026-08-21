@@ -8,18 +8,33 @@ export function ConfirmSubmitButton({
   confirm,
   pendingLabel,
   className,
+  name,
+  value,
+  disabled,
+  'aria-label': ariaLabel,
 }: {
   children: React.ReactNode;
   confirm: string;
   pendingLabel: string;
   className?: string;
+  // Passed through for the call sites that need them: name/value discriminate
+  // which button submitted a multi-action form (ExtensionTokenPanel), and
+  // disabled marks a control unavailable for a reason other than pending
+  // (the first/last move buttons on a day's activity list).
+  name?: string;
+  value?: string;
+  disabled?: boolean;
+  'aria-label'?: string;
 }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
+      name={name}
+      value={value}
+      disabled={pending || disabled}
       aria-busy={pending}
+      aria-label={ariaLabel}
       className={className}
       onClick={(e) => {
         if (!window.confirm(confirm)) e.preventDefault();
