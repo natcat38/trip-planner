@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import crypto from 'node:crypto';
-import { expect, test, type BrowserContext } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // Signs in the same way export.spec.ts / places.spec.ts / settings.spec.ts do:
 // write an Auth.js database session straight into Postgres and set its cookie,
@@ -11,7 +11,6 @@ import { db } from '../src/lib/db';
 // Worth driving through real HTTP rather than trusting the unit tests: the
 // upload path crosses a Server Action body limit, a bytea column and a route
 // handler's response headers, and none of those exist in a unit test.
-const SESSION_COOKIE = 'authjs.session-token';
 
 // A real 1x1 PNG — the bytes a browser would actually upload.
 const PNG_1X1 = Buffer.from(
@@ -19,35 +18,12 @@ const PNG_1X1 = Buffer.from(
   'base64',
 );
 
-async function signIn(context: BrowserContext, userId: string) {
-  const sessionToken = crypto.randomUUID();
-  await db.session.create({
-    data: {
-      sessionToken,
-      userId,
-      expires: new Date(Date.now() + 60 * 60 * 1000),
-    },
-  });
-  await context.addCookies([
-    {
-      name: SESSION_COOKIE,
-      value: sessionToken,
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      sameSite: 'Lax',
-    },
-  ]);
-}
-
 test.describe('attachments', () => {
   let userId: string;
   let tripId: string;
 
-  test.beforeEach(async () => {
-    const user = await db.user.create({
-      data: { email: `attach-e2e-${crypto.randomUUID()}@example.com` },
-    });
+  test.beforeEach(async ({ context }) => {
+    const { user } = await signInAs(db, context, 'attach-e2e');
     userId = user.id;
     const trip = await db.trip.create({
       data: {
@@ -71,9 +47,7 @@ test.describe('attachments', () => {
 
   test('uploads a file and serves it back with safe headers', async ({
     page,
-    context,
   }) => {
-    await signIn(context, userId);
     await page.goto(`/trips/${tripId}`);
 
     await page.getByText('Attachments', { exact: false }).first().click();
@@ -102,7 +76,6 @@ test.describe('attachments', () => {
 
   test('accepts a file larger than the default Server Action body limit', async ({
     page,
-    context,
   }) => {
     // The reason this exists: next.config.ts raises
     // serverActions.bodySizeLimit from its 1 MB default, and every other test
@@ -115,7 +88,6 @@ test.describe('attachments', () => {
       Buffer.alloc(2 * 1024 * 1024, 0x20),
     ]);
 
-    await signIn(context, userId);
     await page.goto(`/trips/${tripId}`);
 
     await page.getByText('Attachments', { exact: false }).first().click();
@@ -133,11 +105,7 @@ test.describe('attachments', () => {
     expect(row.sizeBytes).toBe(bigPdf.byteLength);
   });
 
-  test('refuses a file type that is not on the allowlist', async ({
-    page,
-    context,
-  }) => {
-    await signIn(context, userId);
+  test('refuses a file type that is not on the allowlist', async ({ page }) => {
     await page.goto(`/trips/${tripId}`);
 
     await page.getByText('Attachments', { exact: false }).first().click();
@@ -159,6 +127,7 @@ test.describe('attachments', () => {
 
   test('does not serve an attachment to a signed-out visitor', async ({
     page,
+    context,
   }) => {
     const attachment = await db.attachment.create({
       data: {
@@ -170,7 +139,10 @@ test.describe('attachments', () => {
       },
     });
 
-    // No session cookie set on this context.
+    // beforeEach signs the shared context in as the trip owner; clear that
+    // cookie so this request actually arrives signed out.
+    await context.clearCookies();
+
     const response = await page.goto(
       `/trips/${tripId}/attachments/${attachment.id}`,
     );

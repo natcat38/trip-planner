@@ -2,6 +2,7 @@ import 'dotenv/config';
 import crypto from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // The offline layer is the one feature in this app whose entire behaviour only
 // appears with the network switched off, so a mocked unit test can't reach it —
@@ -215,6 +216,51 @@ test.describe('offline', () => {
       ).toBeVisible();
     } finally {
       await context.setOffline(false);
+    }
+  });
+
+  test('the offline fallback still works after signing out through the button', async ({
+    page,
+    context,
+  }) => {
+    // The button's fix under test: it messages the worker to clear-and-restore
+    // via clearAllCaches() directly, rather than relying on the redirect-based
+    // fallback (which only fires on the *next* guarded navigation). If the
+    // button instead deleted every cache without restoring /offline, this
+    // profile would lose the offline fallback until sw.js's bytes next change.
+    const { user } = await signInAs(db, context, 'offline-signout');
+    try {
+      await page.goto('/trips');
+      await page.waitForFunction(
+        () => navigator.serviceWorker?.controller != null,
+        undefined,
+        { timeout: 15_000 },
+      );
+
+      await expect(
+        page.getByRole('button', { name: 'Sign out' }),
+      ).toBeVisible();
+      await page.getByRole('button', { name: 'Sign out' }).click();
+      await page.waitForURL('/');
+
+      expect(
+        await page.evaluate(
+          async () => (await caches.match('/offline')) != null,
+        ),
+      ).toBe(true);
+
+      await context.setOffline(true);
+      try {
+        await page.goto('/shared/never-visited-after-signout');
+        await expect(
+          page.getByRole('heading', { name: /you.?re offline/i }),
+        ).toBeVisible();
+      } finally {
+        await context.setOffline(false);
+      }
+    } finally {
+      await db.session.deleteMany({ where: { userId: user.id } });
+      await db.user.delete({ where: { id: user.id } });
     }
   });
 });

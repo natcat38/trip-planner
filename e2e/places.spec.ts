@@ -2,6 +2,7 @@ import 'dotenv/config';
 import crypto from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // Matches this repo's existing e2e pattern (see e2e/export.spec.ts,
 // e2e/sharing.spec.ts) of verifying the redirect/render boundary rather
@@ -28,22 +29,10 @@ test('the places page redirects to sign-in when signed out', async ({
 test.describe('places page, signed in', () => {
   let userId: string;
   let tripId: string;
-  let sessionToken: string;
 
-  test.beforeEach(async () => {
-    const user = await db.user.create({
-      data: { email: `places-e2e-${crypto.randomUUID()}@example.com` },
-    });
+  test.beforeEach(async ({ context }) => {
+    const { user } = await signInAs(db, context, 'places-e2e');
     userId = user.id;
-
-    sessionToken = crypto.randomUUID();
-    await db.session.create({
-      data: {
-        sessionToken,
-        userId,
-        expires: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
 
     // A random, nonsense destination guarantees Wikivoyage's one-shot search
     // (resolveTitle in src/lib/research/wikivoyage.ts) finds no matching
@@ -86,18 +75,7 @@ test.describe('places page, signed in', () => {
 
   test('renders the degrade-honestly guide state instead of a blank panel', async ({
     page,
-    context,
   }) => {
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: sessionToken,
-        url: 'http://localhost:3000',
-        httpOnly: true,
-        sameSite: 'Lax',
-      },
-    ]);
-
     const response = await page.goto(`/trips/${tripId}/places`);
     expect(response?.ok()).toBe(true);
 
@@ -108,18 +86,7 @@ test.describe('places page, signed in', () => {
 
   test('adding a saved place to a day puts it on the itinerary with its cost counted in the budget', async ({
     page,
-    context,
   }) => {
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: sessionToken,
-        url: 'http://localhost:3000',
-        httpOnly: true,
-        sameSite: 'Lax',
-      },
-    ]);
-
     const response = await page.goto(`/trips/${tripId}/places`);
     expect(response?.ok()).toBe(true);
 
