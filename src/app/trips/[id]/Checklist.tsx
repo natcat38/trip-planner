@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { listChecklist } from '@/server/checklist';
 import {
   addChecklistItemAction,
@@ -47,10 +48,9 @@ export function Checklist({
                   item.updatedAt.toISOString(),
                 )}
               >
-                <button
-                  type="submit"
-                  aria-pressed={item.done}
+                <SubmitButton
                   aria-label={item.done ? 'Mark as not done' : 'Mark as done'}
+                  pendingLabel="…"
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs ${
                     item.done
                       ? 'border-foreground bg-foreground text-background'
@@ -58,7 +58,7 @@ export function Checklist({
                   }`}
                 >
                   {item.done ? '✓' : ''}
-                </button>
+                </SubmitButton>
               </form>
               <span
                 className={`flex-1 text-sm ${

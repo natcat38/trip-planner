@@ -9,6 +9,7 @@
  */
 
 import { useActionState, useState } from 'react';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { KeyStatus } from '@/server/aiSettings';
 import {
   deleteApiKeyAction,
@@ -137,12 +138,12 @@ function StoredKeyPanel({
             be temporarily unreachable or no longer valid.
           </p>
           <form action={refreshModelsAction}>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingLabel="Retrying…"
               className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/[.145] dark:text-zinc-50"
             >
               Retry
-            </button>
+            </SubmitButton>
           </form>
         </div>
       ) : (

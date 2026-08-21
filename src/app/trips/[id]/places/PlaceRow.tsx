@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney, minorUnitExponent } from '@/lib/money';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import type { listPlaces } from '@/server/places';
@@ -91,12 +92,12 @@ export function PlaceRow({
                 </option>
               ))}
             </select>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingLabel="Adding…"
               className="rounded-full bg-foreground px-3 py-1 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
             >
               Add to day
-            </button>
+            </SubmitButton>
           </form>
         )}
       </div>

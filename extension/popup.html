@@ -5,8 +5,9 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <!-- Setup: shown until an app URL and token are stored. -->
-    <section id="setup" hidden>
+    <!-- Setup: shown until an app URL and token are stored. Wrapped in a real
+         <form> (not just a click-bound button) so Enter submits it. -->
+    <form id="setup" novalidate hidden>
       <h1>Connect to Trip Planner</h1>
       <label for="app-url">App URL</label>
       <input
@@ -19,12 +20,12 @@
       <p class="hint">
         Generate one in the app under Settings → Browser extension.
       </p>
-      <button id="connect" type="button">Connect</button>
+      <button id="connect" type="submit">Connect</button>
       <p id="setup-error" class="error" role="alert" hidden></p>
-    </section>
+    </form>
 
-    <!-- Save: the normal path. -->
-    <section id="save" hidden>
+    <!-- Save: the normal path. Also a real <form> for the same reason. -->
+    <form id="save" novalidate hidden>
       <label for="name">Place</label>
       <input id="name" type="text" />
       <label for="trip">Trip</label>
@@ -39,11 +40,11 @@
       </select>
       <label for="notes">Notes</label>
       <textarea id="notes" rows="3"></textarea>
-      <button id="submit" type="button">Save to trip</button>
+      <button id="submit" type="submit">Save to trip</button>
       <p id="status" role="status" hidden></p>
       <p id="save-error" class="error" role="alert" hidden></p>
       <button id="disconnect" type="button" class="link">Disconnect</button>
-    </section>
+    </form>
 
     <script src="popup.js"></script>
   </body>

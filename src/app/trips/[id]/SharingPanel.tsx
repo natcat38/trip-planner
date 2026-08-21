@@ -2,6 +2,7 @@
 
 import { useActionState, useSyncExternalStore } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { InviteFormState } from './sharing-actions';
 import {
   enableShareLinkAction,
@@ -18,10 +19,10 @@ export function SharingPanel({
   tripId: string;
   status: ShareStatus;
 }) {
-  const [state, formAction, isPending] = useActionState<
-    InviteFormState,
-    FormData
-  >(inviteCollaboratorAction.bind(null, tripId), {});
+  const [state, formAction] = useActionState<InviteFormState, FormData>(
+    inviteCollaboratorAction.bind(null, tripId),
+    {},
+  );
 
   const origin = useSyncExternalStore(
     () => () => {},
@@ -66,12 +67,12 @@ export function SharingPanel({
           </div>
         ) : (
           <form action={enableShareLinkAction.bind(null, tripId)}>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingLabel="Creating…"
               className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
             >
               Create public read-only link
-            </button>
+            </SubmitButton>
           </form>
         )}
       </div>
@@ -130,13 +131,12 @@ export function SharingPanel({
             placeholder="friend@example.com"
             className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
           />
-          <button
-            type="submit"
-            disabled={isPending}
+          <SubmitButton
+            pendingLabel="Inviting…"
             className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
           >
             Invite
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </section>
