@@ -35,6 +35,13 @@ function setError(id, message) {
   el.hidden = !message;
 }
 
+// #status (role="status") is always mounted — see the comment on it in
+// popup.html — so clearing/showing it toggles only textContent, never
+// `hidden`. An unmounted or hidden live region announces nothing.
+function setStatus(message) {
+  $('status').textContent = message ?? '';
+}
+
 async function api(appUrl, token, path, init = {}) {
   const response = await fetch(new URL(path, appUrl), {
     ...init,
@@ -132,7 +139,7 @@ async function connect() {
 
 async function save() {
   setError('save-error', null);
-  $('status').hidden = true;
+  setStatus(null);
   const { appUrl, token } = await store.get();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -151,8 +158,7 @@ async function save() {
         notes: $('notes').value,
       }),
     });
-    $('status').textContent = `Saved “${place.name}”.`;
-    $('status').hidden = false;
+    setStatus(`Saved “${place.name}”.`);
   } catch (err) {
     setError('save-error', err.message);
   } finally {

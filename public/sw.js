@@ -25,7 +25,7 @@
 // Bump to invalidate every cached page at once (e.g. after a layout change
 // that would otherwise leave old shells around). activate() deletes any cache
 // whose name doesn't match.
-const CACHE_NAME = 'trip-planner-v1';
+const CACHE_NAME = 'trip-planner-v2';
 
 const OFFLINE_URL = '/offline';
 

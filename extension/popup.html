@@ -41,7 +41,11 @@
       <label for="notes">Notes</label>
       <textarea id="notes" rows="3"></textarea>
       <button id="submit" type="submit">Save to trip</button>
-      <p id="status" role="status" hidden></p>
+      <!-- Always mounted (unlike setup/save-error, which toggle `hidden`):
+           an unmounted/hidden live region announces nothing to a screen
+           reader, so this stays in the tree at all times and only its text
+           content changes — see popup.js's setStatus(). -->
+      <p id="status" role="status"></p>
       <p id="save-error" class="error" role="alert" hidden></p>
       <button id="disconnect" type="button" class="link">Disconnect</button>
     </form>

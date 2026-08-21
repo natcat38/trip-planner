@@ -23,7 +23,11 @@ function Block({ className }: { className: string }) {
 export default function TripLoading() {
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
+      >
         <div className="flex items-baseline justify-between mb-8">
           <Block className="h-8 w-56" />
           <div className="flex gap-4">

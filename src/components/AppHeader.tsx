@@ -1,4 +1,5 @@
 import { signOut } from '@/auth';
+import { ThemeToggle } from '@/app/ThemeToggle';
 import { currentUserIdentity } from '@/server/auth-scope';
 import { SignOutButton } from './SignOutButton';
 
@@ -21,7 +22,10 @@ export async function AppHeader() {
         <span className="text-sm text-zinc-600 dark:text-zinc-400">
           {email}
         </span>
-        <SignOutButton action={doSignOut} />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <SignOutButton action={doSignOut} />
+        </div>
       </div>
     </header>
   );

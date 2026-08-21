@@ -33,3 +33,22 @@ test('the landing page links into the app', async ({ page }) => {
   // is that the link goes into the app rather than nowhere.
   await expect(page).toHaveURL(/\/api\/auth\/signin|\/trips/);
 });
+
+// B10: the skip link must be the very first focusable thing in the body (so
+// it's reachable on the first Tab from anywhere in the document) and must
+// actually move focus to the page's <main> landmark, not just point a URL
+// fragment at it. Asserted with real keyboard input, not a DOM snapshot —
+// href="#main" existing says nothing about whether Tab order or focus
+// movement actually work.
+test('the skip link is reachable on the first Tab and moves focus to #main', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: 'Skip to content' });
+  await expect(skipLink).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#main')).toBeFocused();
+});

@@ -30,17 +30,32 @@ export function OfflineReady() {
     }
   }, []);
 
-  if (!offline) return null;
-
   return (
     <div
       role="status"
+      // Always mounted — an unmounted live region announces nothing, so the
+      // offline->online transition (this node disappearing) would go
+      // unannounced. Only the text and visible styling toggle; the node
+      // itself and its role stay put for assistive tech to track.
+      //
+      // `sticky top-0` instead of `fixed inset-x-0 top-0`: fixed covered the
+      // first line of page content (and, on notch/pill devices, sat under
+      // the safe-area status bar with no way to push below it); sticky
+      // pushes the page down and reserves its own space, so nothing is ever
+      // covered. `pt-[env(safe-area-inset-top)]` (added to the constant
+      // vertical padding via `calc`, not replacing it) keeps that space
+      // clear of the notch/status bar as an installed PWA.
+      //
       // print:hidden for the same reason as ThemeToggle — this renders on
       // /trips/[id]/print too, and a PDF export shouldn't carry a banner.
-      className="fixed inset-x-0 top-0 z-50 bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 print:hidden dark:bg-amber-950 dark:text-amber-200"
+      className={
+        offline
+          ? 'sticky top-0 z-50 bg-amber-100 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] text-center text-sm text-amber-900 print:hidden dark:bg-amber-950 dark:text-amber-200'
+          : 'sr-only'
+      }
     >
-      You&rsquo;re offline — showing the last version of pages you&rsquo;ve
-      opened. Edits won&rsquo;t save until you reconnect.
+      {offline &&
+        'You’re offline — showing the last version of pages you’ve opened. Edits won’t save until you reconnect.'}
     </div>
   );
 }
