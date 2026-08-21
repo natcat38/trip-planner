@@ -22,6 +22,7 @@ import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
 import { Select } from '@/components/Select';
+import Form from 'next/form';
 import { SubmitButton } from '@/components/SubmitButton';
 import { saveOsmPlaceAction } from './actions';
 import { DayPlanner } from './DayPlanner';
@@ -319,7 +320,15 @@ export default async function PlacesPage({
             </p>
           ) : (
             <>
-              <form method="get" className="flex flex-wrap gap-3 mb-4">
+              {/* next/form, not a bare <form method="get">: a native GET
+                  submission is a full browser navigation, which useFormStatus
+                  cannot observe — the Search button's pending state would be
+                  decorative. next/form routes the submit through the client
+                  router instead, so "Searching…" reflects a real wait. */}
+              <Form
+                action={`/trips/${tripId}/places`}
+                className="flex flex-wrap gap-3 mb-4"
+              >
                 <label className="flex flex-1 flex-col gap-1">
                   <span className="sr-only">Search places</span>
                   <input
@@ -353,7 +362,7 @@ export default async function PlacesPage({
                 >
                   Search
                 </SubmitButton>
-              </form>
+              </Form>
 
               {searchResults.length === 0 ? (
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">
