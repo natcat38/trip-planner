@@ -192,13 +192,15 @@ export function ItineraryDays({
                               <SubmitButton
                                 pendingLabel="Voting…"
                                 aria-pressed={votes[activity.id]?.mine ?? false}
+                                aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
                                 className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
                                   votes[activity.id]?.mine
                                     ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
                                     : 'border-black/[.08] text-zinc-500 dark:border-white/[.145] dark:text-zinc-400'
                                 }`}
                               >
-                                👍 {votes[activity.id]?.count ?? 0}
+                                <span aria-hidden>👍</span>{' '}
+                                {votes[activity.id]?.count ?? 0}
                               </SubmitButton>
                             </form>
 

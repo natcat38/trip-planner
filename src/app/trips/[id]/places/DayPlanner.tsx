@@ -126,51 +126,59 @@ export function DayPlanner({
         </button>
       </form>
 
-      {state.error && (
-        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
-          {state.error} Save more places in the tray below and try again.
-        </p>
-      )}
+      {/* Mounted unconditionally so the live region exists before its
+          content changes — a conditionally-rendered wrapper announces
+          nothing on its first appearance. */}
+      <div aria-live="polite" aria-busy={isPending}>
+        {state.error && (
+          <p
+            className="mt-4 text-sm text-red-600 dark:text-red-400"
+            role="alert"
+          >
+            {state.error} Save more places in the tray below and try again.
+          </p>
+        )}
 
-      {state.candidates && state.candidates.length > 0 && (
-        <div className="mt-6 flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={
-                state.source === 'ai'
-                  ? 'text-xs text-green-600 dark:text-green-400'
-                  : 'text-xs text-zinc-500 dark:text-zinc-400'
-              }
-            >
-              {state.source === 'ai'
-                ? 'AI-sequenced from your saved places'
-                : 'Generated without AI — sequenced algorithmically by proximity'}
-            </span>
+        {state.candidates && state.candidates.length > 0 && (
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={
+                  state.source === 'ai'
+                    ? 'text-xs text-green-600 dark:text-green-400'
+                    : 'text-xs text-zinc-500 dark:text-zinc-400'
+                }
+              >
+                {state.source === 'ai'
+                  ? 'AI-sequenced from your saved places'
+                  : 'Generated without AI — sequenced algorithmically by proximity'}
+              </span>
+            </div>
+
+            {state.notice && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {state.notice}
+              </p>
+            )}
+
+            {days.length === 0 ? (
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                This trip has no days yet, so a candidate can&apos;t be added to
+                the itinerary.
+              </p>
+            ) : (
+              state.candidates.map((candidate, index) => (
+                <CandidateCard
+                  key={index}
+                  tripId={tripId}
+                  candidate={candidate}
+                  days={days}
+                />
+              ))
+            )}
           </div>
-
-          {state.notice && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {state.notice}
-            </p>
-          )}
-
-          {days.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              This trip has no days yet, so a candidate can&apos;t be added to
-              the itinerary.
-            </p>
-          ) : (
-            state.candidates.map((candidate, index) => (
-              <CandidateCard
-                key={index}
-                tripId={tripId}
-                candidate={candidate}
-                days={days}
-              />
-            ))
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }

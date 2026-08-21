@@ -35,22 +35,30 @@ export function GuideSummary({ tripId }: { tripId: string }) {
         </button>
       </form>
 
-      {state.error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
-          {state.error}
-        </p>
-      )}
+      {/* Mounted unconditionally so the live region exists before its
+          content changes — a conditionally-rendered wrapper announces
+          nothing on its first appearance. */}
+      <div aria-live="polite" aria-busy={isPending}>
+        {state.error && (
+          <p
+            className="mt-2 text-sm text-red-600 dark:text-red-400"
+            role="alert"
+          >
+            {state.error}
+          </p>
+        )}
 
-      {state.text && (
-        <div className="mt-3 rounded border border-black/[.08] p-3 dark:border-white/[.145]">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            AI-reformatted from the Wikivoyage text above
-          </p>
-          <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
-            {state.text}
-          </p>
-        </div>
-      )}
+        {state.text && (
+          <div className="mt-3 rounded border border-black/[.08] p-3 dark:border-white/[.145]">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              AI-reformatted from the Wikivoyage text above
+            </p>
+            <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+              {state.text}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
