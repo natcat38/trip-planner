@@ -15,7 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "db:seed": "tsx prisma/seed.mts",
-    "db:size": "tsx scripts/db-size.cjs",
+    "db:size": "tsx scripts/db-size.mts",
     "file-map": "node scripts/gen-file-map.mjs",
     "file-map:check": "node scripts/gen-file-map.mjs --check"
   },
