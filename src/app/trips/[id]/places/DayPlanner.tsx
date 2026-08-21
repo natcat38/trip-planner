@@ -16,6 +16,7 @@
  */
 
 import { useActionState } from 'react';
+import { Select } from '@/components/Select';
 import type { DayPlanCandidate } from '@/server/dayPlan';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import {
@@ -90,22 +91,16 @@ export function DayPlanner({
           >
             Pace
           </label>
-          {/* Explicit background required — a transparent select renders an
-              unreadable native option list in dark mode (see AiKeyPanel.tsx's
-              own comment on this, a real bug there previously). */}
-          <select
+          <Select
             id="pace"
             name="pace"
             defaultValue="relaxed"
-            className="rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
-          >
-            <option value="relaxed" className="bg-white dark:bg-zinc-900">
-              Relaxed
-            </option>
-            <option value="packed" className="bg-white dark:bg-zinc-900">
-              Packed
-            </option>
-          </select>
+            className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+            options={[
+              { value: 'relaxed', label: 'Relaxed' },
+              { value: 'packed', label: 'Packed' },
+            ]}
+          />
         </div>
 
         {showFreeModelNotice && (
@@ -228,21 +223,15 @@ function CandidateCard({
         {candidate.places.map((place) => (
           <input key={place.id} type="hidden" name="placeId" value={place.id} />
         ))}
-        <select
+        <Select
           name="dayId"
           required
-          className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
-        >
-          {days.map((day) => (
-            <option
-              key={day.id}
-              value={day.id}
-              className="bg-white dark:bg-zinc-900"
-            >
-              {formatDayOption(day.date)}
-            </option>
-          ))}
-        </select>
+          className="px-2 py-1 text-sm text-black dark:text-zinc-50"
+          options={days.map((day) => ({
+            value: day.id,
+            label: formatDayOption(day.date),
+          }))}
+        />
         <button
           type="submit"
           disabled={isPending}

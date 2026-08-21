@@ -19,6 +19,7 @@ import { getKeyStatus } from '@/server/aiSettings';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
+import { Select } from '@/components/Select';
 import { saveOsmPlaceAction } from './actions';
 import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
@@ -295,18 +296,19 @@ export default async function PlacesPage({
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="sr-only">Category</span>
-                  <select
+                  <Select
                     name="category"
                     defaultValue={category ?? ''}
-                    className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
-                  >
-                    <option value="">All categories</option>
-                    <option value="Food">Food</option>
-                    <option value="Sightseeing">Sightseeing</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Lodging">Lodging</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+                    options={[
+                      { value: '', label: 'All categories' },
+                      { value: 'Food', label: 'Food' },
+                      { value: 'Sightseeing', label: 'Sightseeing' },
+                      { value: 'Transport', label: 'Transport' },
+                      { value: 'Lodging', label: 'Lodging' },
+                      { value: 'Other', label: 'Other' },
+                    ]}
+                  />
                 </label>
                 <button
                   type="submit"
