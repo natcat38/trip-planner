@@ -8,21 +8,15 @@ export function ConfirmSubmitButton({
   confirm,
   pendingLabel,
   className,
-  style,
   name,
   value,
   disabled,
   'aria-label': ariaLabel,
-  'aria-pressed': ariaPressed,
 }: {
   children: React.ReactNode;
   confirm: string;
   pendingLabel: string;
   className?: string;
-  // Kept symmetrical with SubmitButton — see its comment. Not exercised by
-  // any current confirm site, but the two primitives diverging once already
-  // caused a real gap (the pin-colour swatches), so they stay in lockstep.
-  style?: React.CSSProperties;
   // Passed through for the call sites that need them: name/value discriminate
   // which button submitted a multi-action form (ExtensionTokenPanel), and
   // disabled marks a control unavailable for a reason other than pending
@@ -31,9 +25,12 @@ export function ConfirmSubmitButton({
   value?: string;
   disabled?: boolean;
   'aria-label'?: string;
-  'aria-pressed'?: boolean;
 }) {
-  const { pending } = useFormStatus();
+  const { pending, data } = useFormStatus();
+  // See SubmitButton's comment: useFormStatus().pending is form-wide, so a
+  // button with a name/value pair only shows its pending label when the
+  // submitted FormData confirms it was the one clicked.
+  const isMine = !name || data?.get(name) === value;
   return (
     <button
       type="submit"
@@ -42,14 +39,12 @@ export function ConfirmSubmitButton({
       disabled={pending || disabled}
       aria-busy={pending}
       aria-label={ariaLabel}
-      aria-pressed={ariaPressed}
       className={className}
-      style={style}
       onClick={(e) => {
         if (!window.confirm(confirm)) e.preventDefault();
       }}
     >
-      {pending ? pendingLabel : children}
+      {pending && isMine ? pendingLabel : children}
     </button>
   );
 }

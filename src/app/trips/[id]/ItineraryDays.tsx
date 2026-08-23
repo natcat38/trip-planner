@@ -288,7 +288,6 @@ export function ItineraryDays({
                                   >
                                     <SubmitButton
                                       aria-label={`Set pin colour ${color}`}
-                                      pendingLabel=""
                                       className={`h-6 w-6 rounded-full border ${
                                         activity.pinColor === color
                                           ? 'border-black dark:border-white'
