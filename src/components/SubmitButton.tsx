@@ -13,7 +13,10 @@ export function SubmitButton({
   'aria-pressed': ariaPressed,
 }: {
   children: React.ReactNode;
-  pendingLabel: string;
+  // Defaults to children when omitted — fine for controls where the pending
+  // state doesn't need its own label (e.g. the 24px pin-colour swatches,
+  // which have no text content at all).
+  pendingLabel?: React.ReactNode;
   className?: string;
   // Runtime-computed swatch colour (ItineraryDays.tsx's pin-colour palette) —
   // can't be baked into className since the value isn't known until render.
@@ -32,7 +35,17 @@ export function SubmitButton({
   // don't convey.
   'aria-pressed'?: boolean;
 }) {
-  const { pending } = useFormStatus();
+  const { pending, data } = useFormStatus();
+  // useFormStatus().pending is form-wide, not button-wide: in a form with
+  // multiple submit buttons (e.g. ExtensionTokenPanel's Generate/Revoke),
+  // every SubmitButton in the form sees pending=true while *either* one is
+  // submitting. Narrow to "is this the button that was actually clicked" by
+  // checking whether the submitted FormData carries this button's
+  // name/value pair — a plain submit puts the activating submit button's
+  // name/value into the FormData. Buttons with no name (the common case)
+  // can't be disambiguated this way, so they fall back to the old
+  // form-wide behaviour.
+  const isMine = !name || data?.get(name) === value;
   return (
     <button
       type="submit"
@@ -45,7 +58,7 @@ export function SubmitButton({
       className={className}
       style={style}
     >
-      {pending ? pendingLabel : children}
+      {pending && isMine ? (pendingLabel ?? children) : children}
     </button>
   );
 }
