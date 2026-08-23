@@ -239,9 +239,7 @@ test.describe('extension API', () => {
 
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Generate a new token' }).click();
-    await expect(
-      page.getByRole('button', { name: 'Working…' }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Working…' })).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Revoking…' }),
     ).not.toBeVisible();
@@ -252,9 +250,7 @@ test.describe('extension API', () => {
 
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Revoke' }).click();
-    await expect(
-      page.getByRole('button', { name: 'Revoking…' }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Revoking…' })).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Working…' }),
     ).not.toBeVisible();
