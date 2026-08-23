@@ -64,14 +64,23 @@ test.describe('ActivityForm category select', () => {
     await addSection.getByLabel('Category').selectOption('Transport');
     await addSection.locator('button[type="submit"]').click();
 
-    await expect(page.getByText('Ride the bullet train').first()).toBeVisible();
-    await expect(page.getByText('(Transport)')).toBeVisible();
+    // Longer than the 5s default: this is a server-action round-trip plus a
+    // revalidate and re-render, which overruns 5s on CI's two-core runner
+    // under parallel load (it failed there while passing locally). The wait
+    // is the point of the assertion, not an obstacle to it.
+    const slow = { timeout: 20_000 };
+    await expect(page.getByText('Ride the bullet train').first()).toBeVisible(
+      slow,
+    );
+    await expect(page.getByText('(Transport)')).toBeVisible(slow);
 
     // Reload to prove the category was actually persisted server-side via
     // addActivityAction, not just reflected in client state.
     await page.reload();
-    await expect(page.getByText('Ride the bullet train').first()).toBeVisible();
-    await expect(page.getByText('(Transport)')).toBeVisible();
+    await expect(page.getByText('Ride the bullet train').first()).toBeVisible(
+      slow,
+    );
+    await expect(page.getByText('(Transport)')).toBeVisible(slow);
   });
 });
 
