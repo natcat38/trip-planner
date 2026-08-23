@@ -123,5 +123,12 @@ test.describe('trip checklist toggle', () => {
     // toggled, and the disclosure summary's count must not have moved.
     await expect(checkbox).not.toBeChecked();
     await expect(page.getByText('Checklist (0/1)')).toBeVisible();
+
+    // The alert must not be nested inside the <label>, or it leaks into the
+    // checkbox's accessible name (label content computes the labelled
+    // control's name). getByRole's `name` matches by substring, so it would
+    // still resolve even with the alert text appended — assert the exact
+    // name instead so a regression here actually fails the test.
+    await expect(checkbox).toHaveAccessibleName('Pack passport');
   });
 });
