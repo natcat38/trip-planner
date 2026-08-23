@@ -7,6 +7,7 @@
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ThemeToggle } from '@/app/ThemeToggle';
 import { currentUserId, UnauthenticatedError } from '@/server/auth-scope';
 import { InvalidShareLinkError } from '@/server/errors';
 import {
@@ -45,19 +46,32 @@ export async function generateMetadata(): Promise<Metadata> {
 // keep it verbatim.
 function InvalidShareLink() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center gap-4 bg-zinc-50 px-8 py-16 text-center dark:bg-black">
-      <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
-        Link not found
-      </h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        This link is no longer valid.
-      </p>
-      <Link
-        href="/"
-        className="text-sm text-zinc-600 underline dark:text-zinc-400"
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+      {/* No AppHeader — this route has no auth gate at all (see the file
+          header comment above). Same minimal chrome as the other
+          auth-agnostic routes (/, and SharedTripView's own chrome for a
+          valid token). */}
+      <div className="flex w-full justify-end px-4 py-3 sm:px-8 print:hidden">
+        <ThemeToggle />
+      </div>
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-16 text-center"
       >
-        Go to Trip Planner
-      </Link>
+        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          Link not found
+        </h1>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          This link is no longer valid.
+        </p>
+        <Link
+          href="/"
+          className="text-sm text-zinc-600 underline dark:text-zinc-400"
+        >
+          Go to Trip Planner
+        </Link>
+      </main>
     </div>
   );
 }

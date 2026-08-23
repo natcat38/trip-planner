@@ -2,8 +2,10 @@
 
 /**
  * Registers the offline service worker (public/sw.js) and shows a banner when
- * the connection drops. Rendered once from the root layout, like ThemeToggle,
- * so both apply on every route.
+ * the connection drops. Rendered once from the root layout (unlike
+ * ThemeToggle, which each page's own chrome — AppHeader, or a minimal bar on
+ * the auth-agnostic routes — renders individually), so this applies on every
+ * route without each page needing to remember it.
  *
  * Next 16 ships an experimental `useOffline` hook, but it is flagged "not
  * recommended for production" and caches nothing — it detects connectivity and
@@ -46,8 +48,8 @@ export function OfflineReady() {
       // vertical padding via `calc`, not replacing it) keeps that space
       // clear of the notch/status bar as an installed PWA.
       //
-      // print:hidden for the same reason as ThemeToggle — this renders on
-      // /trips/[id]/print too, and a PDF export shouldn't carry a banner.
+      // print:hidden because this renders on /trips/[id]/print too (root
+      // layout, every route), and a PDF export shouldn't carry a banner.
       className={
         offline
           ? 'sticky top-0 z-50 bg-amber-100 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] text-center text-sm text-amber-900 print:hidden dark:bg-amber-950 dark:text-amber-200'
