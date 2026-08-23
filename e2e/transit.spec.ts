@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import crypto from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // These tests exercise a real signed-in session end to end without any OAuth
 // provider or credentials: Auth.js uses database sessions, so a valid
@@ -16,23 +16,11 @@ import { db } from '../src/lib/db';
 test.describe('transit leg, signed in', () => {
   let userId: string;
   let tripId: string;
-  let sessionToken: string;
   let dayId: string;
 
-  test.beforeEach(async () => {
-    const user = await db.user.create({
-      data: { email: `transit-e2e-${crypto.randomUUID()}@example.com` },
-    });
+  test.beforeEach(async ({ context }) => {
+    const { user } = await signInAs(db, context, 'transit-e2e');
     userId = user.id;
-
-    sessionToken = crypto.randomUUID();
-    await db.session.create({
-      data: {
-        sessionToken,
-        userId,
-        expires: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
 
     const trip = await db.trip.create({
       data: {
@@ -62,7 +50,6 @@ test.describe('transit leg, signed in', () => {
 
   test('renders a transit leg with correct Google/Apple Maps links between two geocoded activities, and never calls Transitous on page load', async ({
     page,
-    context,
   }) => {
     await db.activity.create({
       data: {
@@ -84,16 +71,6 @@ test.describe('transit leg, signed in', () => {
         sortOrder: 1,
       },
     });
-
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: sessionToken,
-        url: 'http://localhost:3000',
-        httpOnly: true,
-        sameSite: 'Lax',
-      },
-    ]);
 
     // The most valuable assertion in this file (ADR-0010): TransitLeg must
     // never call Transitous on render, only on explicit "Find transit"
@@ -155,7 +132,6 @@ test.describe('transit leg, signed in', () => {
 
   test('a trip whose activities lack coordinates renders no transit leg row', async ({
     page,
-    context,
   }) => {
     await db.activity.create({
       data: {
@@ -173,16 +149,6 @@ test.describe('transit leg, signed in', () => {
         sortOrder: 1,
       },
     });
-
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: sessionToken,
-        url: 'http://localhost:3000',
-        httpOnly: true,
-        sameSite: 'Lax',
-      },
-    ]);
 
     const response = await page.goto(`/trips/${tripId}`);
     expect(response?.ok()).toBe(true);

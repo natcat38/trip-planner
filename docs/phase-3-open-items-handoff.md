@@ -38,6 +38,8 @@ navigation.
 
 This is probably the smallest-effort, highest-value item in this document.
 
+**Closed in Phase 4 M8:** `AppHeader` + `SignOutButton` on every authed route, clearing caches directly.
+
 ### 2.2 The app has never stored a destination timezone
 `Day.date` is UTC midnight and `Activity.startTime` is a bare `"09:30"`. Consequences already
 absorbed:
@@ -111,8 +113,25 @@ a token in Settings → Browser extension, and save any page. If `host_permissio
 grant the CORS bypass, the fix is CORS headers on the two `/api/extension/*` routes — safe to add
 there specifically *because* they authenticate with a bearer token rather than cookies.
 
-If someone does get Playwright loading extensions (a different machine, a newer Playwright), the
-removed spec is recoverable from this branch's history and was close to working.
+If someone does get Playwright loading extensions (a different machine, a newer Playwright), note
+that the removed spec is **not** recoverable from this branch's history — it was never `git add`ed
+before deletion, so no commit, stash, or dangling object contains it (verified exhaustively: every
+ref, `--diff-filter=A` across all history, and every dangling/stash object). It would need to be
+rewritten from scratch, using this ADR/handoff description and `e2e/extension-api.spec.ts` as the
+reference for the token/sign-in idiom.
+
+A follow-up attempt on this machine (Windows 10) found the blocker one level lower than a
+Playwright flag: full Chromium (`chromium-1228\chrome-win64\chrome.exe`) cannot be spawned at all —
+headed or headless, persistent context or plain launch, with or without extension flags — failing
+every time with `spawn UNKNOWN` (matching [playwright#35363](https://github.com/microsoft/playwright/issues/35363)).
+The one binary that *can* spawn, `chromium_headless_shell-1228\chrome-headless-shell.exe`, launches
+fine but silently ignores `--load-extension`: no error, no service worker, no CDP target, no
+extension entry ever written to the profile. So the extension-capable binary won't start, and the
+binary that starts doesn't support extensions — a dead end on this machine specifically, not a
+flag combination to keep retrying. The suggested next step is a Windows Defender exclusion for
+`%USERPROFILE%\AppData\Local\ms-playwright`, then re-running with **no** `channel` override and
+`headless: false` (the `channel: 'chromium'` option resolves to the same blocked binary, so it
+isn't the variable). Until then, the 30-second manual check above remains the control.
 
 ### 2.8 The extension lists owned trips only
 Its trip picker mirrors `listTrips` in `src/server/trips.ts`, which is owner-scoped — so a
@@ -123,6 +142,10 @@ does not list trips shared with you either.
 Worth deciding deliberately at some point. Whichever way it goes, the fix belongs in the app's trip
 list first and the extension second — an extension that showed more than the app does would be a
 strange place to introduce the change.
+
+**Closed in Phase 4 M8 (ADR-0018):** both lists now include accepted-collaborator trips, app and
+extension together, through one shared `tripAccessWhere` predicate in `src/server/auth-scope.ts`.
+Listing only — no write path was widened.
 
 ### 2.9 The extension ships pointing at localhost as well as production
 `extension/manifest.json`'s `host_permissions` includes `http://localhost:3000/*` so one build works
@@ -180,6 +203,9 @@ and exceeding the Hobby allowance **locks Blob out for 30 days**. `src/server/at
 single place that would change (ADR-0016 §1).
 
 Nobody is currently monitoring headroom. A `SELECT pg_database_size(...)` check would be cheap.
+
+**Closed in Phase 4 M8 (ADR-0018):** `npm run db:size`. It is a trend check, not the billing truth —
+Neon measures the cap as "logical data size" in its own console.
 
 ### 3.3 Map tiles cannot be cached offline — this is a licence limit, not a technical one
 Mapbox sets a **12-hour device TTL** on vector tiles, GL JS has no supported offline mode (that
@@ -275,13 +301,17 @@ re-proposing any of them**:
 
 ## 6. Small, cheap, and probably worth doing
 
-- **A sign-out control** (§2.1). Smallest effort, clearest gap.
+- **A sign-out control** (§2.1). Smallest effort, clearest gap. **Closed in Phase 4 M8** — see §2.1.
 - **Extract the e2e sign-in helper.** Now **six** specs hand-roll the same "create a Session row, set
   `authjs.session-token`" preamble: `export`, `places`, `settings`, `transit`, `attachments`,
   `extension-api`. Pull it into `e2e/auth.ts`. Noted during M6's review and grown by one since.
-- **A database-size check** against Neon's 0.5 GB (§3.2), so the wall is seen coming.
+  **Closed in Phase 4 M8** — `e2e/auth.ts`'s `signInAs`, used by all six specs plus `signout.spec.ts`
+  and `offline.spec.ts`.
+- **A database-size check** against Neon's 0.5 GB (§3.2), so the wall is seen coming. **Closed in
+  Phase 4 M8** — see §3.2.
 - **Bump `CACHE_NAME` in `public/sw.js`** after any change to the root layout, or users keep old
-  shells until the worker updates for another reason.
+  shells until the worker updates for another reason. Still open — no change to `src/app/layout.tsx`
+  has happened since, so there has been nothing to bump for yet.
 
 ---
 

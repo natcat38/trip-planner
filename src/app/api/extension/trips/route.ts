@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const trips = await listTripsForExtension(identity.userId);
+  const trips = await listTripsForExtension(identity.userId, identity.email);
   return NextResponse.json(
     { trips },
     // A user's trip list behind a bearer token: never a shared cache.

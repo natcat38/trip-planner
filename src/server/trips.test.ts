@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
 import {
   currentUserId,
+  currentUserIdentity,
   ForbiddenOrNotFoundError,
   requireTripAccess,
   requireTripOwner,
@@ -15,7 +16,7 @@ import {
   updateTrip,
 } from './trips';
 
-vi.mock('./auth-scope', () => {
+vi.mock('./auth-scope', async () => {
   // Mirrors auth-scope.ts's real ForbiddenOrNotFoundError shape without
   // importing the real module, which pulls in next-auth (and, transitively,
   // next/server) — not resolvable in this unit-test environment. The real
@@ -25,11 +26,21 @@ vi.mock('./auth-scope', () => {
       super("That trip doesn't exist or you don't have access.");
     }
   }
+  // tripAccessWhere is the REAL implementation (from trip-access-where.ts,
+  // which has no auth/db imports and is safe to load here) rather than a
+  // second copy reimplemented in this factory — a reimplementation only
+  // proves the mock agrees with itself, not that listTrips still builds the
+  // real access predicate.
+  const { tripAccessWhere } = await vi.importActual<
+    typeof import('./trip-access-where')
+  >('./trip-access-where');
   return {
     ForbiddenOrNotFoundError,
     currentUserId: vi.fn(),
+    currentUserIdentity: vi.fn(),
     requireTripAccess: vi.fn(),
     requireTripOwner: vi.fn(),
+    tripAccessWhere,
   };
 });
 vi.mock('../lib/db', () => ({
@@ -45,6 +56,7 @@ vi.mock('../lib/db', () => ({
 
 beforeEach(() => {
   vi.mocked(currentUserId).mockReset();
+  vi.mocked(currentUserIdentity).mockReset();
   vi.mocked(requireTripAccess).mockReset();
   vi.mocked(requireTripOwner).mockReset();
   vi.mocked(db.trip.findMany).mockReset();
@@ -63,14 +75,41 @@ const validInput = {
 };
 
 describe('listTrips', () => {
-  it("queries the current user's trips ordered by start date", async () => {
-    vi.mocked(currentUserId).mockResolvedValue('user-1');
+  it('queries owned trips and accepted-collaborator trips, ordered by start date', async () => {
+    vi.mocked(currentUserIdentity).mockResolvedValue({
+      userId: 'user-1',
+      email: 'me@example.com',
+    });
     vi.mocked(db.trip.findMany).mockResolvedValue([] as never);
 
     await listTrips();
 
     expect(db.trip.findMany).toHaveBeenCalledWith({
-      where: { userId: 'user-1' },
+      where: {
+        OR: [
+          { userId: 'user-1' },
+          {
+            collaborators: {
+              some: { email: 'me@example.com', status: 'ACCEPTED' },
+            },
+          },
+        ],
+      },
+      orderBy: { startDate: 'desc' },
+    });
+  });
+
+  it('omits the collaborator clause entirely when the session carries no email', async () => {
+    vi.mocked(currentUserIdentity).mockResolvedValue({
+      userId: 'user-1',
+      email: undefined,
+    });
+    vi.mocked(db.trip.findMany).mockResolvedValue([] as never);
+
+    await listTrips();
+
+    expect(db.trip.findMany).toHaveBeenCalledWith({
+      where: { OR: [{ userId: 'user-1' }] },
       orderBy: { startDate: 'desc' },
     });
   });

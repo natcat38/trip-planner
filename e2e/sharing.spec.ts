@@ -2,6 +2,7 @@ import 'dotenv/config';
 import crypto from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // These hit real routes without a signed-in session, matching this repo's
 // existing e2e pattern (see e2e/smoke.spec.ts) of verifying redirect/render
@@ -75,5 +76,55 @@ test.describe('sharing', () => {
     const response = await page.goto('/trips');
     await expect(page).toHaveURL(/\/api\/auth\/signin/);
     expect(response?.ok()).toBe(true);
+  });
+
+  test('accepted collaborator sees the shared trip on /trips', async ({
+    context,
+    browser,
+  }) => {
+    const { user: owner } = await signInAs(db, context, 'share-owner');
+    let collabUserId: string | undefined;
+    try {
+      const trip = await db.trip.create({
+        data: {
+          userId: owner.id,
+          name: 'Kyoto',
+          destinations: ['Kyoto'],
+          startDate: new Date('2026-10-01'),
+          endDate: new Date('2026-10-05'),
+          baseCurrency: 'JPY',
+          budgetMinor: 100000,
+        },
+      });
+
+      const collabContext = await browser.newContext();
+      try {
+        const collabPage = await collabContext.newPage();
+        const { user: collab } = await signInAs(
+          db,
+          collabContext,
+          'share-collab',
+        );
+        collabUserId = collab.id;
+        await db.tripCollaborator.create({
+          data: { tripId: trip.id, email: collab.email, status: 'ACCEPTED' },
+        });
+
+        await collabPage.goto('/trips');
+        await expect(
+          collabPage.getByRole('heading', { name: 'Kyoto' }),
+        ).toBeVisible();
+      } finally {
+        await collabContext.close();
+      }
+    } finally {
+      await db.trip.deleteMany({ where: { userId: owner.id } });
+      await db.session.deleteMany({ where: { userId: owner.id } });
+      await db.user.delete({ where: { id: owner.id } });
+      if (collabUserId) {
+        await db.session.deleteMany({ where: { userId: collabUserId } });
+        await db.user.delete({ where: { id: collabUserId } });
+      }
+    }
   });
 });

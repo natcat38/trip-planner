@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from '../auth';
 import { db } from '../lib/db';
+import { listTripsForExtension } from './extensionApi';
 import { StaleWriteError } from './errors';
 import { createTrip, duplicateTrip, listTrips, updateTrip } from './trips';
 
@@ -301,5 +302,156 @@ describe('duplicateTrip against a real database', () => {
     expect(copiedActivity.placeId).not.toBeNull();
     expect(copiedActivity.placeId).not.toBe(place.id);
     expect(copiedActivity.placeId).toBe(newPlaces[0].id);
+  });
+});
+
+// listTrips (app dashboard) and listTripsForExtension (browser extension
+// picker) both build their `where` from auth-scope.ts's tripAccessWhere, the
+// same predicate requireTripAccess uses. auth-scope.db.test.ts already proves
+// that predicate's positive/negative cases against requireTripAccess; this
+// proves the same cases hold for these two list functions specifically,
+// rather than assuming they inherited it correctly from a shared helper.
+describe('listTrips and listTripsForExtension access scope against a real database', () => {
+  let scopeOwnerId: string;
+  let collaboratorId: string;
+  let collaboratorEmail: string;
+  let strangerId: string;
+  let strangerEmail: string;
+  let scopeTripId: string;
+
+  beforeEach(async () => {
+    const scopeOwnerEmail = `scope-owner-${crypto.randomUUID()}@example.com`;
+    collaboratorEmail = `scope-collab-${crypto.randomUUID()}@example.com`;
+    strangerEmail = `scope-stranger-${crypto.randomUUID()}@example.com`;
+    const owner = await db.user.create({ data: { email: scopeOwnerEmail } });
+    const collaborator = await db.user.create({
+      data: { email: collaboratorEmail },
+    });
+    const stranger = await db.user.create({ data: { email: strangerEmail } });
+    scopeOwnerId = owner.id;
+    collaboratorId = collaborator.id;
+    strangerId = stranger.id;
+
+    const trip = await db.trip.create({
+      data: {
+        userId: scopeOwnerId,
+        name: 'Scoped Trip',
+        destinations: ['Kyoto'],
+        startDate: new Date('2026-09-01'),
+        endDate: new Date('2026-09-05'),
+        baseCurrency: 'JPY',
+        budgetMinor: 100000,
+      },
+    });
+    scopeTripId = trip.id;
+  });
+
+  afterEach(async () => {
+    await db.tripCollaborator.deleteMany({ where: { tripId: scopeTripId } });
+    await db.trip.deleteMany({ where: { id: scopeTripId } });
+    await db.user.deleteMany({
+      where: { id: { in: [scopeOwnerId, collaboratorId, strangerId] } },
+    });
+  });
+
+  function signInAs(id: string, email: string) {
+    vi.mocked(auth).mockResolvedValue({ user: { id, email } } as never);
+  }
+
+  it('includes an accepted collaborator trip in listTrips', async () => {
+    await db.tripCollaborator.create({
+      data: {
+        tripId: scopeTripId,
+        email: collaboratorEmail,
+        status: 'ACCEPTED',
+      },
+    });
+    signInAs(collaboratorId, collaboratorEmail);
+
+    const trips = await listTrips();
+
+    expect(trips.map((t) => t.id)).toContain(scopeTripId);
+  });
+
+  it('excludes a pending (not yet accepted) collaborator trip from listTrips', async () => {
+    await db.tripCollaborator.create({
+      data: {
+        tripId: scopeTripId,
+        email: collaboratorEmail,
+        status: 'PENDING',
+      },
+    });
+    signInAs(collaboratorId, collaboratorEmail);
+
+    const trips = await listTrips();
+
+    expect(trips.map((t) => t.id)).not.toContain(scopeTripId);
+  });
+
+  it('excludes a stranger trip from listTrips', async () => {
+    signInAs(strangerId, strangerEmail);
+
+    const trips = await listTrips();
+
+    expect(trips.map((t) => t.id)).not.toContain(scopeTripId);
+  });
+
+  it('includes an accepted collaborator trip in listTripsForExtension', async () => {
+    await db.tripCollaborator.create({
+      data: {
+        tripId: scopeTripId,
+        email: collaboratorEmail,
+        status: 'ACCEPTED',
+      },
+    });
+
+    const trips = await listTripsForExtension(
+      collaboratorId,
+      collaboratorEmail,
+    );
+
+    expect(trips.map((t) => t.id)).toContain(scopeTripId);
+  });
+
+  it('excludes a pending (not yet accepted) collaborator trip from listTripsForExtension', async () => {
+    await db.tripCollaborator.create({
+      data: {
+        tripId: scopeTripId,
+        email: collaboratorEmail,
+        status: 'PENDING',
+      },
+    });
+
+    const trips = await listTripsForExtension(
+      collaboratorId,
+      collaboratorEmail,
+    );
+
+    expect(trips.map((t) => t.id)).not.toContain(scopeTripId);
+  });
+
+  it('excludes a stranger trip from listTripsForExtension', async () => {
+    const trips = await listTripsForExtension(strangerId, strangerEmail);
+
+    expect(trips.map((t) => t.id)).not.toContain(scopeTripId);
+  });
+
+  it('matches an accepted collaborator even when the session email has different casing', async () => {
+    // TripCollaborator.email is normalized to lowercase at invite time, but a
+    // session's User.email is not (e.g. an OAuth profile can supply
+    // "Jane.Doe@Example.com"). listTrips must lowercase before comparing, or
+    // this collaborator's own trip silently vanishes from their dashboard.
+    await db.tripCollaborator.create({
+      data: {
+        tripId: scopeTripId,
+        email: collaboratorEmail,
+        status: 'ACCEPTED',
+      },
+    });
+    signInAs(collaboratorId, collaboratorEmail.toUpperCase());
+
+    const trips = await listTrips();
+
+    expect(trips.map((t) => t.id)).toContain(scopeTripId);
   });
 });

@@ -68,10 +68,12 @@ function isProtectedPath(pathname) {
   return pathname === '/trips' || pathname.startsWith('/trips/');
 }
 
-// The session-ended signal. There is no sign-out control in the app yet, so
-// this is the only hook available: a navigation to a guarded route that comes
-// back a redirect means the session is gone, and the pages cached for it must
-// not outlive it.
+// The session-ended signal for the redirect path. The direct path is the
+// sign-out button (src/components/SignOutButton.tsx), which messages this
+// worker to clear caches before the session ends (ADR-0015 §5). This is the
+// fallback for when a session simply expires with no button click: a
+// navigation to a guarded route that comes back a redirect means the session
+// is gone, and the pages cached for it must not outlive it.
 //
 // It has to be spelled as `type === 'opaqueredirect'`, NOT as
 // `response.redirected` plus a URL check. A navigation Request carries redirect
@@ -174,6 +176,22 @@ async function handleImmutableAsset(request) {
   }
   return response;
 }
+
+// The direct sign-out path: SignOutButton posts { type: 'CLEAR_CACHES' } and
+// awaits an ack on the MessagePort it sends, so the clear finishes before the
+// sign-out action runs (ADR-0015 §5 requires clear-before-signout, not
+// after). Reuses the same clearAllCaches() the redirect path uses, so there
+// is exactly one implementation of "clear and restore the offline page" —
+// not a second copy of CACHE_NAME or the restore logic in the button itself.
+self.addEventListener('message', (event) => {
+  if (!event.data || event.data.type !== 'CLEAR_CACHES') return;
+  const port = event.ports && event.ports[0];
+  event.waitUntil(
+    clearAllCaches().then(() => {
+      if (port) port.postMessage({ ok: true });
+    }),
+  );
+});
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;

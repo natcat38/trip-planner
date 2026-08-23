@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import crypto from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // /settings holds users' encrypted provider API keys. It is auth-gated only
 // because src/proxy.ts's matcher lists it — an unmatched route runs no proxy
@@ -27,31 +27,10 @@ test('the settings page renders no key form to a signed-out visitor', async ({
 
 test.describe('settings, signed in', () => {
   let userId: string;
-  let sessionToken: string;
 
   test.beforeEach(async ({ context }) => {
-    const user = await db.user.create({
-      data: { email: `settings-e2e-${crypto.randomUUID()}@example.com` },
-    });
+    const { user } = await signInAs(db, context, 'settings-e2e');
     userId = user.id;
-
-    sessionToken = crypto.randomUUID();
-    await db.session.create({
-      data: {
-        sessionToken,
-        userId,
-        expires: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
-
-    await context.addCookies([
-      {
-        name: 'authjs.session-token',
-        value: sessionToken,
-        domain: 'localhost',
-        path: '/',
-      },
-    ]);
   });
 
   test.afterEach(async () => {

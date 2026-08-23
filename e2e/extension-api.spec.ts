@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import crypto from 'node:crypto';
-import { expect, test, type BrowserContext } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { db } from '../src/lib/db';
+import { signInAs } from './auth';
 
 // /api/extension/* is NOT covered by src/proxy.ts's matcher, so these routes
 // are reachable without a session and authenticate themselves. That makes them
@@ -10,37 +11,13 @@ import { db } from '../src/lib/db';
 //
 // The token is generated through the Settings UI rather than written straight
 // into the database, so this covers the whole path a user actually takes.
-const SESSION_COOKIE = 'authjs.session-token';
-
-async function signIn(context: BrowserContext, userId: string) {
-  const sessionToken = crypto.randomUUID();
-  await db.session.create({
-    data: {
-      sessionToken,
-      userId,
-      expires: new Date(Date.now() + 60 * 60 * 1000),
-    },
-  });
-  await context.addCookies([
-    {
-      name: SESSION_COOKIE,
-      value: sessionToken,
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      sameSite: 'Lax',
-    },
-  ]);
-}
 
 test.describe('extension API', () => {
   let userId: string;
   let tripId: string;
 
-  test.beforeEach(async () => {
-    const user = await db.user.create({
-      data: { email: `ext-api-${crypto.randomUUID()}@example.com` },
-    });
+  test.beforeEach(async ({ context }) => {
+    const { user } = await signInAs(db, context, 'ext-api');
     userId = user.id;
     const trip = await db.trip.create({
       data: {
@@ -64,9 +41,7 @@ test.describe('extension API', () => {
 
   async function generateToken(
     page: import('@playwright/test').Page,
-    context: BrowserContext,
   ): Promise<string> {
-    await signIn(context, userId);
     await page.goto('/settings');
     await page.getByRole('button', { name: /generate token/i }).click();
 
@@ -87,11 +62,10 @@ test.describe('extension API', () => {
 
   test('a generated token lists the user trips and saves a place', async ({
     page,
-    context,
     request,
   }) => {
     test.skip(!hasGeocoder, 'needs MAPBOX_TOKEN to geocode the saved place');
-    const token = await generateToken(page, context);
+    const token = await generateToken(page);
 
     const list = await request.get('/api/extension/trips', {
       headers: { Authorization: `Bearer ${token}` },
@@ -127,11 +101,10 @@ test.describe('extension API', () => {
 
   test('saving the same page twice updates rather than duplicating', async ({
     page,
-    context,
     request,
   }) => {
     test.skip(!hasGeocoder, 'needs MAPBOX_TOKEN to geocode the saved place');
-    const token = await generateToken(page, context);
+    const token = await generateToken(page);
     const body = {
       tripId,
       name: 'Fukuoka Tower',
@@ -154,7 +127,6 @@ test.describe('extension API', () => {
 
   test('reports a place it cannot locate instead of failing opaquely', async ({
     page,
-    context,
     request,
   }) => {
     test.skip(
@@ -165,7 +137,7 @@ test.describe('extension API', () => {
     // Without a Mapbox token geocode() returns null rather than throwing, and
     // Place.lat/lng are non-null — so the only correct answer is to say so.
     // A 500 here would mean that null was reaching the database layer.
-    const token = await generateToken(page, context);
+    const token = await generateToken(page);
 
     const response = await request.post('/api/extension/places', {
       headers: { Authorization: `Bearer ${token}` },
@@ -202,10 +174,9 @@ test.describe('extension API', () => {
 
   test('one user token cannot write to another user trip', async ({
     page,
-    context,
     request,
   }) => {
-    const token = await generateToken(page, context);
+    const token = await generateToken(page);
 
     const stranger = await db.user.create({
       data: { email: `ext-stranger-${crypto.randomUUID()}@example.com` },
@@ -246,10 +217,9 @@ test.describe('extension API', () => {
 
   test('a revoked token stops working immediately', async ({
     page,
-    context,
     request,
   }) => {
-    const token = await generateToken(page, context);
+    const token = await generateToken(page);
     await page.getByRole('button', { name: /revoke/i }).click();
     await expect(page.getByText(/no token yet/i)).toBeVisible();
 
@@ -261,10 +231,9 @@ test.describe('extension API', () => {
 
   test('answers 400, not 500, for JSON that is not an object', async ({
     page,
-    context,
     request,
   }) => {
-    const token = await generateToken(page, context);
+    const token = await generateToken(page);
 
     // `null`, `[]` and `"str"` are all valid JSON, so parsing succeeding does
     // not mean there are fields to read. A body of literal `null` used to
@@ -281,8 +250,8 @@ test.describe('extension API', () => {
     }
   });
 
-  test('rejects a javascript: URL', async ({ page, context, request }) => {
-    const token = await generateToken(page, context);
+  test('rejects a javascript: URL', async ({ page, request }) => {
+    const token = await generateToken(page);
 
     const save = await request.post('/api/extension/places', {
       headers: { Authorization: `Bearer ${token}` },
