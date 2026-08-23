@@ -55,7 +55,7 @@ export function SharedTripView({
       {/* No AppHeader — this route is the one other unauthenticated page
           (src/proxy.ts doesn't match /shared/*), so it gets the same
           minimal chrome as the public landing page. */}
-      <div className="flex w-full justify-end px-8 py-3 print:hidden">
+      <div className="flex w-full justify-end px-4 py-3 sm:px-8 print:hidden">
         <ThemeToggle />
       </div>
       <main

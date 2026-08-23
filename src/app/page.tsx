@@ -33,7 +33,7 @@ export default function Home() {
       {/* No AppHeader here — this page is deliberately auth-free (see the
           comment above) — so it carries its own minimal, non-fixed chrome
           just for the theme toggle, matching /shared/[token]'s. */}
-      <div className="flex w-full justify-end px-8 py-3 print:hidden">
+      <div className="flex w-full justify-end px-4 py-3 sm:px-8 print:hidden">
         <ThemeToggle />
       </div>
       <main
