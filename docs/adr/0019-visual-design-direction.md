@@ -1,6 +1,10 @@
 # ADR-0019: Visual design direction — "departure board"
 
-**Status:** Proposed — awaiting owner approval (2026-08-23)
+**Status:** Accepted (2026-08-23)
+
+Owner approved the full direction (§1–§4) on the existing `#2563eb` accent, choosing convergence
+over alternative (b)'s teal/orange. Open question 3 (now/next highlighting) is therefore in scope
+for this milestone. Open question 4 is settled below.
 
 ## Context
 The frontend-design audit that opened Milestone 10 found that Trip Planner is still visually
@@ -244,6 +248,8 @@ If approved, this direction determines the shape of C2–C7:
    or does convergence on the existing blue win?
 3. Does "now"/"next" highlighting in the itinerary (new behaviour, not present today —
    §4) belong in this milestone, or is it scope creep to defer to a later one?
-4. Should `manifest.ts` and `extension/popup.css` be edited in the same C-task as `globals.css`
-   (all four sites converge together) or left for a separate task, given they're outside the
-   Next.js CSS cascade and touch a PWA manifest and a separately-bundled extension?
+4. ~~Should `manifest.ts` and `extension/popup.css` be edited in the same C-task as `globals.css`?~~
+   **Settled:** `manifest.ts` converges in C2 with the rest of the accent sites — it is one value
+   and leaving it behind would mean the installed PWA's home-screen tint diverges from the app
+   for the length of the milestone. `extension/popup.css` stays in C7, which already re-cuts that
+   file wholesale; splitting its accent change out would mean touching it twice.
