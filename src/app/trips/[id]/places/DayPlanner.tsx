@@ -16,6 +16,7 @@
  */
 
 import { useActionState } from 'react';
+import { Select } from '@/components/Select';
 import type { DayPlanCandidate } from '@/server/dayPlan';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import {
@@ -56,7 +57,7 @@ export function DayPlanner({
   >(generateDayPlanAction.bind(null, tripId), INITIAL_STATE);
 
   return (
-    <section className="mt-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+    <section className="mt-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
         Plan a day
       </h2>
@@ -90,22 +91,16 @@ export function DayPlanner({
           >
             Pace
           </label>
-          {/* Explicit background required — a transparent select renders an
-              unreadable native option list in dark mode (see AiKeyPanel.tsx's
-              own comment on this, a real bug there previously). */}
-          <select
+          <Select
             id="pace"
             name="pace"
             defaultValue="relaxed"
-            className="rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
-          >
-            <option value="relaxed" className="bg-white dark:bg-zinc-900">
-              Relaxed
-            </option>
-            <option value="packed" className="bg-white dark:bg-zinc-900">
-              Packed
-            </option>
-          </select>
+            className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+            options={[
+              { value: 'relaxed', label: 'Relaxed' },
+              { value: 'packed', label: 'Packed' },
+            ]}
+          />
         </div>
 
         {showFreeModelNotice && (
@@ -126,51 +121,59 @@ export function DayPlanner({
         </button>
       </form>
 
-      {state.error && (
-        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
-          {state.error} Save more places in the tray below and try again.
-        </p>
-      )}
+      {/* Mounted unconditionally so the live region exists before its
+          content changes — a conditionally-rendered wrapper announces
+          nothing on its first appearance. */}
+      <div aria-live="polite" aria-busy={isPending}>
+        {state.error && (
+          <p
+            className="mt-4 text-sm text-red-600 dark:text-red-400"
+            role="alert"
+          >
+            {state.error} Save more places in the tray below and try again.
+          </p>
+        )}
 
-      {state.candidates && state.candidates.length > 0 && (
-        <div className="mt-6 flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={
-                state.source === 'ai'
-                  ? 'text-xs text-green-600 dark:text-green-400'
-                  : 'text-xs text-zinc-500 dark:text-zinc-400'
-              }
-            >
-              {state.source === 'ai'
-                ? 'AI-sequenced from your saved places'
-                : 'Generated without AI — sequenced algorithmically by proximity'}
-            </span>
+        {state.candidates && state.candidates.length > 0 && (
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={
+                  state.source === 'ai'
+                    ? 'text-xs text-green-700 dark:text-green-400'
+                    : 'text-xs text-zinc-500 dark:text-zinc-400'
+                }
+              >
+                {state.source === 'ai'
+                  ? 'AI-sequenced from your saved places'
+                  : 'Generated without AI — sequenced algorithmically by proximity'}
+              </span>
+            </div>
+
+            {state.notice && (
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                {state.notice}
+              </p>
+            )}
+
+            {days.length === 0 ? (
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                This trip has no days yet, so a candidate can&apos;t be added to
+                the itinerary.
+              </p>
+            ) : (
+              state.candidates.map((candidate, index) => (
+                <CandidateCard
+                  key={index}
+                  tripId={tripId}
+                  candidate={candidate}
+                  days={days}
+                />
+              ))
+            )}
           </div>
-
-          {state.notice && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {state.notice}
-            </p>
-          )}
-
-          {days.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              This trip has no days yet, so a candidate can&apos;t be added to
-              the itinerary.
-            </p>
-          ) : (
-            state.candidates.map((candidate, index) => (
-              <CandidateCard
-                key={index}
-                tripId={tripId}
-                candidate={candidate}
-                days={days}
-              />
-            ))
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
@@ -192,7 +195,7 @@ function CandidateCard({
   >(acceptDayPlanAction.bind(null, tripId), ACCEPT_INITIAL_STATE);
 
   return (
-    <div className="rounded border border-black/[.08] p-4 dark:border-white/[.145]">
+    <div className="rounded border border-black/[.08] p-4 dark:border-white/25">
       <p className="font-medium text-black dark:text-zinc-50">
         {candidate.label}
       </p>
@@ -200,7 +203,7 @@ function CandidateCard({
         {candidate.places.map((place) => (
           <li key={place.id}>
             {place.name}{' '}
-            <span className="text-zinc-500 dark:text-zinc-500">
+            <span className="text-zinc-500 dark:text-zinc-400">
               ({place.category})
             </span>
           </li>
@@ -220,21 +223,15 @@ function CandidateCard({
         {candidate.places.map((place) => (
           <input key={place.id} type="hidden" name="placeId" value={place.id} />
         ))}
-        <select
+        <Select
           name="dayId"
           required
-          className="rounded border border-black/[.08] bg-white px-2 py-1 text-sm text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
-        >
-          {days.map((day) => (
-            <option
-              key={day.id}
-              value={day.id}
-              className="bg-white dark:bg-zinc-900"
-            >
-              {formatDayOption(day.date)}
-            </option>
-          ))}
-        </select>
+          className="px-2 py-1 text-sm text-black dark:text-zinc-50"
+          options={days.map((day) => ({
+            value: day.id,
+            label: formatDayOption(day.date),
+          }))}
+        />
         <button
           type="submit"
           disabled={isPending}

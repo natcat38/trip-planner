@@ -1,0 +1,134 @@
+import 'dotenv/config';
+import { expect, test } from '@playwright/test';
+import { db } from '../src/lib/db';
+import { signInAs } from './auth';
+
+// B7 (WCAG target sizes) turned the checklist toggle from a <button> into a
+// real <input type="checkbox"> inside a <label> wrapping the item text, so
+// the whole row is one hit target instead of a 20px square. That's a real
+// control swap (native checked semantics instead of aria-pressed on a
+// button, and the Server Action is now called directly from useTransition
+// rather than via a bound form action — see the comments on
+// ChecklistCheckbox in src/app/trips/[id]/Checklist.tsx and on
+// toggleChecklistItemAction in src/app/trips/[id]/actions.ts for why), and
+// no existing spec drove this toggle at all. This is that coverage: it
+// proves clicking the checkbox both flips the visible state and persists
+// through toggleChecklistItemAction, surviving a reload.
+test.describe('trip checklist toggle', () => {
+  let userId: string;
+  let tripId: string;
+  let itemId: string;
+
+  test.beforeEach(async ({ context }) => {
+    const { user } = await signInAs(db, context, 'checklist-e2e');
+    userId = user.id;
+
+    const trip = await db.trip.create({
+      data: {
+        userId,
+        name: 'Checklist E2E Trip',
+        destinations: ['Osaka'],
+        startDate: new Date('2026-09-01'),
+        endDate: new Date('2026-09-05'),
+        baseCurrency: 'JPY',
+        budgetMinor: 500000,
+      },
+    });
+    tripId = trip.id;
+
+    const item = await db.checklistItem.create({
+      data: {
+        tripId,
+        label: 'Pack passport',
+        sortOrder: 0,
+      },
+    });
+    itemId = item.id;
+  });
+
+  test.afterEach(async () => {
+    await db.checklistItem.deleteMany({ where: { tripId } });
+    await db.trip.deleteMany({ where: { id: tripId } });
+    await db.session.deleteMany({ where: { userId } });
+    await db.user.deleteMany({ where: { id: userId } });
+  });
+
+  test('clicking the checkbox toggles the item done and persists it', async ({
+    page,
+  }) => {
+    await page.goto(`/trips/${tripId}`);
+
+    const disclosure = page.getByText('Checklist (0/1)');
+    await expect(disclosure).toBeVisible();
+    await disclosure.click();
+
+    const checkbox = page.getByRole('checkbox', { name: 'Pack passport' });
+    await expect(checkbox).toBeVisible();
+    await expect(checkbox).not.toBeChecked();
+
+    await checkbox.click();
+
+    await expect(checkbox).toBeChecked();
+    await expect(page.getByText('Checklist (1/1)')).toBeVisible();
+
+    // Reload to prove the toggle actually persisted server-side (via
+    // toggleChecklistItemAction) rather than only flipping client state.
+    await page.reload();
+    const disclosureAfterReload = page.getByText('Checklist (1/1)');
+    await expect(disclosureAfterReload).toBeVisible();
+    await disclosureAfterReload.click();
+    await expect(
+      page.getByRole('checkbox', { name: 'Pack passport' }),
+    ).toBeChecked();
+  });
+
+  // Coverage for the stale-write path the useTransition rewrite introduced
+  // (review finding on B7): the page is holding an `updatedAt` that's gone
+  // stale because someone else (another collaborator, or this same person in
+  // another tab) touched the item after this page loaded. Simulate that by
+  // updating the row directly in the db, behind the page's back, then
+  // toggle. toggleChecklistItemAction must reject via StaleWriteError, and
+  // ChecklistCheckbox must (a) show that rejection to the user and (b) leave
+  // the checkbox showing what's actually true server-side, not what the
+  // click asked for.
+  test('toggling a stale item surfaces the conflict and leaves the checkbox unchanged', async ({
+    page,
+  }) => {
+    await page.goto(`/trips/${tripId}`);
+
+    const disclosure = page.getByText('Checklist (0/1)');
+    await expect(disclosure).toBeVisible();
+    await disclosure.click();
+
+    const checkbox = page.getByRole('checkbox', { name: 'Pack passport' });
+    await expect(checkbox).toBeVisible();
+    await expect(checkbox).not.toBeChecked();
+
+    // Simulate a concurrent change: bump updatedAt without touching `done`,
+    // so the page's in-memory item.updatedAt (captured at load) no longer
+    // matches the row the action's updateMany will look for.
+    await db.checklistItem.update({
+      where: { id: itemId },
+      data: { updatedAt: new Date() },
+    });
+
+    await checkbox.click();
+
+    // Next.js also renders its own (empty) route-announcer with
+    // role="alert", so scope to the one actually carrying text.
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'changed elsewhere' }),
+    ).toHaveText('This trip was changed elsewhere — reload and try again.');
+    // The write was rejected: the checkbox must not lie about having
+    // toggled, and the disclosure summary's count must not have moved.
+    await expect(checkbox).not.toBeChecked();
+    await expect(page.getByText('Checklist (0/1)')).toBeVisible();
+
+    // The alert must not be nested inside the <label>, or it leaks into the
+    // checkbox's accessible name (label content computes the labelled
+    // control's name). getByRole's `name` matches by substring, so it would
+    // still resolve even with the alert text appended — assert the exact
+    // name instead so a regression here actually fails the test.
+    await expect(checkbox).toHaveAccessibleName('Pack passport');
+  });
+});

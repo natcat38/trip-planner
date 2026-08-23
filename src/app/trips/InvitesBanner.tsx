@@ -1,4 +1,5 @@
 import { acceptInviteAction, declineInviteAction } from './actions';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { PendingInvite } from '@/server/sharing';
 
 export function InvitesBanner({ invites }: { invites: PendingInvite[] }) {
@@ -9,7 +10,7 @@ export function InvitesBanner({ invites }: { invites: PendingInvite[] }) {
       {invites.map((invite) => (
         <li
           key={invite.tripId}
-          className="flex items-center justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]"
+          className="flex items-center justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/25"
         >
           <p className="text-sm text-black dark:text-zinc-50">
             You&apos;ve been invited to collaborate on{' '}
@@ -17,20 +18,20 @@ export function InvitesBanner({ invites }: { invites: PendingInvite[] }) {
           </p>
           <div className="flex gap-3 shrink-0">
             <form action={acceptInviteAction.bind(null, invite.tripId)}>
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Accepting…"
                 className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
               >
                 Accept
-              </button>
+              </SubmitButton>
             </form>
             <form action={declineInviteAction.bind(null, invite.tripId)}>
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Declining…"
                 className="text-sm text-zinc-600 dark:text-zinc-400 underline"
               >
                 Decline
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </li>

@@ -35,6 +35,13 @@ function setError(id, message) {
   el.hidden = !message;
 }
 
+// #status (role="status") is always mounted — see the comment on it in
+// popup.html — so clearing/showing it toggles only textContent, never
+// `hidden`. An unmounted or hidden live region announces nothing.
+function setStatus(message) {
+  $('status').textContent = message ?? '';
+}
+
 async function api(appUrl, token, path, init = {}) {
   const response = await fetch(new URL(path, appUrl), {
     ...init,
@@ -108,7 +115,9 @@ async function connect() {
     return;
   }
 
-  $('connect').disabled = true;
+  const btn = $('connect');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
   try {
     // Verified before storing, so a mistyped token fails here rather than on
     // first use with no obvious cause.
@@ -123,17 +132,20 @@ async function connect() {
   } catch (err) {
     setError('setup-error', err.message);
   } finally {
-    $('connect').disabled = false;
+    btn.disabled = false;
+    btn.textContent = 'Connect';
   }
 }
 
 async function save() {
   setError('save-error', null);
-  $('status').hidden = true;
+  setStatus(null);
   const { appUrl, token } = await store.get();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  $('submit').disabled = true;
+  const btn = $('submit');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
   try {
     const { place } = await api(appUrl, token, '/api/extension/places', {
       method: 'POST',
@@ -146,19 +158,28 @@ async function save() {
         notes: $('notes').value,
       }),
     });
-    $('status').textContent = `Saved “${place.name}”.`;
-    $('status').hidden = false;
+    setStatus(`Saved “${place.name}”.`);
   } catch (err) {
     setError('save-error', err.message);
   } finally {
-    $('submit').disabled = false;
+    btn.disabled = false;
+    btn.textContent = 'Save to trip';
   }
 }
 
 async function init() {
-  $('connect').addEventListener('click', connect);
-  $('submit').addEventListener('click', save);
+  // Real <form> submit listeners (not click handlers on the buttons) so
+  // pressing Enter in any field submits, same as the primary button.
+  $('setup').addEventListener('submit', (e) => {
+    e.preventDefault();
+    connect();
+  });
+  $('save').addEventListener('submit', (e) => {
+    e.preventDefault();
+    save();
+  });
   $('disconnect').addEventListener('click', async () => {
+    if (!confirm('Disconnect from Trip Planner?')) return;
     await store.clear();
     show('setup');
   });

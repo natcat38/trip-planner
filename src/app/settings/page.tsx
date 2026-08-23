@@ -20,7 +20,11 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
+      >
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Settings
@@ -33,7 +37,7 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <section className="rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             AI key
           </h2>
@@ -46,7 +50,7 @@ export default async function SettingsPage() {
           <AiKeyPanel status={status} models={models} />
         </section>
 
-        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Browser extension
           </h2>

@@ -4,12 +4,14 @@
  * rejected per the optimistic-locking rule (ADR-0003).
  * @packageDocumentation
  */
+import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
 import {
   currentUserId,
   ForbiddenOrNotFoundError,
   requireTripAccess,
 } from '@/server/auth-scope';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { deleteTripAction, updateTripAction } from '../../actions';
 import { TripForm } from '../../TripForm';
 
@@ -28,13 +30,9 @@ export default async function EditTripPage({
   try {
     trip = await requireTripAccess(id);
   } catch (err) {
-    if (err instanceof ForbiddenOrNotFoundError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
-    }
+    // A forbidden trip and a missing trip render identically — notFound()
+    // never leaks which one it was.
+    if (err instanceof ForbiddenOrNotFoundError) notFound();
     throw err;
   }
 
@@ -49,7 +47,11 @@ export default async function EditTripPage({
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
+      >
         <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">
           Edit trip
         </h1>
@@ -69,12 +71,13 @@ export default async function EditTripPage({
         />
         {isOwner && (
           <form action={boundDelete} className="mt-8">
-            <button
-              type="submit"
+            <ConfirmSubmitButton
+              confirm="Delete this trip and all its days, activities, expenses and attachments? This cannot be undone."
+              pendingLabel="Deleting…"
               className="text-sm text-red-600 dark:text-red-400 underline"
             >
               Delete trip
-            </button>
+            </ConfirmSubmitButton>
           </form>
         )}
       </main>

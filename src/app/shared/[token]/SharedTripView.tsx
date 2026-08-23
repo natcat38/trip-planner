@@ -1,10 +1,12 @@
 import { Map } from '@/components/Map';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import type {
   getSharedBudgetSummary,
   getSharedTrip,
   listSharedExpenses,
 } from '@/server/sharing';
+import { ThemeToggle } from '@/app/ThemeToggle';
 import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
 import { duplicateSharedTripAction } from './actions';
 
@@ -50,7 +52,17 @@ export function SharedTripView({
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      {/* No AppHeader — this route is the one other unauthenticated page
+          (src/proxy.ts doesn't match /shared/*), so it gets the same
+          minimal chrome as the public landing page. */}
+      <div className="flex w-full justify-end px-4 py-3 sm:px-8 print:hidden">
+        <ThemeToggle />
+      </div>
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
+      >
         <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
           Read-only shared view
         </p>
@@ -60,17 +72,17 @@ export function SharedTripView({
           </h1>
           {canSaveCopy && (
             <form action={duplicateSharedTripAction.bind(null, token)}>
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Saving…"
                 className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
               >
                 Save a copy
-              </button>
+              </SubmitButton>
             </form>
           )}
         </div>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
@@ -88,7 +100,7 @@ export function SharedTripView({
             )}
           </p>
           {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-600 dark:text-amber-400">
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700 dark:text-amber-400">
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}
@@ -129,7 +141,7 @@ export function SharedTripView({
                   {day.activities.map((activity) => (
                     <li
                       key={activity.id}
-                      className="rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]"
+                      className="rounded-lg border border-black/[.08] p-4 dark:border-white/25"
                     >
                       <p className="font-medium text-black dark:text-zinc-50">
                         {activity.title}{' '}

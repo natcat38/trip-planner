@@ -39,9 +39,15 @@ export function Map({
   // this the offline map initialises and renders an empty grey square, which
   // reads as a broken app rather than an unavailable feature.
   const offline = useIsOffline();
+  // Public env vars are inlined at build time, so this is a plain constant —
+  // safe to read during render on both server and client with no hydration
+  // mismatch risk (same as the accessToken assignment below).
+  const hasToken = Boolean(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapboxMap | null>(null);
-  const markersRef = useRef(new globalThis.Map<string, Marker>());
+  const markersRef = useRef(
+    new globalThis.Map<string, { marker: Marker; dot: HTMLSpanElement }>(),
+  );
   const onSelectPinRef = useRef(onSelectPin);
 
   useEffect(() => {
@@ -53,7 +59,8 @@ export function Map({
     .join('|');
 
   useEffect(() => {
-    if (!containerRef.current || pins.length === 0 || offline) return;
+    if (!containerRef.current || pins.length === 0 || offline || !hasToken)
+      return;
     let cancelled = false;
     const markers = markersRef.current;
 
@@ -80,52 +87,89 @@ export function Map({
       mapRef.current = map;
 
       for (const pin of pins) {
-        const el = document.createElement('div');
-        el.style.width = '16px';
-        el.style.height = '16px';
-        el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
+        // A real <button>, not a <div>: keyboard-reachable and announced by
+        // name to assistive tech. The button itself is the >=24px hit area;
+        // the visual 16px dot is a separate aria-hidden child so the pin's
+        // apparent size on the map is unchanged. Mapbox centers the marker
+        // element on the coordinate using its own offsetWidth/offsetHeight
+        // (see .mapboxgl-marker in mapbox-gl.css, which only sets
+        // position/opacity — it doesn't impose a size), so the 24px button
+        // being centered puts the 16px dot's center on the same coordinate
+        // the 16px div used to occupy.
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.setAttribute('aria-label', pin.title);
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.width = '24px';
+        el.style.height = '24px';
+        el.style.padding = '0';
+        el.style.border = 'none';
+        el.style.background = 'transparent';
         el.style.cursor = 'pointer';
-        el.style.background =
+
+        const dot = document.createElement('span');
+        dot.setAttribute('aria-hidden', 'true');
+        dot.style.width = '16px';
+        dot.style.height = '16px';
+        dot.style.borderRadius = '50%';
+        dot.style.border = '2px solid white';
+        dot.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
+        dot.style.background =
           pin.id === selectedId ? SELECTED_PIN_COLOR : (pin.color ?? PIN_COLOR);
+        el.appendChild(dot);
+
         el.addEventListener('click', () => onSelectPinRef.current?.(pin.id));
 
         const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([pin.lng, pin.lat])
           .setPopup(new mapboxgl.Popup({ offset: 12 }).setText(pin.title))
           .addTo(map);
-        markers.set(pin.id, marker);
+        markers.set(pin.id, { marker, dot });
       }
     })();
 
     return () => {
       cancelled = true;
-      markers.forEach((marker) => marker.remove());
+      markers.forEach(({ marker }) => marker.remove());
       markers.clear();
       mapRef.current?.remove();
       mapRef.current = null;
     };
     // pinsKey is the intentional dependency — re-init only when the pin set itself changes.
     // `offline` joins it so reconnecting builds the map that was skipped.
+    // `hasToken` is a build-time constant (see its declaration above) and
+    // deliberately omitted — it can't change between renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pinsKey, offline]);
 
   useEffect(() => {
-    markersRef.current.forEach((marker, id) => {
+    markersRef.current.forEach(({ dot }, id) => {
       const pin = pins.find((p) => p.id === id);
-      marker.getElement().style.background =
+      dot.style.background =
         id === selectedId ? SELECTED_PIN_COLOR : (pin?.color ?? PIN_COLOR);
     });
     const pin = pins.find((p) => p.id === selectedId);
-    if (pin) mapRef.current?.flyTo({ center: [pin.lng, pin.lat], zoom: 15 });
+    if (pin) {
+      // matchMedia is browser-only; this effect only ever runs on the
+      // client, but guard it anyway since it's cheap and removes any doubt.
+      const reducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      mapRef.current?.flyTo({
+        center: [pin.lng, pin.lat],
+        zoom: 15,
+        duration: reducedMotion ? 0 : undefined,
+      });
+    }
     // pinsKey (not pins) avoids re-running on every parent re-render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, pinsKey]);
 
   if (pins.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/[.145] dark:text-zinc-400">
+      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/25 dark:text-zinc-400">
         No geocoded places yet — add a place to an activity to see it on the
         map.
       </div>
@@ -134,11 +178,28 @@ export function Map({
 
   if (offline) {
     return (
-      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/[.145] dark:text-zinc-400">
+      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/25 dark:text-zinc-400">
         The map needs a connection. Your itinerary below is available offline.
       </div>
     );
   }
 
-  return <div ref={containerRef} className="h-80 w-full rounded-lg" />;
+  if (!hasToken) {
+    return (
+      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/25 dark:text-zinc-400">
+        Map unavailable — no Mapbox token configured.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      role="region"
+      aria-label="Map of itinerary places"
+      // overflow-hidden: the Mapbox canvas paints its own square corners
+      // over rounded-lg otherwise.
+      className="h-80 w-full overflow-hidden rounded-lg"
+    />
+  );
 }

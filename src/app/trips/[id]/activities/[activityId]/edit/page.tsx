@@ -4,6 +4,7 @@
  * ActivityForm, including its optional minor-units cost/currency fields.
  * @packageDocumentation
  */
+import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
 import { ForbiddenOrNotFoundError } from '@/server/auth-scope';
 import { requireActivity } from '@/server/itinerary';
@@ -21,13 +22,9 @@ export default async function EditActivityPage({
   try {
     activity = await requireActivity(tripId, activityId);
   } catch (err) {
-    if (err instanceof ForbiddenOrNotFoundError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
-    }
+    // A forbidden activity and a missing activity render identically —
+    // notFound() never leaks which one it was.
+    if (err instanceof ForbiddenOrNotFoundError) notFound();
     throw err;
   }
 
@@ -40,7 +37,11 @@ export default async function EditActivityPage({
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
+      >
         <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">
           Edit activity
         </h1>

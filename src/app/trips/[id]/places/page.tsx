@@ -7,7 +7,9 @@
  * saved tray with a day picker to promote a place onto the itinerary.
  * @packageDocumentation
  */
+import { Suspense } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import {
   ForbiddenOrNotFoundError,
   requireTripAccess,
@@ -19,6 +21,9 @@ import { getKeyStatus } from '@/server/aiSettings';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
+import { Select } from '@/components/Select';
+import Form from 'next/form';
+import { SubmitButton } from '@/components/SubmitButton';
 import { saveOsmPlaceAction } from './actions';
 import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
@@ -55,7 +60,7 @@ function GuidePanel({
 }) {
   if (!destination) {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
@@ -71,11 +76,11 @@ function GuidePanel({
   // explicit message and point at OSM search instead of an empty panel.
   if (guide == null || guide.coverage === 'none') {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
-        <p className="text-sm text-amber-600 dark:text-amber-400">
+        <p className="text-sm text-amber-700 dark:text-amber-400">
           Limited guide data for {destination}. Use place search below instead.
         </p>
         {guide?.url && (
@@ -97,7 +102,7 @@ function GuidePanel({
   );
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
       <div className="flex items-baseline justify-between mb-2 gap-4">
         <h2 className="font-medium text-black dark:text-zinc-50">
           Destination guide — {guide.title}
@@ -105,8 +110,8 @@ function GuidePanel({
         <span
           className={
             guide.coverage === 'good'
-              ? 'shrink-0 text-xs text-green-600 dark:text-green-400'
-              : 'shrink-0 text-xs text-amber-600 dark:text-amber-400'
+              ? 'shrink-0 text-xs text-green-700 dark:text-green-400'
+              : 'shrink-0 text-xs text-amber-700 dark:text-amber-400'
           }
         >
           {guide.coverage === 'good' ? 'Good coverage' : 'Limited coverage'}
@@ -114,7 +119,7 @@ function GuidePanel({
       </div>
 
       {guide.coverage === 'thin' && (
-        <p className="mb-4 text-sm text-amber-600 dark:text-amber-400">
+        <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
           Limited guide data for {destination} — some sections may be missing.
           Place search below still works.
         </p>
@@ -129,7 +134,7 @@ function GuidePanel({
           {availableSections.map(({ key, label }) => (
             <details
               key={key}
-              className="rounded border border-dashed border-black/[.08] p-3 dark:border-white/[.145]"
+              className="rounded border border-dashed border-black/[.08] p-3 dark:border-white/25"
             >
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 {label}
@@ -180,6 +185,44 @@ function GuidePanel({
   );
 }
 
+// A skeleton, not a spinner: sized to GuidePanel's real "limited coverage"
+// shape (heading + a couple of text lines) so nothing shifts when the
+// streamed guide content swaps in.
+function GuideSkeleton() {
+  return (
+    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+      <div className="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-3" />
+      <div className="h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-2" />
+      <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+    </section>
+  );
+}
+
+// getGuide() is a live Wikivoyage fetch (see the module doc comment in
+// ../../../lib/research/wikivoyage.ts) — isolated here, unawaited by the
+// page itself, so the search form and saved-places map/list below render
+// immediately instead of waiting on it. Wrapped in <Suspense> at the call
+// site with GuideSkeleton as the fallback.
+async function GuidePanelAsync({
+  destination,
+  tripId,
+  hasApiKey,
+}: {
+  destination: string | null;
+  tripId: string;
+  hasApiKey: boolean;
+}) {
+  const guide = destination ? await getGuide(destination) : null;
+  return (
+    <GuidePanel
+      destination={destination}
+      guide={guide}
+      tripId={tripId}
+      hasApiKey={hasApiKey}
+    />
+  );
+}
+
 export default async function PlacesPage({
   params,
   searchParams,
@@ -200,20 +243,15 @@ export default async function PlacesPage({
     trip = await requireTripAccess(tripId);
     days = await ensureDaysForTrip(tripId);
   } catch (err) {
-    if (err instanceof ForbiddenOrNotFoundError) {
-      return (
-        <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 dark:bg-black">
-          <p className="text-zinc-600 dark:text-zinc-400">{err.message}</p>
-        </div>
-      );
-    }
+    // A forbidden trip and a missing trip render identically — notFound()
+    // never leaks which one it was.
+    if (err instanceof ForbiddenOrNotFoundError) notFound();
     throw err;
   }
 
   const destination = trip.destinations[0] ?? null;
 
-  const [guide, center, savedPlaces, keyStatus] = await Promise.all([
-    destination ? getGuide(destination) : null,
+  const [center, savedPlaces, keyStatus] = await Promise.all([
     destination ? geocode(destination) : null,
     listPlaces(tripId),
     getKeyStatus(),
@@ -248,7 +286,11 @@ export default async function PlacesPage({
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
+      >
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Places — {trip.name}
@@ -261,14 +303,15 @@ export default async function PlacesPage({
           </Link>
         </div>
 
-        <GuidePanel
-          destination={destination}
-          guide={guide}
-          tripId={tripId}
-          hasApiKey={keyStatus != null}
-        />
+        <Suspense fallback={<GuideSkeleton />}>
+          <GuidePanelAsync
+            destination={destination}
+            tripId={tripId}
+            hasApiKey={keyStatus != null}
+          />
+        </Suspense>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/[.145]">
+        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Search places
           </h2>
@@ -281,33 +324,49 @@ export default async function PlacesPage({
             </p>
           ) : (
             <>
-              <form method="get" className="flex flex-wrap gap-3 mb-4">
-                <input
-                  type="text"
-                  name="q"
-                  defaultValue={q ?? ''}
-                  placeholder="Search (e.g. ramen)"
-                  className="flex-1 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-                />
-                <select
-                  name="category"
-                  defaultValue={category ?? ''}
-                  className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
-                >
-                  <option value="">All categories</option>
-                  <option value="Food">Food</option>
-                  <option value="Sightseeing">Sightseeing</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Lodging">Lodging</option>
-                  <option value="Other">Other</option>
-                </select>
-                <button
-                  type="submit"
+              {/* next/form, not a bare <form method="get">: a native GET
+                  submission is a full browser navigation, which useFormStatus
+                  cannot observe — the Search button's pending state would be
+                  decorative. next/form routes the submit through the client
+                  router instead, so "Searching…" reflects a real wait. */}
+              <Form
+                action={`/trips/${tripId}/places`}
+                className="flex flex-wrap gap-3 mb-4"
+              >
+                <label className="flex flex-1 flex-col gap-1">
+                  <span className="sr-only">Search places</span>
+                  <input
+                    type="search"
+                    name="q"
+                    autoComplete="off"
+                    defaultValue={q ?? ''}
+                    placeholder="Search (e.g. ramen)"
+                    className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="sr-only">Category</span>
+                  <Select
+                    name="category"
+                    defaultValue={category ?? ''}
+                    className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+                    options={[
+                      { value: '', label: 'All categories' },
+                      { value: 'Food', label: 'Food' },
+                      { value: 'Sightseeing', label: 'Sightseeing' },
+                      { value: 'Transport', label: 'Transport' },
+                      { value: 'Lodging', label: 'Lodging' },
+                      { value: 'Other', label: 'Other' },
+                    ]}
+                  />
+                </label>
+                <SubmitButton
+                  pendingLabel="Searching…"
                   className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
                 >
                   Search
-                </button>
-              </form>
+                </SubmitButton>
+              </Form>
 
               {searchResults.length === 0 ? (
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -320,10 +379,10 @@ export default async function PlacesPage({
                   {searchResults.map((place) => (
                     <li
                       key={place.id}
-                      className="flex items-start justify-between gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/25"
                     >
-                      <div>
-                        <p className="font-medium text-black dark:text-zinc-50">
+                      <div className="min-w-0">
+                        <p className="font-medium text-black dark:text-zinc-50 truncate">
                           {place.name}{' '}
                           <span className="font-normal text-zinc-500 dark:text-zinc-400">
                             ({place.category})

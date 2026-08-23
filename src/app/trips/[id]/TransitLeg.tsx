@@ -55,7 +55,7 @@ export function TransitLeg({
   );
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-dashed border-black/[.08] px-4 py-3 text-sm dark:border-white/[.145]">
+    <li className="flex flex-col gap-2 rounded-lg border border-dashed border-black/[.08] px-4 py-3 text-sm dark:border-white/25">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-zinc-500 dark:text-zinc-400">Getting there</span>
         <a
@@ -85,83 +85,90 @@ export function TransitLeg({
         </form>
       </div>
 
-      {isPending && (
-        <p className="text-zinc-500 dark:text-zinc-400">Asking Transitous…</p>
-      )}
+      {/* Mounted unconditionally (not `{x && <div aria-live>}`) so the live
+          region exists in the DOM before its content changes — a screen
+          reader only announces updates to a region it already knows about. */}
+      <div aria-live="polite" aria-busy={isPending}>
+        {isPending && (
+          <p className="text-zinc-500 dark:text-zinc-400">Asking Transitous…</p>
+        )}
 
-      {!isPending && state.journeys !== undefined && (
-        <div className="flex flex-col gap-2">
-          {state.journeys === null && (
-            <p className="text-zinc-500 dark:text-zinc-400">
-              Couldn&apos;t reach transit routing just now — try the map links
-              above instead.
-            </p>
-          )}
+        {!isPending && state.journeys !== undefined && (
+          <div className="flex flex-col gap-2">
+            {state.journeys === null && (
+              <p className="text-zinc-500 dark:text-zinc-400">
+                Couldn&apos;t reach transit routing just now — try the map links
+                above instead.
+              </p>
+            )}
 
-          {state.journeys !== null && state.journeys.length === 0 && (
-            <p className="text-zinc-500 dark:text-zinc-400">
-              No transit route found in Transitous&apos;s data for this leg.
-              Coverage is per-operator, not per-city — this doesn&apos;t mean
-              there&apos;s no way to get there, just that it isn&apos;t in the
-              data. Try the map links above.
-            </p>
-          )}
+            {state.journeys !== null && state.journeys.length === 0 && (
+              <p className="text-zinc-500 dark:text-zinc-400">
+                No transit route found in Transitous&apos;s data for this leg.
+                Coverage is per-operator, not per-city — this doesn&apos;t mean
+                there&apos;s no way to get there, just that it isn&apos;t in the
+                data. Try the map links above.
+              </p>
+            )}
 
-          {state.journeys !== null && state.journeys.length > 0 && (
-            <ul className="flex flex-col gap-2">
-              {state.journeys.map((journey, i) => (
-                <li
-                  key={i}
-                  className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+            {state.journeys !== null && state.journeys.length > 0 && (
+              <ul className="flex flex-col gap-2">
+                {state.journeys.map((journey, i) => (
+                  <li
+                    key={i}
+                    className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25"
+                  >
+                    <details>
+                      <summary className="cursor-pointer text-black dark:text-zinc-50">
+                        {minutes(journey.durationSeconds)} · {journey.transfers}{' '}
+                        {journey.transfers === 1 ? 'transfer' : 'transfers'}
+                      </summary>
+                      <ul className="mt-2 flex flex-col gap-1 text-zinc-600 dark:text-zinc-400">
+                        {journey.legs.map((leg, j) => (
+                          <li key={j}>
+                            {leg.mode}: {leg.from} → {leg.to} (
+                            {minutes(leg.durationSeconds)})
+                            {[leg.line, leg.headsign, leg.agency].some(
+                              Boolean,
+                            ) &&
+                              ` — ${[leg.line, leg.headsign, leg.agency]
+                                .filter(Boolean)
+                                .join(', ')}`}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {state.journeys !== null && (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Transit data via{' '}
+                <a
+                  href="https://transitous.org/sources/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
                 >
-                  <details>
-                    <summary className="cursor-pointer text-black dark:text-zinc-50">
-                      {minutes(journey.durationSeconds)} · {journey.transfers}{' '}
-                      {journey.transfers === 1 ? 'transfer' : 'transfers'}
-                    </summary>
-                    <ul className="mt-2 flex flex-col gap-1 text-zinc-600 dark:text-zinc-400">
-                      {journey.legs.map((leg, j) => (
-                        <li key={j}>
-                          {leg.mode}: {leg.from} → {leg.to} (
-                          {minutes(leg.durationSeconds)})
-                          {[leg.line, leg.headsign, leg.agency].some(Boolean) &&
-                            ` — ${[leg.line, leg.headsign, leg.agency]
-                              .filter(Boolean)
-                              .join(', ')}`}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {state.journeys !== null && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Transit data via{' '}
-              <a
-                href="https://transitous.org/sources/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Transitous
-              </a>{' '}
-              and{' '}
-              <a
-                href="https://www.openstreetmap.org/copyright"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                OpenStreetMap
-              </a>
-              .
-            </p>
-          )}
-        </div>
-      )}
+                  Transitous
+                </a>{' '}
+                and{' '}
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  OpenStreetMap
+                </a>
+                .
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </li>
   );
 }

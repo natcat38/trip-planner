@@ -9,6 +9,8 @@
  */
 
 import { useActionState, useState } from 'react';
+import { Select } from '@/components/Select';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { KeyStatus } from '@/server/aiSettings';
 import {
   deleteApiKeyAction,
@@ -59,7 +61,7 @@ function ApiKeyForm() {
           name="apiKey"
           autoComplete="off"
           placeholder="gsk_… or sk-or-v1-…"
-          className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/[.145] dark:bg-transparent"
+          className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
         />
       </div>
 
@@ -131,18 +133,18 @@ function StoredKeyPanel({
       </p>
 
       {models === null ? (
-        <div className="rounded border border-dashed border-black/[.08] p-4 dark:border-white/[.145]">
-          <p className="mb-3 text-sm text-amber-600 dark:text-amber-400">
+        <div className="rounded border border-dashed border-black/[.08] p-4 dark:border-white/25">
+          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
             Couldn&apos;t load models from the provider right now — the key may
             be temporarily unreachable or no longer valid.
           </p>
           <form action={refreshModelsAction}>
-            <button
-              type="submit"
-              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/[.145] dark:text-zinc-50"
+            <SubmitButton
+              pendingLabel="Retrying…"
+              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/25 dark:text-zinc-50"
             >
               Retry
-            </button>
+            </SubmitButton>
           </form>
         </div>
       ) : (
@@ -159,32 +161,20 @@ function StoredKeyPanel({
           >
             Model
           </label>
-          {/* The explicit background is required, not cosmetic: with a
-              transparent select the native option list inherits the page's
-              dark backdrop but keeps default dark text, leaving the choices
-              nearly unreadable. Options carry their own colours because
-              browsers don't inherit the select's into the popup list. */}
-          <select
+          <Select
             id="model"
             name="model"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
-            className="w-full max-w-md rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50"
-          >
-            <option value="" disabled className="bg-white dark:bg-zinc-900">
-              Choose a model…
-            </option>
-            {models.map((m) => (
-              <option
-                key={m.id}
-                value={m.id}
-                className="bg-white text-black dark:bg-zinc-900 dark:text-zinc-50"
-              >
-                {m.id}
-                {m.free ? ' (free)' : ''}
-              </option>
-            ))}
-          </select>
+            className="w-full max-w-md px-3 py-2 text-sm text-black dark:text-zinc-50"
+            options={[
+              { value: '', label: 'Choose a model…', disabled: true },
+              ...models.map((m) => ({
+                value: m.id,
+                label: `${m.id}${m.free ? ' (free)' : ''}`,
+              })),
+            ]}
+          />
 
           {selectedIsFree && (
             <p className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-300">

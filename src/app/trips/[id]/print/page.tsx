@@ -67,7 +67,11 @@ export default async function TripPrintPage({
 
   return (
     <div className="flex flex-col flex-1 bg-white">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8 print:py-0 print:px-0">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8 print:py-0 print:px-0"
+      >
         <div className="flex items-center justify-between mb-2 print:hidden">
           <Link
             href={`/trips/${trip.id}`}
@@ -94,7 +98,7 @@ export default async function TripPrintPage({
             )}
           </p>
           {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-600">
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700">
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}

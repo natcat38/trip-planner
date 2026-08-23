@@ -1,6 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatBytes } from '@/lib/bytes';
 import type { AttachmentSummary, AttachmentUsage } from '@/server/attachments';
 import {
@@ -35,13 +37,13 @@ export function Attachments({
   attachments: AttachmentSummary[];
   usage: AttachmentUsage;
 }) {
-  const [state, formAction, isPending] = useActionState<
-    AttachmentFormState,
-    FormData
-  >(addAttachmentAction.bind(null, tripId), {});
+  const [state, formAction] = useActionState<AttachmentFormState, FormData>(
+    addAttachmentAction.bind(null, tripId),
+    {},
+  );
 
   return (
-    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/[.145]">
+    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/25">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         Attachments{attachments.length > 0 ? ` (${attachments.length})` : ''}
       </summary>
@@ -52,7 +54,7 @@ export function Attachments({
             <li key={attachment.id} className="flex items-center gap-3">
               <a
                 href={`/trips/${tripId}/attachments/${attachment.id}`}
-                className="flex-1 truncate text-sm text-black underline dark:text-zinc-50"
+                className="block min-w-0 flex-1 truncate text-sm text-black underline dark:text-zinc-50"
               >
                 {attachment.filename}
               </a>
@@ -73,12 +75,13 @@ export function Attachments({
                   attachment.id,
                 )}
               >
-                <button
-                  type="submit"
+                <ConfirmSubmitButton
+                  confirm="Delete this file? It cannot be recovered."
+                  pendingLabel="Deleting…"
                   className="text-sm text-red-600 underline dark:text-red-400"
                 >
                   Delete
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </li>
           ))}
@@ -91,21 +94,25 @@ export function Attachments({
             {state.error}
           </p>
         )}
-        <div className="flex gap-3">
-          <input
-            type="file"
-            name="file"
-            required
-            accept={ACCEPT}
-            className="flex-1 text-sm text-zinc-600 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:text-zinc-700 dark:text-zinc-400 dark:file:bg-zinc-800 dark:file:text-zinc-300"
-          />
-          <button
-            type="submit"
-            disabled={isPending}
+        <div className="flex items-end gap-3">
+          <label className="flex flex-1 flex-col gap-1">
+            <span className="text-sm font-medium text-black dark:text-zinc-50">
+              File
+            </span>
+            <input
+              type="file"
+              name="file"
+              required
+              accept={ACCEPT}
+              className="text-sm text-zinc-600 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:text-zinc-700 dark:text-zinc-400 dark:file:bg-zinc-800 dark:file:text-zinc-300"
+            />
+          </label>
+          <SubmitButton
+            pendingLabel="Uploading…"
             className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
           >
-            {isPending ? 'Uploading…' : 'Upload'}
-          </button>
+            Upload
+          </SubmitButton>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           JPEG, PNG, WebP or PDF · up to {formatBytes(usage.maxFileBytes)} each

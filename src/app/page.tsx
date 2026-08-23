@@ -6,6 +6,7 @@
  * @packageDocumentation
  */
 import Link from 'next/link';
+import { ThemeToggle } from './ThemeToggle';
 
 const FEATURES = [
   {
@@ -29,7 +30,17 @@ const FEATURES = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
-      <main className="mx-auto w-full max-w-3xl flex-1 px-8 py-24">
+      {/* No AppHeader here — this page is deliberately auth-free (see the
+          comment above) — so it carries its own minimal, non-fixed chrome
+          just for the theme toggle, matching /shared/[token]'s. */}
+      <div className="flex w-full justify-end px-4 py-3 sm:px-8 print:hidden">
+        <ThemeToggle />
+      </div>
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-8 sm:py-24"
+      >
         <h1 className="text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Trip Planner
         </h1>

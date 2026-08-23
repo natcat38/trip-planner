@@ -4,6 +4,7 @@
  * @packageDocumentation
  */
 import Link from 'next/link';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
@@ -27,10 +28,14 @@ export default async function TripsPage() {
 
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
-      <main className="flex-1 w-full max-w-3xl mx-auto py-16 px-8">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
+      >
         <InvitesBanner invites={invites} />
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Your trips
           </h1>
@@ -51,7 +56,7 @@ export default async function TripsPage() {
         </div>
 
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-black/[.08] p-12 text-center dark:border-white/[.145]">
+          <div className="rounded-lg border border-dashed border-black/[.08] p-12 text-center dark:border-white/25">
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
               You haven&apos;t planned any trips yet.
             </p>
@@ -67,7 +72,7 @@ export default async function TripsPage() {
             {trips.map((trip) => (
               <li
                 key={trip.id}
-                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/[.145] dark:hover:bg-white/[.03]"
+                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/25 dark:hover:bg-white/[.03]"
               >
                 <Link href={`/trips/${trip.id}`} className="block flex-1 p-5">
                   <div className="flex items-baseline justify-between gap-4">
@@ -87,12 +92,12 @@ export default async function TripsPage() {
                   action={duplicateTripAction.bind(null, trip.id)}
                   className="shrink-0 pr-5"
                 >
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingLabel="Duplicating…"
                     className="text-sm text-zinc-600 dark:text-zinc-400 underline"
                   >
                     Duplicate
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}

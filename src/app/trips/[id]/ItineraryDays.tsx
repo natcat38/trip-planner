@@ -1,8 +1,10 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, Suspense, use, useState } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
+import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import type { DayWeather } from '@/lib/research/weather';
 import type { ensureDaysForTrip } from '@/server/itinerary';
@@ -68,15 +70,78 @@ function formatWeatherLine(weather: DayWeather): string {
     : parts.join(' · ');
 }
 
+// A skeleton, not a spinner: the weather line is a single row of text, so a
+// pulse block the same size as the real line avoids any layout shift when
+// it resolves.
+function WeatherLineSkeleton() {
+  return (
+    <span className="mb-3 block h-4 w-48 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+  );
+}
+
+// Reads the weather promise via `use()`, isolated in its own leaf component
+// so only this line suspends — the rest of the day (title, activities) is
+// plain props and renders immediately. `weatherPromise` is created once in
+// the parent Server Component (trips/[id]/page.tsx) and passed down
+// unawaited, which is what lets the itinerary stream in before
+// geocode()+getTripWeather() resolve.
+function DayWeatherLine({
+  weatherPromise,
+  dayKey,
+}: {
+  weatherPromise: Promise<Record<string, DayWeather> | null>;
+  dayKey: string;
+}) {
+  const weather = use(weatherPromise);
+  const dayWeather = weather?.[dayKey];
+  if (!dayWeather) return null;
+
+  return (
+    <p
+      className={`text-sm mb-3 ${
+        dayWeather.kind === 'historical'
+          ? 'italic text-zinc-500 dark:text-zinc-400'
+          : 'text-zinc-600 dark:text-zinc-400'
+      }`}
+    >
+      {formatWeatherLine(dayWeather)}
+    </p>
+  );
+}
+
+function WeatherAttribution({
+  weatherPromise,
+}: {
+  weatherPromise: Promise<Record<string, DayWeather> | null>;
+}) {
+  const weather = use(weatherPromise);
+  if (!weather || Object.keys(weather).length === 0) return null;
+
+  return (
+    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      Weather data by{' '}
+      <a
+        href="https://open-meteo.com/"
+        className="underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open-Meteo
+      </a>{' '}
+      (CC BY 4.0)
+    </p>
+  );
+}
+
 export function ItineraryDays({
   tripId,
   days,
-  weather,
+  weatherPromise,
   votes,
 }: {
   tripId: string;
   days: Days;
-  weather: Record<string, DayWeather> | null;
+  weatherPromise: Promise<Record<string, DayWeather> | null>;
   votes: Record<string, VoteSummary>;
 }) {
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
@@ -103,24 +168,17 @@ export function ItineraryDays({
       />
 
       {days.map((day) => {
-        const dayWeather = weather?.[dateKey(day.date)];
-
         return (
           <section key={day.id}>
             <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
               {formatDay(day.date)}
             </h2>
-            {dayWeather && (
-              <p
-                className={`text-sm mb-3 ${
-                  dayWeather.kind === 'historical'
-                    ? 'italic text-zinc-500 dark:text-zinc-500'
-                    : 'text-zinc-600 dark:text-zinc-400'
-                }`}
-              >
-                {formatWeatherLine(dayWeather)}
-              </p>
-            )}
+            <Suspense fallback={<WeatherLineSkeleton />}>
+              <DayWeatherLine
+                weatherPromise={weatherPromise}
+                dayKey={dateKey(day.date)}
+              />
+            </Suspense>
 
             {day.activities.length > 0 && (
               <ul className="flex flex-col gap-2 mb-4">
@@ -136,10 +194,10 @@ export function ItineraryDays({
                   return (
                     <Fragment key={activity.id}>
                       <li
-                        className={`flex items-start justify-between gap-4 rounded-lg border p-4 ${
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
                           activity.id === selectedActivityId
                             ? 'border-red-400 dark:border-red-500'
-                            : 'border-black/[.08] dark:border-white/[.145]'
+                            : 'border-black/[.08] dark:border-white/25'
                         }`}
                       >
                         <div className="flex-1 flex flex-col gap-2">
@@ -187,35 +245,37 @@ export function ItineraryDays({
                                 activity.id,
                               )}
                             >
-                              <button
-                                type="submit"
-                                title={
-                                  votes[activity.id]?.mine
-                                    ? 'You voted for this — click to undo'
-                                    : 'Vote for this'
-                                }
-                                className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
+                              <SubmitButton
+                                pendingLabel="Voting…"
+                                aria-pressed={votes[activity.id]?.mine ?? false}
+                                aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
+                                className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
                                   votes[activity.id]?.mine
                                     ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
-                                    : 'border-black/[.08] text-zinc-500 dark:border-white/[.145] dark:text-zinc-400'
+                                    : 'border-black/[.08] text-zinc-500 dark:border-white/25 dark:text-zinc-400'
                                 }`}
                               >
-                                👍 {votes[activity.id]?.count ?? 0}
-                              </button>
+                                <span aria-hidden>👍</span>{' '}
+                                {votes[activity.id]?.count ?? 0}
+                              </SubmitButton>
                             </form>
 
                             <details className="relative">
                               <summary className="cursor-pointer list-none">
                                 <span
                                   aria-hidden
-                                  className="inline-block h-4 w-4 rounded-full border border-black/[.08] align-middle dark:border-white/[.145]"
+                                  className="inline-block h-6 w-6 rounded-full border border-black/[.08] align-middle dark:border-white/25"
                                   style={{
                                     background: activity.pinColor ?? '#2563eb',
                                   }}
                                 />
                                 <span className="sr-only">Pin colour</span>
                               </summary>
-                              <div className="absolute z-10 mt-1 flex items-center gap-1 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/[.145]">
+                              {/* bg-background resolves to #0a0a0a in dark mode,
+                                  identical to the page's own dark:bg-black
+                                  backdrop — the popover was invisible against
+                                  itself without an explicit surface colour. */}
+                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/25 dark:bg-zinc-900">
                                 {PIN_COLOR_PALETTE.map((color) => (
                                   <form
                                     key={color}
@@ -226,16 +286,17 @@ export function ItineraryDays({
                                       color,
                                     )}
                                   >
-                                    <button
-                                      type="submit"
+                                    <SubmitButton
                                       aria-label={`Set pin colour ${color}`}
-                                      className={`h-5 w-5 rounded-full border ${
+                                      className={`h-6 w-6 rounded-full border ${
                                         activity.pinColor === color
                                           ? 'border-black dark:border-white'
-                                          : 'border-black/[.08] dark:border-white/[.145]'
+                                          : 'border-black/[.08] dark:border-white/25'
                                       }`}
                                       style={{ background: color }}
-                                    />
+                                    >
+                                      {null}
+                                    </SubmitButton>
                                   </form>
                                 ))}
                                 <form
@@ -246,12 +307,12 @@ export function ItineraryDays({
                                     null,
                                   )}
                                 >
-                                  <button
-                                    type="submit"
+                                  <SubmitButton
+                                    pendingLabel="Clearing…"
                                     className="text-xs text-zinc-500 underline dark:text-zinc-400"
                                   >
                                     Default
-                                  </button>
+                                  </SubmitButton>
                                 </form>
                               </div>
                             </details>
@@ -266,14 +327,14 @@ export function ItineraryDays({
                               'up',
                             )}
                           >
-                            <button
-                              type="submit"
+                            <SubmitButton
                               disabled={index === 0}
                               aria-label="Move up"
-                              className="text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                              pendingLabel="…"
+                              className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                             >
                               ↑
-                            </button>
+                            </SubmitButton>
                           </form>
                           <form
                             action={moveActivityAction.bind(
@@ -283,14 +344,14 @@ export function ItineraryDays({
                               'down',
                             )}
                           >
-                            <button
-                              type="submit"
+                            <SubmitButton
                               disabled={index === day.activities.length - 1}
                               aria-label="Move down"
-                              className="text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                              pendingLabel="…"
+                              className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                             >
                               ↓
-                            </button>
+                            </SubmitButton>
                           </form>
                           <Link
                             href={`/trips/${tripId}/activities/${activity.id}/edit`}
@@ -305,12 +366,13 @@ export function ItineraryDays({
                               activity.id,
                             )}
                           >
-                            <button
-                              type="submit"
+                            <ConfirmSubmitButton
+                              confirm="Delete this activity?"
+                              pendingLabel="Deleting…"
                               className="text-sm text-red-600 dark:text-red-400 underline"
                             >
                               Delete
-                            </button>
+                            </ConfirmSubmitButton>
                           </form>
                         </div>
                       </li>
@@ -343,7 +405,7 @@ export function ItineraryDays({
               </ul>
             )}
 
-            <details className="rounded-lg border border-dashed border-black/[.08] p-4 dark:border-white/[.145]">
+            <details className="rounded-lg border border-dashed border-black/[.08] p-4 dark:border-white/25">
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 Add activity
               </summary>
@@ -365,20 +427,11 @@ export function ItineraryDays({
         );
       })}
 
-      {weather && Object.keys(weather).length > 0 && (
-        <p className="text-xs text-zinc-400 dark:text-zinc-600">
-          Weather data by{' '}
-          <a
-            href="https://open-meteo.com/"
-            className="underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open-Meteo
-          </a>{' '}
-          (CC BY 4.0)
-        </p>
-      )}
+      {/* No loading fallback: this line is pure attribution, not content —
+          nothing is lost by it simply appearing once weather resolves. */}
+      <Suspense fallback={null}>
+        <WeatherAttribution weatherPromise={weatherPromise} />
+      </Suspense>
     </div>
   );
 }

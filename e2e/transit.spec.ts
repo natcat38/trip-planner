@@ -127,9 +127,37 @@ test.describe('transit leg, signed in', () => {
       page.getByRole('button', { name: 'Find transit' }),
     ).toBeVisible();
 
+    // B6: the results area is a live region mounted at page load, not one
+    // that only appears once a result exists — a screen reader can only
+    // hear the eventual "Asking Transitous…"/results update if the region
+    // was already in the DOM to be updated. Asserted without clicking
+    // "Find transit" so this stays inside the "never call Transitous on
+    // page load" test above.
+    const liveRegion = page.locator('[aria-live="polite"]');
+    await expect(liveRegion).toHaveCount(1);
+    await expect(liveRegion).toHaveAttribute('aria-busy', 'false');
+
     expect(transitousRequests).toBe(0);
   });
 
+  // B9 originally added a test here asserting that the itinerary renders
+  // without waiting on the per-day weather <Suspense> boundary
+  // (DayWeatherLine in ItineraryDays.tsx), modelled on the guide-streaming
+  // test in e2e/places.spec.ts. It was removed on review: unlike that
+  // guide fetch — which leans on a real, uncontrolled network round trip to
+  // en.wikivoyage.org to prove the race — this page's weatherPromise always
+  // calls geocode() first, and geocode() calls requireEnv('MAPBOX_TOKEN'),
+  // which *throws synchronously* (no fetch is even attempted) whenever
+  // MAPBOX_TOKEN is unset, which is always true in CI (ADR-0001, no paid
+  // always-on infra). So the promise here resolves before the render even
+  // reaches the Suspense boundary, and the test would pass identically
+  // against a blocking `await weatherPromise` in the page component — it
+  // asserted a real-looking guarantee it could not actually prove. There is
+  // no way to force genuine weather-fetch latency in this environment
+  // without a real Mapbox token, so rather than keep a test that advertises
+  // coverage it doesn't provide, this boundary is left to the unit-level
+  // coverage of getTripWeather()/formatWeatherLine() and the manual/staging
+  // verification of the Suspense wiring itself.
   test('a trip whose activities lack coordinates renders no transit leg row', async ({
     page,
   }) => {

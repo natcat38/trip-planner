@@ -215,11 +215,57 @@ test.describe('extension API', () => {
     }
   });
 
+  // Regression coverage for a review finding on the M9 pass: Generate and
+  // Revoke share one <form>, and useFormStatus().pending is form-wide, so
+  // clicking Generate used to flip Revoke's label to "Revoking…" too (and
+  // vice versa) for the duration of the request — actively misleading on a
+  // destructive control. SubmitButton/ConfirmSubmitButton now derive
+  // "is this button the one that submitted" from the FormData's name/value
+  // pair (see their comments), so only the clicked button's pending label
+  // should ever appear. Delay the Server Action's response so there's a
+  // window in which to observe the pending state at all — a plain DB write
+  // otherwise resolves too fast to reliably assert against.
+  test('clicking Generate does not show Revoke pending, and vice versa', async ({
+    page,
+  }) => {
+    await generateToken(page);
+
+    await page.route('**/settings', async (route) => {
+      if (route.request().method() === 'POST') {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      await route.continue();
+    });
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Generate a new token' }).click();
+    await expect(page.getByRole('button', { name: 'Working…' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Revoking…' }),
+    ).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Revoke' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Working…' }),
+    ).not.toBeVisible();
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Revoke' }).click();
+    await expect(page.getByRole('button', { name: 'Revoking…' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Working…' }),
+    ).not.toBeVisible();
+    await expect(page.getByText(/no token yet/i)).toBeVisible();
+  });
+
   test('a revoked token stops working immediately', async ({
     page,
     request,
   }) => {
     const token = await generateToken(page);
+    // Revoke is now behind a native confirm (ConfirmSubmitButton); Playwright
+    // auto-dismisses dialogs by default, which would silently turn this click
+    // into a no-op, so accept it explicitly.
+    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: /revoke/i }).click();
     await expect(page.getByText(/no token yet/i)).toBeVisible();
 
@@ -227,6 +273,27 @@ test.describe('extension API', () => {
       headers: { Authorization: `Bearer ${token}` },
     });
     expect(list.status()).toBe(401);
+  });
+
+  test('dismissing the revoke confirmation leaves the token active', async ({
+    page,
+    request,
+  }) => {
+    // Proves ConfirmSubmitButton's preventDefault() branch actually cancels
+    // the submit — without this, a confirm that doesn't cancel would be worse
+    // than no confirm at all, and nothing else in the suite would catch it.
+    const token = await generateToken(page);
+    page.once('dialog', (dialog) => dialog.dismiss());
+    await page.getByRole('button', { name: /revoke/i }).click();
+
+    // The dismissed confirm means the form never submitted — the "copy this
+    // now" screen (and the token's own value) is still exactly as generateToken
+    // left it, not reset to "no token yet".
+    await expect(page.locator('input[readonly]')).toHaveValue(token);
+    const list = await request.get('/api/extension/trips', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(list.ok()).toBe(true);
   });
 
   test('answers 400, not 500, for JSON that is not an object', async ({
