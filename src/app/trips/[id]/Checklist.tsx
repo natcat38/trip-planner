@@ -33,7 +33,14 @@ type ChecklistItem = ChecklistItems[number];
 // `item.done` (the server-confirmed value from props) rather than by
 // optimistic local state, so a rejected write can never leave the checkbox
 // showing something that didn't actually happen.
-function ChecklistCheckbox({
+// Renders the full <li> row (label+checkbox, delete button, and the
+// stale-write alert). The alert must be a *sibling* of the <label>, not
+// nested inside it — label content computes the labelled control's
+// accessible name, so an alert nested inside the label would get appended
+// to the checkbox's name. That's also why pending/error state lives here
+// rather than in a child of the label: the row needs to lay the alert out
+// below the label+delete line, not inside it.
+function ChecklistRow({
   tripId,
   item,
 }: {
@@ -43,32 +50,54 @@ function ChecklistCheckbox({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
   return (
-    <span className="flex flex-col gap-1">
-      <input
-        type="checkbox"
-        checked={item.done}
-        disabled={pending}
-        aria-busy={pending}
-        onChange={() => {
-          setError(undefined);
-          startTransition(async () => {
-            const result = await toggleChecklistItemAction(
-              tripId,
-              item.id,
-              !item.done,
-              item.updatedAt.toISOString(),
-            );
-            if (result.error) setError(result.error);
-          });
-        }}
-        className="h-5 w-5 shrink-0 accent-black dark:accent-white"
-      />
+    <li className="flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        <label className="flex flex-1 cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            checked={item.done}
+            disabled={pending}
+            aria-busy={pending}
+            onChange={() => {
+              setError(undefined);
+              startTransition(async () => {
+                const result = await toggleChecklistItemAction(
+                  tripId,
+                  item.id,
+                  !item.done,
+                  item.updatedAt.toISOString(),
+                );
+                if (result.error) setError(result.error);
+              });
+            }}
+            className="h-5 w-5 shrink-0 accent-black dark:accent-white"
+          />
+          <span
+            className={`text-sm ${
+              item.done
+                ? 'text-zinc-500 line-through dark:text-zinc-400'
+                : 'text-black dark:text-zinc-50'
+            }`}
+          >
+            {item.label}
+          </span>
+        </label>
+        <form action={deleteChecklistItemAction.bind(null, tripId, item.id)}>
+          <ConfirmSubmitButton
+            confirm="Delete this checklist item?"
+            pendingLabel="Deleting…"
+            className="text-sm text-red-600 dark:text-red-400 underline"
+          >
+            Delete
+          </ConfirmSubmitButton>
+        </form>
+      </div>
       {error && (
         <span className="text-xs text-red-600 dark:text-red-400" role="alert">
           {error}
         </span>
       )}
-    </span>
+    </li>
   );
 }
 
@@ -97,31 +126,7 @@ export function Checklist({
       {items.length > 0 && (
         <ul className="mt-4 flex flex-col gap-2">
           {items.map((item) => (
-            <li key={item.id} className="flex items-center gap-3">
-              <label className="flex flex-1 cursor-pointer items-center gap-3">
-                <ChecklistCheckbox tripId={tripId} item={item} />
-                <span
-                  className={`text-sm ${
-                    item.done
-                      ? 'text-zinc-500 line-through dark:text-zinc-400'
-                      : 'text-black dark:text-zinc-50'
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </label>
-              <form
-                action={deleteChecklistItemAction.bind(null, tripId, item.id)}
-              >
-                <ConfirmSubmitButton
-                  confirm="Delete this checklist item?"
-                  pendingLabel="Deleting…"
-                  className="text-sm text-red-600 dark:text-red-400 underline"
-                >
-                  Delete
-                </ConfirmSubmitButton>
-              </form>
-            </li>
+            <ChecklistRow key={item.id} tripId={tripId} item={item} />
           ))}
         </ul>
       )}
