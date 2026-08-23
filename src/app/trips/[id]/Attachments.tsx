@@ -54,7 +54,7 @@ export function Attachments({
             <li key={attachment.id} className="flex items-center gap-3">
               <a
                 href={`/trips/${tripId}/attachments/${attachment.id}`}
-                className="flex-1 truncate text-sm text-black underline dark:text-zinc-50"
+                className="block min-w-0 flex-1 truncate text-sm text-black underline dark:text-zinc-50"
               >
                 {attachment.filename}
               </a>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useSyncExternalStore } from 'react';
+import { useActionState, useState, useSyncExternalStore } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { SubmitButton } from '@/components/SubmitButton';
 import type { InviteFormState } from './sharing-actions';
@@ -11,6 +11,41 @@ import {
   revokeShareLinkAction,
 } from './sharing-actions';
 import type { ShareStatus } from '@/server/sharing';
+
+// navigator.clipboard.writeText needs a secure context and can reject (a
+// permissions prompt denial, or a browser that refuses outright) — the
+// failure path is handled explicitly rather than leaving the button to
+// silently do nothing, matching ExtensionTokenPanel's readOnly-input idiom
+// for "here's a value to copy, select it on focus" but adding the actual
+// clipboard write since a share URL (unlike the token) isn't sensitive
+// enough to require a manual select-and-copy.
+function CopyShareUrlButton({ url }: { url: string }) {
+  const [status, setStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setStatus('copied');
+      setTimeout(() => setStatus('idle'), 2000);
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="shrink-0 rounded-full border border-black/[.08] px-3 py-1.5 text-sm text-zinc-600 hover:bg-black/[.02] dark:border-white/25 dark:text-zinc-400 dark:hover:bg-white/[.03]"
+    >
+      {status === 'copied'
+        ? 'Copied'
+        : status === 'error'
+          ? 'Copy failed'
+          : 'Copy'}
+    </button>
+  );
+}
 
 export function SharingPanel({
   tripId,
@@ -41,10 +76,20 @@ export function SharingPanel({
       <div className="mb-6">
         {status.shareToken ? (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 break-all">
-              {shareUrl}
-            </p>
-            <div className="flex gap-4">
+            <label className="flex flex-col gap-1">
+              <span className="sr-only">Share link</span>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  readOnly
+                  value={shareUrl ?? ''}
+                  spellCheck={false}
+                  onFocus={(event) => event.currentTarget.select()}
+                  className="w-full min-w-0 rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
+                />
+                <CopyShareUrlButton url={shareUrl ?? ''} />
+              </div>
+            </label>
+            <div className="flex flex-wrap gap-4">
               <form action={enableShareLinkAction.bind(null, tripId)}>
                 <ConfirmSubmitButton
                   confirm="Regenerate the link? Every previously shared link stops working."
@@ -118,9 +163,12 @@ export function SharingPanel({
             ))}
           </ul>
         )}
-        <form action={formAction} className="flex items-end gap-2">
+        <form action={formAction} className="flex flex-wrap items-end gap-2">
           {state.error && (
-            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            <p
+              className="w-full text-sm text-red-600 dark:text-red-400"
+              role="alert"
+            >
               {state.error}
             </p>
           )}

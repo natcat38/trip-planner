@@ -51,9 +51,9 @@ export function PlaceRow({
 
   return (
     <li className="rounded-lg border border-black/[.08] p-4 dark:border-white/25">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-medium text-black dark:text-zinc-50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+        <div className="min-w-0">
+          <p className="font-medium text-black dark:text-zinc-50 truncate">
             {place.name}{' '}
             <span className="font-normal text-zinc-500 dark:text-zinc-400">
               ({place.category})

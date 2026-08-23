@@ -194,7 +194,7 @@ export function ItineraryDays({
                   return (
                     <Fragment key={activity.id}>
                       <li
-                        className={`flex items-start justify-between gap-4 rounded-lg border p-4 ${
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
                           activity.id === selectedActivityId
                             ? 'border-red-400 dark:border-red-500'
                             : 'border-black/[.08] dark:border-white/25'

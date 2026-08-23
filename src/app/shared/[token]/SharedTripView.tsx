@@ -61,7 +61,7 @@ export function SharedTripView({
       <main
         id="main"
         tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
+        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
           Read-only shared view
