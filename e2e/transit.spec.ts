@@ -140,37 +140,24 @@ test.describe('transit leg, signed in', () => {
     expect(transitousRequests).toBe(0);
   });
 
-  // B9: geocode()+getTripWeather() are streamed behind a per-day <Suspense>
-  // boundary (DayWeatherLine in ItineraryDays.tsx) instead of being awaited
-  // by the page component, so the itinerary itself no longer waits on
-  // weather. Unlike the guide fetch in e2e/places.spec.ts, geocode() here
-  // fails closed (fast, no real network round-trip) whenever
-  // MAPBOX_TOKEN is unset — which is the case in CI by design (ADR-0001) —
-  // so this can't lean on real fetch latency to prove the race the way that
-  // test does. What it CAN assert unconditionally: the itinerary's own
-  // markup (title, activities) is present at `waitUntil: 'commit'`, i.e.
-  // before the page component's function body would have finished if
-  // weather were still awaited inline — and the weather Suspense boundary's
-  // fallback/resolved state never blocks it from appearing.
-  test('the itinerary renders without waiting on the weather Suspense boundary', async ({
-    page,
-  }) => {
-    await db.activity.create({
-      data: {
-        dayId,
-        title: 'Streaming Test Activity',
-        category: 'Sightseeing',
-        sortOrder: 0,
-      },
-    });
-
-    await page.goto(`/trips/${tripId}`, { waitUntil: 'commit' });
-
-    await expect(page.getByText('Streaming Test Activity')).toBeVisible({
-      timeout: 3_000,
-    });
-  });
-
+  // B9 originally added a test here asserting that the itinerary renders
+  // without waiting on the per-day weather <Suspense> boundary
+  // (DayWeatherLine in ItineraryDays.tsx), modelled on the guide-streaming
+  // test in e2e/places.spec.ts. It was removed on review: unlike that
+  // guide fetch — which leans on a real, uncontrolled network round trip to
+  // en.wikivoyage.org to prove the race — this page's weatherPromise always
+  // calls geocode() first, and geocode() calls requireEnv('MAPBOX_TOKEN'),
+  // which *throws synchronously* (no fetch is even attempted) whenever
+  // MAPBOX_TOKEN is unset, which is always true in CI (ADR-0001, no paid
+  // always-on infra). So the promise here resolves before the render even
+  // reaches the Suspense boundary, and the test would pass identically
+  // against a blocking `await weatherPromise` in the page component — it
+  // asserted a real-looking guarantee it could not actually prove. There is
+  // no way to force genuine weather-fetch latency in this environment
+  // without a real Mapbox token, so rather than keep a test that advertises
+  // coverage it doesn't provide, this boundary is left to the unit-level
+  // coverage of getTripWeather()/formatWeatherLine() and the manual/staging
+  // verification of the Suspense wiring itself.
   test('a trip whose activities lack coordinates renders no transit leg row', async ({
     page,
   }) => {

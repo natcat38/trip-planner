@@ -76,19 +76,17 @@ export function SharingPanel({
       <div className="mb-6">
         {status.shareToken ? (
           <div className="flex flex-col gap-2">
-            <label className="flex flex-col gap-1">
-              <span className="sr-only">Share link</span>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  readOnly
-                  value={shareUrl ?? ''}
-                  spellCheck={false}
-                  onFocus={(event) => event.currentTarget.select()}
-                  className="w-full min-w-0 rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
-                />
-                <CopyShareUrlButton url={shareUrl ?? ''} />
-              </div>
-            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                readOnly
+                aria-label="Share link"
+                value={shareUrl ?? ''}
+                spellCheck={false}
+                onFocus={(event) => event.currentTarget.select()}
+                className="w-full min-w-0 rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
+              />
+              <CopyShareUrlButton url={shareUrl ?? ''} />
+            </div>
             <div className="flex flex-wrap gap-4">
               <form action={enableShareLinkAction.bind(null, tripId)}>
                 <ConfirmSubmitButton
