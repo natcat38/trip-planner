@@ -18,11 +18,11 @@ export async function AppHeader() {
     // print:hidden — /trips/[id]/print is a nav-free print surface and
     // hides its own controls the same way.
     <header className="w-full border-b border-black/[.08] print:hidden dark:border-white/25">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-3">
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
+        <span className="min-w-0 truncate text-sm text-zinc-600 dark:text-zinc-400">
           {email}
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <ThemeToggle />
           <SignOutButton action={doSignOut} />
         </div>

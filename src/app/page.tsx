@@ -39,7 +39,7 @@ export default function Home() {
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto w-full max-w-3xl flex-1 px-8 py-24"
+        className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-8 sm:py-24"
       >
         <h1 className="text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
           Trip Planner
