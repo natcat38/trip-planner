@@ -13,10 +13,15 @@ starter).
 
 ## Seeing it
 
-The app sits behind Google/GitHub sign-in, but `/` is now a real (auth-free) landing page rather
-than the framework starter, so it's worth a look even signed out. The other part you can see
-without an account is a shared trip: enabling sharing mints a `/shared/<token>` URL that renders
-a read-only itinerary and budget with no session at all.
+**[Live demo — a shared trip, no sign-in needed](https://trip-planner-cyan-five.vercel.app/shared/YzdiQTCwe_2LuWzMswg4YWTNDGEOwcMQ)**
+— a real trip on the production deployment, rendered through the public share route: the
+day-by-day itinerary, the synced map, and a budget mixing GBP and JPY rolled up into the trip's
+base currency. It is genuinely read-only — no edit or delete controls exist on that page, and
+the payload never carries the owner or the token (see the sharing rule below).
+
+The app itself sits behind Google/GitHub sign-in, but [`/`](https://trip-planner-cyan-five.vercel.app)
+is a real (auth-free) landing page rather than the framework starter, so it's worth a look even
+signed out.
 
 To see the rest, run it locally — see [Running it](#running-it) below.
 
