@@ -369,7 +369,7 @@ export function ItineraryDays({
                             <ConfirmSubmitButton
                               confirm="Delete this activity?"
                               pendingLabel="Deleting…"
-                              className="text-sm text-red-600 dark:text-red-400 underline"
+                              className="text-sm text-danger underline"
                             >
                               Delete
                             </ConfirmSubmitButton>

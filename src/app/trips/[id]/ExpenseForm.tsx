@@ -16,10 +16,7 @@ export function ExpenseForm({
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-3">
       {state.error && (
-        <p
-          className="w-full text-sm text-red-600 dark:text-red-400"
-          role="alert"
-        >
+        <p className="w-full text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}

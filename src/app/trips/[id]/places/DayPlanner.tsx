@@ -105,7 +105,7 @@ export function DayPlanner({
         </div>
 
         {showFreeModelNotice && (
-          <p className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-300">
+          <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
             Your chosen model is a free OpenRouter endpoint, which generally
             requires permission to train on and publish the prompts it receives.
             Generating a day plan sends this trip&apos;s saved place names and
@@ -127,10 +127,7 @@ export function DayPlanner({
           nothing on its first appearance. */}
       <div aria-live="polite" aria-busy={isPending}>
         {state.error && (
-          <p
-            className="mt-4 text-sm text-red-600 dark:text-red-400"
-            role="alert"
-          >
+          <p className="mt-4 text-sm text-danger" role="alert">
             {state.error} Save more places in the tray below and try again.
           </p>
         )}
@@ -141,7 +138,7 @@ export function DayPlanner({
               <span
                 className={
                   state.source === 'ai'
-                    ? 'text-xs text-green-700 dark:text-green-400'
+                    ? 'text-xs text-positive'
                     : 'text-xs text-zinc-500 dark:text-zinc-400'
                 }
               >
@@ -152,9 +149,7 @@ export function DayPlanner({
             </div>
 
             {state.notice && (
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                {state.notice}
-              </p>
+              <p className="text-xs text-warning">{state.notice}</p>
             )}
 
             {days.length === 0 ? (
@@ -212,7 +207,7 @@ function CandidateCard({
       </ol>
 
       {state.error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-2 text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}

@@ -111,10 +111,7 @@ export function PlaceRow({
           </summary>
           <form action={formAction} className="mt-3 flex flex-col gap-3">
             {state.error && (
-              <p
-                className="text-sm text-red-600 dark:text-red-400"
-                role="alert"
-              >
+              <p className="text-sm text-danger" role="alert">
                 {state.error}
               </p>
             )}
@@ -195,7 +192,7 @@ export function PlaceRow({
           <ConfirmSubmitButton
             confirm="Delete this saved place?"
             pendingLabel="Deleting…"
-            className="text-sm text-red-600 dark:text-red-400 underline"
+            className="text-sm text-danger underline"
           >
             Delete
           </ConfirmSubmitButton>

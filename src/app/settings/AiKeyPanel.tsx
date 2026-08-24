@@ -43,7 +43,7 @@ function ApiKeyForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}
@@ -134,7 +134,7 @@ function StoredKeyPanel({
 
       {models === null ? (
         <div className="rounded border border-dashed border-border p-4">
-          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
+          <p className="mb-3 text-sm text-warning">
             Couldn&apos;t load models from the provider right now — the key may
             be temporarily unreachable or no longer valid.
           </p>
@@ -150,7 +150,7 @@ function StoredKeyPanel({
       ) : (
         <form action={modelAction} className="flex flex-col gap-3">
           {modelState.error && (
-            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            <p className="text-sm text-danger" role="alert">
               {modelState.error}
             </p>
           )}
@@ -177,7 +177,7 @@ function StoredKeyPanel({
           />
 
           {selectedIsFree && (
-            <p className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-300">
+            <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
               This is a free OpenRouter model. Its endpoint generally requires
               permission to train on and publish the prompts you send —
               including anything in your trip data, like hotel names and travel
@@ -205,10 +205,7 @@ function StoredKeyPanel({
           }
         }}
       >
-        <button
-          type="submit"
-          className="text-sm text-red-600 dark:text-red-400 underline"
-        >
+        <button type="submit" className="text-sm text-danger underline">
           Remove key
         </button>
       </form>

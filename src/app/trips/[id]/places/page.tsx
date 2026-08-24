@@ -81,7 +81,7 @@ function GuidePanel({
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
-        <p className="text-sm text-amber-700 dark:text-amber-400">
+        <p className="text-sm text-warning">
           Limited guide data for {destination}. Use place search below instead.
         </p>
         {guide?.url && (
@@ -111,8 +111,8 @@ function GuidePanel({
         <span
           className={
             guide.coverage === 'good'
-              ? 'shrink-0 text-xs text-green-700 dark:text-green-400'
-              : 'shrink-0 text-xs text-amber-700 dark:text-amber-400'
+              ? 'shrink-0 text-xs text-positive'
+              : 'shrink-0 text-xs text-warning'
           }
         >
           {guide.coverage === 'good' ? 'Good coverage' : 'Limited coverage'}
@@ -120,7 +120,7 @@ function GuidePanel({
       </div>
 
       {guide.coverage === 'thin' && (
-        <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
+        <p className="mb-4 text-sm text-warning">
           Limited guide data for {destination} — some sections may be missing.
           Place search below still works.
         </p>

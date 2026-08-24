@@ -74,7 +74,7 @@ export default async function EditTripPage({
             <ConfirmSubmitButton
               confirm="Delete this trip and all its days, activities, expenses and attachments? This cannot be undone."
               pendingLabel="Deleting…"
-              className="text-sm text-red-600 dark:text-red-400 underline"
+              className="text-sm text-danger underline"
             >
               Delete trip
             </ConfirmSubmitButton>

@@ -100,7 +100,7 @@ export function ExtensionTokenPanel({
             pendingLabel="Revoking…"
             name="intent"
             value="revoke"
-            className="text-sm text-red-600 underline disabled:opacity-50 dark:text-red-400"
+            className="text-sm text-danger underline disabled:opacity-50"
           >
             Revoke
           </ConfirmSubmitButton>

@@ -78,7 +78,7 @@ export function Attachments({
                 <ConfirmSubmitButton
                   confirm="Delete this file? It cannot be recovered."
                   pendingLabel="Deleting…"
-                  className="text-sm text-red-600 underline dark:text-red-400"
+                  className="text-sm text-danger underline"
                 >
                   Delete
                 </ConfirmSubmitButton>
@@ -90,7 +90,7 @@ export function Attachments({
 
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         {state.error && (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="text-sm text-danger" role="alert">
             {state.error}
           </p>
         )}

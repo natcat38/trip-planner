@@ -36,7 +36,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
       <p
         className={
           summary.isOverBudget
-            ? 'text-red-600 dark:text-red-400'
+            ? 'text-danger'
             : 'text-zinc-700 dark:text-zinc-300'
         }
       >
@@ -59,7 +59,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
       )}
 
       {summary.unconvertedItems.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700 dark:text-amber-400">
+        <ul className="mt-4 flex flex-col gap-1 text-sm text-warning">
           {summary.unconvertedItems.map((item) => (
             <li key={item.id}>
               {item.label}:{' '}
@@ -91,7 +91,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
                   <ConfirmSubmitButton
                     confirm="Delete this expense?"
                     pendingLabel="Deleting…"
-                    className="text-red-600 dark:text-red-400 underline"
+                    className="text-danger underline"
                   >
                     Delete
                   </ConfirmSubmitButton>

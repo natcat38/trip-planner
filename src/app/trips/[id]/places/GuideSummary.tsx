@@ -40,10 +40,7 @@ export function GuideSummary({ tripId }: { tripId: string }) {
           nothing on its first appearance. */}
       <div aria-live="polite" aria-busy={isPending}>
         {state.error && (
-          <p
-            className="mt-2 text-sm text-red-600 dark:text-red-400"
-            role="alert"
-          >
+          <p className="mt-2 text-sm text-danger" role="alert">
             {state.error}
           </p>
         )}

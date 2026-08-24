@@ -90,7 +90,7 @@ export function SharedTripView({
           <p
             className={
               budget.isOverBudget
-                ? 'text-red-600 dark:text-red-400'
+                ? 'text-danger'
                 : 'text-zinc-700 dark:text-zinc-300'
             }
           >
@@ -101,7 +101,7 @@ export function SharedTripView({
             )}
           </p>
           {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700 dark:text-amber-400">
+            <ul className="mt-4 flex flex-col gap-1 text-sm text-warning">
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}

@@ -86,14 +86,14 @@ function ChecklistRow({
           <ConfirmSubmitButton
             confirm="Delete this checklist item?"
             pendingLabel="Deleting…"
-            className="text-sm text-red-600 dark:text-red-400 underline"
+            className="text-sm text-danger underline"
           >
             Delete
           </ConfirmSubmitButton>
         </form>
       </div>
       {error && (
-        <span className="text-xs text-red-600 dark:text-red-400" role="alert">
+        <span className="text-xs text-danger" role="alert">
           {error}
         </span>
       )}
@@ -133,7 +133,7 @@ export function Checklist({
 
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         {state.error && (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="text-sm text-danger" role="alert">
             {state.error}
           </p>
         )}

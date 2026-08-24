@@ -29,7 +29,7 @@ export function DayNotesForm({
       </summary>
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         {state.error && (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="text-sm text-danger" role="alert">
             {state.error}
           </p>
         )}

@@ -102,7 +102,7 @@ export function SharingPanel({
                 <ConfirmSubmitButton
                   confirm="Turn off the public link? Anyone holding it loses access."
                   pendingLabel="Turning off…"
-                  className="text-sm text-red-600 dark:text-red-400 underline"
+                  className="text-sm text-danger underline"
                 >
                   Turn off link
                 </ConfirmSubmitButton>
@@ -153,7 +153,7 @@ export function SharingPanel({
                     confirm="Remove this collaborator? They lose access immediately."
                     pendingLabel="Removing…"
                     aria-label={`Remove ${collaborator.email}`}
-                    className="text-red-600 dark:text-red-400 underline"
+                    className="text-danger underline"
                   >
                     Remove
                   </ConfirmSubmitButton>
@@ -164,10 +164,7 @@ export function SharingPanel({
         )}
         <form action={formAction} className="flex flex-wrap items-end gap-2">
           {state.error && (
-            <p
-              className="w-full text-sm text-red-600 dark:text-red-400"
-              role="alert"
-            >
+            <p className="w-full text-sm text-danger" role="alert">
               {state.error}
             </p>
           )}

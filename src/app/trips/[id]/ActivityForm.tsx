@@ -44,7 +44,7 @@ export function ActivityForm({
   return (
     <form action={formAction} className="flex flex-col gap-3">
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}
