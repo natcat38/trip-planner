@@ -16,7 +16,7 @@ import {
   requireTripOwner,
   tripAccessWhere,
 } from './auth-scope';
-import { ValidationError, StaleWriteError } from './errors';
+import { ValidationError, optimisticUpdate } from './errors';
 
 export interface TripInput {
   name: string;
@@ -82,18 +82,19 @@ export async function createTrip(input: TripInput) {
 export async function updateTrip(tripId: string, input: TripUpdateInput) {
   const trip = await requireTripAccess(tripId);
   validateTripInput(input);
-  const result = await db.trip.updateMany({
-    where: { id: tripId, userId: trip.userId, updatedAt: input.updatedAt },
-    data: {
-      name: input.name,
-      destinations: input.destinations,
-      startDate: input.startDate,
-      endDate: input.endDate,
-      baseCurrency: input.baseCurrency,
-      budgetMinor: toMinorUnits(input.budgetAmount, input.baseCurrency),
-    },
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.trip.updateMany({
+      where: { id: tripId, userId: trip.userId, updatedAt: input.updatedAt },
+      data: {
+        name: input.name,
+        destinations: input.destinations,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        baseCurrency: input.baseCurrency,
+        budgetMinor: toMinorUnits(input.budgetAmount, input.baseCurrency),
+      },
+    }),
+  );
 }
 
 export async function deleteTrip(tripId: string) {

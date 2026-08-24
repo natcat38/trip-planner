@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:prod": "node -e \"process.env.PLAYWRIGHT_BASE_URL='https://trip-planner-cyan-five.vercel.app';require('child_process').execFileSync('npx',['playwright','test','e2e/ux-smoke.spec.ts'],{stdio:'inherit',env:process.env,shell:true})\"",
     "db:seed": "tsx prisma/seed.mts",
     "db:size": "tsx scripts/db-size.mts",
     "file-map": "node scripts/gen-file-map.mjs",

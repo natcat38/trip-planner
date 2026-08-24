@@ -49,15 +49,11 @@ Push to `main` (or merge a PR into it). The `deploy` job in CI should run only a
 passes, apply any pending migrations to Neon, then call the deploy hook. Check the Vercel
 dashboard for the resulting deployment.
 
-## 5. Outstanding account-side actions
+## 5. Account-side notes
 
-Carried over from the Phase 3 open-items ledger when it was retired (2026-08-24); none of these
-are repo changes.
-
-- **Set `ENCRYPTION_KEY` in Vercel.** `/settings` renders in production, but saving a BYOK AI
-  key throws until it exists. Generate with
-  `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; it must differ
-  from the local `.env` value, and rotating it later invalidates every stored user key.
-- **Production has been smoke-tested, not functionally tested.** Sign-in, geocoding, FX, and
-  the share flow have each been exercised, but no full end-to-end pass has been run against the
-  production deployment itself.
+- `ENCRYPTION_KEY` is set in Vercel (2026-08-20) and both OAuth client secrets have been
+  rotated (2026-08-24). If `ENCRYPTION_KEY` is ever rotated again, every stored user AI key
+  is invalidated and users must re-enter theirs.
+- The unauthenticated UX flows can be run against production with
+  `npm run test:e2e:prod` (see `e2e/ux-smoke.spec.ts`); authenticated flows still have no
+  automated production coverage, because production sign-in requires real OAuth.

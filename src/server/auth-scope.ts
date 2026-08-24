@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { auth } from '../auth';
 import { db } from '../lib/db';
+import { StaleWriteError, ValidationError } from './errors';
 import { tripAccessWhere } from './trip-access-where';
 
 export class UnauthenticatedError extends Error {
@@ -101,6 +102,36 @@ export async function ignoreIfMissing(action: Promise<void>): Promise<void> {
   } catch (err) {
     if (!(err instanceof ForbiddenOrNotFoundError)) throw err;
   }
+}
+
+// The ~10 near-identical Server Action try/catch blocks across
+// src/app/trips/**/actions.ts all do the same thing: call a domain function,
+// and turn a known domain error into `{ error: message }` for useActionState
+// to render, while letting anything else (including Next's redirect()/
+// notFound() control-flow throws) propagate. `errorClasses` lets each call
+// site opt into exactly the subset it used to catch — e.g. addActivityAction
+// only ever needs ValidationError, updateActivityAction needs all three.
+export function withFormErrors<
+  Args extends unknown[],
+  State extends { error?: string },
+>(
+  fn: (...args: Args) => Promise<State>,
+  errorClasses: (
+    | typeof ValidationError
+    | typeof StaleWriteError
+    | typeof ForbiddenOrNotFoundError
+  )[] = [ValidationError, StaleWriteError, ForbiddenOrNotFoundError],
+): (...args: Args) => Promise<State> {
+  return async (...args: Args) => {
+    try {
+      return await fn(...args);
+    } catch (err) {
+      if (errorClasses.some((ErrorClass) => err instanceof ErrorClass)) {
+        return { error: (err as Error).message } as State;
+      }
+      throw err;
+    }
+  };
 }
 
 // Owner only — deleting the trip and managing sharing itself. Memoized per

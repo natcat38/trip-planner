@@ -8,6 +8,7 @@
  */
 
 import { randomBytes } from 'node:crypto';
+import { cache } from 'react';
 import {
   Prisma,
   type Activity,
@@ -24,7 +25,7 @@ import {
 } from './auth-scope';
 import {
   InvalidShareLinkError,
-  StaleWriteError,
+  optimisticUpdate,
   ValidationError,
 } from './errors';
 import { summarizeBudget, type BudgetSummary } from './budget';
@@ -62,11 +63,12 @@ export async function enableShareLink(
 ): Promise<string> {
   const trip = await requireTripOwner(tripId);
   const shareToken = randomBytes(24).toString('base64url');
-  const result = await db.trip.updateMany({
-    where: { id: trip.id, updatedAt },
-    data: { shareToken },
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.trip.updateMany({
+      where: { id: trip.id, updatedAt },
+      data: { shareToken },
+    }),
+  );
   return shareToken;
 }
 
@@ -75,11 +77,12 @@ export async function revokeShareLink(
   updatedAt: Date,
 ): Promise<void> {
   const trip = await requireTripOwner(tripId);
-  const result = await db.trip.updateMany({
-    where: { id: trip.id, updatedAt },
-    data: { shareToken: null },
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.trip.updateMany({
+      where: { id: trip.id, updatedAt },
+      data: { shareToken: null },
+    }),
+  );
 }
 
 function validateEmail(email: string) {
@@ -163,11 +166,15 @@ export async function declineInvite(tripId: string): Promise<void> {
   await db.tripCollaborator.delete({ where: { id: invite.id } });
 }
 
-async function requireShareToken(token: string) {
+// Memoized per token, same rationale as requireTripAccess in auth-scope.ts:
+// getSharedTrip, getSharedBudgetSummary, and listSharedExpenses can all be
+// called within one request against the same share link, so this dedupes
+// them to one query instead of one per call site.
+const requireShareToken = cache(async (token: string) => {
   const trip = await db.trip.findUnique({ where: { shareToken: token } });
   if (!trip) throw new InvalidShareLinkError();
   return trip;
-}
+});
 
 export async function getSharedTrip(token: string): Promise<{
   trip: Omit<Trip, 'userId' | 'shareToken'>;

@@ -38,6 +38,10 @@ unchanged and is what the AI layer is allowed to do.** The model reformats and c
 app already fetched from Wikivoyage; it is never a source of facts, and prices are reproduced
 verbatim, never computed. Output is labelled as AI-reformatted with the source attribution intact.
 
+**In practice, OpenRouter is the provider actually used.** Groq's sign-up page would not
+complete when tested (Aug 2026), so its success path has never been exercised; see the
+ADR-0011 addendum.
+
 # Citations
 
 [ADR-0011](../../docs/adr/0011-byok-ai-groq-default.md).

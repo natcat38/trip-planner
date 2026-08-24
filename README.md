@@ -40,7 +40,9 @@ To see the rest, run it locally — see [Running it](#running-it) below.
   where no route exists). No fact reaches the UI unless it traces to one of these sources —
   see ADR-0008.
 - **AI day planning (BYOK)** — a short questionnaire turns the saved-places tray into 2–3
-  candidate day plans. Bring your own Groq (default) or OpenRouter key; every place the model
+  candidate day plans. Bring your own Groq or OpenRouter key (Groq is the documented default
+  on privacy grounds, but its sign-up page was broken when tested — Aug 2026 — so OpenRouter is
+  the provider actually exercised in production); every place the model
   returns is validated server-side against the real candidate pool, so a hallucinated place
   can never render. No key, or any AI failure, falls back to a deterministic algorithmic path —
   nobody is locked out. See ADR-0011, ADR-0012.
@@ -188,8 +190,10 @@ Settings) and need no extra server-side secret beyond `ENCRYPTION_KEY`.
 - **Attachments aren't encrypted at rest.** They're stored as plain `bytea`; the panel says
   outright that passports and ID don't belong there. Encrypting the column is deferred to its
   own milestone (a key-rotation story is real work), not silently skipped. See ADR-0016 §4.
-- **Groq's "not for consumer use" clause is an open, unresolved risk**, carried knowingly
-  rather than cleared — see ADR-0011.
+- **Groq, the documented default AI provider, is unverified in practice.** Its sign-up page
+  would not complete when tested (Aug 2026), so no Groq account exists to test with —
+  OpenRouter is the provider actually used. Groq's "not for consumer use" clause also remains
+  an open, unresolved risk, carried knowingly rather than cleared — see ADR-0011.
 - **No drag-and-drop activity reordering** — explicit move-up/move-down controls only.
 - **The browser extension's popup has no automated test.** The server surface it calls is
   fully covered by `e2e/extension-api.spec.ts`; the popup itself (`extension/popup.js`) could

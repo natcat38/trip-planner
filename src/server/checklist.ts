@@ -10,7 +10,7 @@
 
 import { db } from '../lib/db';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
-import { StaleWriteError, ValidationError } from './errors';
+import { optimisticUpdate, ValidationError } from './errors';
 
 export async function requireChecklistItem(tripId: string, itemId: string) {
   const trip = await requireTripAccess(tripId);
@@ -56,11 +56,12 @@ export async function toggleChecklistItem(
   updatedAt: Date,
 ) {
   const item = await requireChecklistItem(tripId, itemId);
-  const result = await db.checklistItem.updateMany({
-    where: { id: item.id, updatedAt },
-    data: { done },
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.checklistItem.updateMany({
+      where: { id: item.id, updatedAt },
+      data: { done },
+    }),
+  );
 }
 
 export async function deleteChecklistItem(tripId: string, itemId: string) {

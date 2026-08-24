@@ -97,3 +97,13 @@ real chat models (e.g. `openai/gpt-oss-120b`) at published limits.
 - Neither provider's success path could be verified before shipping, because BYOK means the
   developer holds no key. Both providers' 401 shapes and OpenRouter's live model list were
   verified; the first real completion happens with a user's own key.
+
+## Addendum (2026-08-24)
+
+In practice the owner could not open a Groq account — the sign-up page would not complete
+(tested Aug 2026) — so the provider actually exercised end-to-end in production is
+**OpenRouter** ("Summarize this guide" verified working there, 2026-08-20). Groq remains the
+documented default in code (`gsk_` prefix detection, provider-neutral model discovery), but its
+success path is unverified and its "not for consumer use" clause remains open. If Groq sign-up
+remains broken, a future revision may flip the documented default to OpenRouter with the
+privacy caveat stated instead.
