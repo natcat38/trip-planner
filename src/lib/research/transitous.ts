@@ -16,6 +16,7 @@
  * @packageDocumentation
  */
 
+import { createTtlCache } from '../ttl-cache';
 import { USER_AGENT } from './userAgent';
 
 const API_BASE = 'https://api.transitous.org/api/v1/plan';
@@ -60,12 +61,7 @@ const MAX_CACHE_ENTRIES = 500;
 const COORD_PRECISION = 4;
 const TIME_BUCKET_MS = 15 * 60 * 1000;
 
-interface CacheEntry {
-  journeys: Journey[];
-  fetchedAt: number;
-}
-
-let cache = new Map<string, CacheEntry>();
+const cache = createTtlCache<Journey[]>(CACHE_TTL_MS, MAX_CACHE_ENTRIES);
 
 function roundCoord(n: number): number {
   return Math.round(n * 10 ** COORD_PRECISION) / 10 ** COORD_PRECISION;
@@ -133,7 +129,7 @@ function recordSuccess() {
 }
 
 export function __resetTransitousStateForTests(): void {
-  cache = new Map();
+  cache.reset();
   requestTimestamps = [];
   consecutiveFailures = 0;
   breakerOpenedAt = null;
@@ -233,8 +229,7 @@ export async function planJourney(
 ): Promise<Journey[] | null> {
   const key = cacheKey(from, to, when);
   const cached = cache.get(key);
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS)
-    return cached.journeys;
+  if (cached) return cached;
 
   const now = Date.now();
   if (breakerIsOpen(now)) return null;
@@ -254,9 +249,7 @@ export async function planJourney(
     const journeys = (data.itineraries ?? []).map(toJourney);
 
     recordSuccess();
-    if (cache.size >= MAX_CACHE_ENTRIES)
-      cache.delete(cache.keys().next().value!);
-    cache.set(key, { journeys, fetchedAt: Date.now() });
+    cache.set(key, journeys);
     return journeys;
   } catch {
     // Network error, timeout/abort, or malformed JSON: never throw (house pattern).

@@ -1,13 +1,9 @@
 import { requireEnv } from './env';
+import { createTtlCache } from './ttl-cache';
 
 export interface GeocodeResult {
   lat: number;
   lng: number;
-}
-
-interface GeocodeCacheEntry {
-  result: GeocodeResult;
-  fetchedAt: number;
 }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // mirrors ./fx.ts's daily refresh
@@ -17,10 +13,10 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // mirrors ./fx.ts's daily refresh
 // Swap in a real LRU only if hit rates ever suggest the wrong entries are going.
 const MAX_ENTRIES = 500;
 
-let cache = new Map<string, GeocodeCacheEntry>();
+const cache = createTtlCache<GeocodeResult>(CACHE_TTL_MS, MAX_ENTRIES);
 
 export function __resetGeocodeCacheForTests() {
-  cache = new Map();
+  cache.reset();
 }
 
 // Server-side only — the token never reaches the browser. Never throws: a bad
@@ -38,8 +34,7 @@ export async function geocode(
 ): Promise<GeocodeResult | null> {
   const key = placeName.trim().toLowerCase();
   const cached = cache.get(key);
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS)
-    return cached.result;
+  if (cached) return cached;
 
   try {
     const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(placeName)}&access_token=${requireEnv('MAPBOX_TOKEN')}&limit=1`;
@@ -51,8 +46,7 @@ export async function geocode(
     if (!coordinates) return null;
 
     const result = { lat: coordinates.latitude, lng: coordinates.longitude };
-    if (cache.size >= MAX_ENTRIES) cache.delete(cache.keys().next().value!);
-    cache.set(key, { result, fetchedAt: Date.now() });
+    cache.set(key, result);
     return result;
   } catch {
     return null;

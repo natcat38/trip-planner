@@ -1,8 +1,10 @@
 # Trip Planner — Knowledge
 
 A multi-user Japan/Europe trip planner: integrated itinerary + budget with multi-currency
-roll-up and maps. **Next.js (App Router) + Prisma/Postgres + Auth.js**, containerised and
-deployed to **AWS (ECS Fargate + RDS)** via GitHub Actions CI/CD, infra in Terraform.
+roll-up, maps, a grounded destination-research layer, BYOK AI day planning, offline support,
+attachments, and a browser extension. **Next.js (App Router) + Prisma/Postgres + Auth.js**,
+deployed to **Vercel + Neon** via a gated GitHub Actions pipeline (ADR-0001, ADR-0002). AWS
+(ECS Fargate + RDS + Terraform) is a planned-but-not-built future runtime — see Infra below.
 
 This bundle is the agent- and reviewer-readable knowledge map. The code-level breakdown lives
 in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); product scope in

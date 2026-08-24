@@ -44,13 +44,11 @@ export function ExtensionTokenPanel({
       <div aria-live="polite" aria-busy={isPending}>
         {state.token ? (
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-black dark:text-zinc-50">
+            <p className="text-sm font-medium text-foreground">
               Copy this now — it won&rsquo;t be shown again.
             </p>
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-black dark:text-zinc-50">
-                Token
-              </span>
+              <span className="text-sm font-medium text-foreground">Token</span>
               <input
                 readOnly
                 value={state.token}
@@ -59,7 +57,7 @@ export function ExtensionTokenPanel({
                 // Selected on focus so copying it is one click plus one
                 // keystroke, rather than a drag across 45 characters of base64.
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full rounded border border-border-strong bg-white px-3 py-2 font-mono text-xs text-black dark:bg-zinc-900 dark:text-zinc-50"
+                className="w-full rounded border border-border-strong bg-white px-3 py-2 font-mono text-xs text-foreground dark:bg-zinc-900"
               />
             </label>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">

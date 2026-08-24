@@ -56,7 +56,7 @@ export function PlaceRow({
     <li className="rounded-lg border border-border p-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
         <div className="min-w-0">
-          <p className="font-medium text-black dark:text-zinc-50 truncate">
+          <p className="font-medium text-foreground truncate">
             {place.name}{' '}
             <span className="font-normal text-zinc-500 dark:text-zinc-400">
               ({place.category})
@@ -90,7 +90,7 @@ export function PlaceRow({
               <Select
                 name="dayId"
                 required
-                className="px-2 py-1 text-sm text-black dark:text-zinc-50"
+                className="px-2 py-1 text-sm text-foreground"
                 options={days.map((day) => ({
                   value: day.id,
                   label: formatDayOption(day.date),
@@ -129,9 +129,7 @@ export function PlaceRow({
             <input type="hidden" name="website" value={place.website ?? ''} />
             <input type="hidden" name="phone" value={place.phone ?? ''} />
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-black dark:text-zinc-50">
-                Notes
-              </span>
+              <span className="text-sm font-medium text-foreground">Notes</span>
               <textarea
                 name="notes"
                 autoComplete="off"
@@ -142,7 +140,7 @@ export function PlaceRow({
             </label>
             <div className="flex gap-3">
               <label className="flex flex-1 flex-col gap-1">
-                <span className="text-sm font-medium text-black dark:text-zinc-50">
+                <span className="text-sm font-medium text-foreground">
                   Cost
                 </span>
                 <input
@@ -164,7 +162,7 @@ export function PlaceRow({
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-black dark:text-zinc-50">
+                <span className="text-sm font-medium text-foreground">
                   Currency
                 </span>
                 <input

@@ -76,7 +76,7 @@ function ChecklistRow({
             className={`text-sm ${
               item.done
                 ? 'text-zinc-500 line-through dark:text-zinc-400'
-                : 'text-black dark:text-zinc-50'
+                : 'text-foreground'
             }`}
           >
             {item.label}
@@ -119,7 +119,7 @@ export function Checklist({
 
   return (
     <details className="mb-8 rounded-lg border border-border p-4">
-      <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
+      <summary className="cursor-pointer text-sm font-medium text-foreground">
         Checklist{items.length > 0 ? ` (${doneCount}/${items.length})` : ''}
       </summary>
 
@@ -139,9 +139,7 @@ export function Checklist({
         )}
         <div className="flex items-end gap-3">
           <label className="flex flex-1 flex-col gap-1">
-            <span className="text-sm font-medium text-black dark:text-zinc-50">
-              Item
-            </span>
+            <span className="text-sm font-medium text-foreground">Item</span>
             <input
               name="label"
               required

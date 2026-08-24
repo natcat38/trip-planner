@@ -32,6 +32,12 @@ export interface TripUpdateInput extends TripInput {
 }
 
 function validateTripInput(input: TripInput) {
+  if (
+    Number.isNaN(input.startDate.getTime()) ||
+    Number.isNaN(input.endDate.getTime())
+  ) {
+    throw new ValidationError('Enter valid start and end dates.');
+  }
   if (input.endDate < input.startDate) {
     throw new ValidationError('End date must be on or after the start date.');
   }

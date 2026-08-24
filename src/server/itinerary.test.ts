@@ -527,27 +527,37 @@ describe('updateActivity and deleteActivity', () => {
 });
 
 describe('setActivityPinColor', () => {
-  const activity = { id: 'activity-1', dayId: 'day-1' };
+  const lastSeenUpdatedAt = new Date('2026-07-01T00:00:00Z');
+  const activity = {
+    id: 'activity-1',
+    dayId: 'day-1',
+    updatedAt: lastSeenUpdatedAt,
+  };
 
   it('refuses when requireTripAccess (via requireActivity) rejects', async () => {
     const denied = new ForbiddenOrNotFoundError();
     vi.mocked(requireTripAccess).mockRejectedValue(denied);
 
     await expect(
-      setActivityPinColor('trip-1', 'activity-1', '#e11d48'),
+      setActivityPinColor('trip-1', 'activity-1', '#e11d48', lastSeenUpdatedAt),
     ).rejects.toBe(denied);
-    expect(db.activity.update).not.toHaveBeenCalled();
+    expect(db.activity.updateMany).not.toHaveBeenCalled();
   });
 
   it('accepts a 6-digit hex colour and persists it', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
-    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    await setActivityPinColor('trip-1', 'activity-1', '#e11d48');
+    await setActivityPinColor(
+      'trip-1',
+      'activity-1',
+      '#e11d48',
+      lastSeenUpdatedAt,
+    );
 
-    expect(db.activity.update).toHaveBeenCalledWith({
-      where: { id: 'activity-1' },
+    expect(db.activity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', updatedAt: lastSeenUpdatedAt },
       data: { pinColor: '#e11d48' },
     });
   });
@@ -555,12 +565,17 @@ describe('setActivityPinColor', () => {
   it('accepts a 3-digit hex colour', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
-    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    await setActivityPinColor('trip-1', 'activity-1', '#abc');
+    await setActivityPinColor(
+      'trip-1',
+      'activity-1',
+      '#abc',
+      lastSeenUpdatedAt,
+    );
 
-    expect(db.activity.update).toHaveBeenCalledWith({
-      where: { id: 'activity-1' },
+    expect(db.activity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', updatedAt: lastSeenUpdatedAt },
       data: { pinColor: '#abc' },
     });
   });
@@ -568,14 +583,24 @@ describe('setActivityPinColor', () => {
   it('accepts null to clear back to the map default', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
-    vi.mocked(db.activity.update).mockResolvedValue({} as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    await setActivityPinColor('trip-1', 'activity-1', null);
+    await setActivityPinColor('trip-1', 'activity-1', null, lastSeenUpdatedAt);
 
-    expect(db.activity.update).toHaveBeenCalledWith({
-      where: { id: 'activity-1' },
+    expect(db.activity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', updatedAt: lastSeenUpdatedAt },
       data: { pinColor: null },
     });
+  });
+
+  it('throws StaleWriteError when the row changed since it was last read', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 0 } as never);
+
+    await expect(
+      setActivityPinColor('trip-1', 'activity-1', '#e11d48', lastSeenUpdatedAt),
+    ).rejects.toThrow(StaleWriteError);
   });
 
   // The injection guard: this string reaches Map.tsx's marker style.background
@@ -585,9 +610,14 @@ describe('setActivityPinColor', () => {
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
 
     await expect(
-      setActivityPinColor('trip-1', 'activity-1', 'red; background:url(x)'),
+      setActivityPinColor(
+        'trip-1',
+        'activity-1',
+        'red; background:url(x)',
+        lastSeenUpdatedAt,
+      ),
     ).rejects.toThrow(ValidationError);
-    expect(db.activity.update).not.toHaveBeenCalled();
+    expect(db.activity.updateMany).not.toHaveBeenCalled();
   });
 
   it('rejects a colour missing the leading #', async () => {
@@ -595,9 +625,9 @@ describe('setActivityPinColor', () => {
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
 
     await expect(
-      setActivityPinColor('trip-1', 'activity-1', 'e11d48'),
+      setActivityPinColor('trip-1', 'activity-1', 'e11d48', lastSeenUpdatedAt),
     ).rejects.toThrow(ValidationError);
-    expect(db.activity.update).not.toHaveBeenCalled();
+    expect(db.activity.updateMany).not.toHaveBeenCalled();
   });
 
   it('rejects an empty string rather than treating it as "clear"', async () => {
@@ -605,9 +635,9 @@ describe('setActivityPinColor', () => {
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
 
     await expect(
-      setActivityPinColor('trip-1', 'activity-1', ''),
+      setActivityPinColor('trip-1', 'activity-1', '', lastSeenUpdatedAt),
     ).rejects.toThrow(ValidationError);
-    expect(db.activity.update).not.toHaveBeenCalled();
+    expect(db.activity.updateMany).not.toHaveBeenCalled();
   });
 });
 
@@ -619,20 +649,32 @@ describe('moveActivity', () => {
     { id: 'activity-3', dayId: 'day-1', sortOrder: 2 },
   ];
 
+  // moveActivity runs both swap updates inside an interactive transaction
+  // (db.$transaction(async (tx) => ...)), not the array form — this mock
+  // hands the callback the same mocked `db` as its `tx`, so each test can
+  // still drive db.activity.updateMany's mock and assert calls on it
+  // directly.
+  function mockInteractiveTransaction() {
+    vi.mocked(db.$transaction).mockImplementation(
+      (cb: unknown) => (cb as (tx: typeof db) => Promise<unknown>)(db) as never,
+    );
+  }
+
   it('swaps sortOrder with the previous sibling when moving up', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
     vi.mocked(db.activity.findMany).mockResolvedValue(siblings as never);
-    vi.mocked(db.$transaction).mockResolvedValue([] as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
+    mockInteractiveTransaction();
 
     await moveActivity('trip-1', 'activity-2', 'up');
 
-    expect(db.activity.update).toHaveBeenCalledWith({
-      where: { id: 'activity-2' },
+    expect(db.activity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-2', sortOrder: 1 },
       data: { sortOrder: 0 },
     });
-    expect(db.activity.update).toHaveBeenCalledWith({
-      where: { id: 'activity-1' },
+    expect(db.activity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', sortOrder: 0 },
       data: { sortOrder: 1 },
     });
     expect(db.$transaction).toHaveBeenCalledTimes(1);
@@ -646,5 +688,37 @@ describe('moveActivity', () => {
     await moveActivity('trip-1', 'activity-1', 'up');
 
     expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('throws ForbiddenOrNotFoundError when the activity is no longer among its siblings', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    // requireActivity found it, but it vanished (e.g. deleted concurrently)
+    // before this findMany ran — findIndex returns -1.
+    vi.mocked(db.activity.findMany).mockResolvedValue([
+      siblings[0],
+      siblings[2],
+    ] as never);
+
+    await expect(
+      moveActivity('trip-1', 'activity-2', 'up'),
+    ).rejects.toBeInstanceOf(ForbiddenOrNotFoundError);
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('throws ForbiddenOrNotFoundError when a sibling moved concurrently (sortOrder race)', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.activity.findFirst).mockResolvedValue(activity as never);
+    vi.mocked(db.activity.findMany).mockResolvedValue(siblings as never);
+    // The first updateMany's where-clause no longer matches — someone else
+    // already changed this activity's sortOrder.
+    vi.mocked(db.activity.updateMany).mockResolvedValueOnce({
+      count: 0,
+    } as never);
+    mockInteractiveTransaction();
+
+    await expect(
+      moveActivity('trip-1', 'activity-2', 'up'),
+    ).rejects.toBeInstanceOf(ForbiddenOrNotFoundError);
   });
 });

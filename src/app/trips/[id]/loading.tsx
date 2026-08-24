@@ -15,16 +15,12 @@
 import { Card } from '@/components/Card';
 
 function Block({ className }: { className: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 ${className}`}
-    />
-  );
+  return <div className={`animate-pulse rounded bg-border ${className}`} />;
 }
 
 export default function TripLoading() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}

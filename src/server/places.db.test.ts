@@ -3,7 +3,12 @@ import { auth } from '../auth';
 import { db } from '../lib/db';
 import { Prisma } from '../generated/prisma/client';
 import { ForbiddenOrNotFoundError } from './auth-scope';
-import { addActivityFromPlace, listPlaces, savePlace } from './places';
+import {
+  addActivityFromPlace,
+  listPlaces,
+  savePlace,
+  updatePlace,
+} from './places';
 
 // Real Postgres, only next-auth's session lookup stubbed — same rationale as itinerary.db.test.ts.
 vi.mock('../auth', () => ({ auth: vi.fn() }));
@@ -81,13 +86,46 @@ describe('places against a real database', () => {
     };
 
     const first = await savePlace(tripId, input);
-    const second = await savePlace(tripId, { ...input, notes: 'go at night' });
+    const second = await savePlace(tripId, {
+      ...input,
+      name: 'Canal City (updated)',
+    });
 
     expect(second.id).toBe(first.id);
-    expect(second.notes).toBe('go at night');
+    expect(second.name).toBe('Canal City (updated)');
     expect(
       await db.place.count({ where: { tripId, sourceId: 'node/555' } }),
     ).toBe(1);
+  });
+
+  it('re-saving an existing OSM place preserves notes/cost added via updatePlace', async () => {
+    const input = {
+      source: 'osm',
+      sourceId: 'node/556',
+      name: 'Ohori Park',
+      lat: 33.5847,
+      lng: 130.3813,
+      category: 'Sightseeing',
+    };
+
+    const first = await savePlace(tripId, input);
+    await updatePlace(tripId, first.id, {
+      name: first.name,
+      category: first.category,
+      notes: 'go at night',
+      costAmount: 500,
+      costCurrency: 'JPY',
+      updatedAt: first.updatedAt,
+    });
+
+    // The OSM save form never sends notes/cost — re-saving the same place
+    // (e.g. from a fresh search) must not blank out what updatePlace set.
+    const second = await savePlace(tripId, input);
+
+    expect(second.id).toBe(first.id);
+    expect(second.notes).toBe('go at night');
+    expect(second.costMinor).toBe(500);
+    expect(second.costCurrency).toBe('JPY');
   });
 
   it('a non-collaborator is denied on savePlace, listPlaces, and addActivityFromPlace', async () => {

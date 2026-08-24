@@ -150,6 +150,15 @@ describe('createTrip', () => {
     expect(db.trip.create).not.toHaveBeenCalled();
   });
 
+  it('rejects an invalid start date', async () => {
+    vi.mocked(currentUserId).mockResolvedValue('user-1');
+
+    await expect(
+      createTrip({ ...validInput, startDate: new Date('not-a-date') }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.trip.create).not.toHaveBeenCalled();
+  });
+
   it('rejects a negative budget amount', async () => {
     vi.mocked(currentUserId).mockResolvedValue('user-1');
 

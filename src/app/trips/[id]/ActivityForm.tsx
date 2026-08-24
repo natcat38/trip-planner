@@ -51,9 +51,7 @@ export function ActivityForm({
 
       <div className="flex gap-3">
         <label className="flex flex-1 flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            Title
-          </span>
+          <span className="text-sm font-medium text-foreground">Title</span>
           <input
             name="title"
             required
@@ -64,22 +62,18 @@ export function ActivityForm({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            Category
-          </span>
+          <span className="text-sm font-medium text-foreground">Category</span>
           <Select
             name="category"
             defaultValue={defaults.category}
-            className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+            className="px-3 py-2 text-sm text-foreground"
             options={CATEGORIES.map((c) => ({ value: c, label: c }))}
           />
         </label>
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Place
-        </span>
+        <span className="text-sm font-medium text-foreground">Place</span>
         <input
           name="placeName"
           autoComplete="off"
@@ -91,9 +85,7 @@ export function ActivityForm({
 
       <div className="flex gap-3">
         <label className="flex flex-1 flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            Start
-          </span>
+          <span className="text-sm font-medium text-foreground">Start</span>
           <input
             type="time"
             name="startTime"
@@ -102,9 +94,7 @@ export function ActivityForm({
           />
         </label>
         <label className="flex flex-1 flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            End
-          </span>
+          <span className="text-sm font-medium text-foreground">End</span>
           <input
             type="time"
             name="endTime"
@@ -116,9 +106,7 @@ export function ActivityForm({
 
       <div className="flex gap-3">
         <label className="flex flex-1 flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            Cost
-          </span>
+          <span className="text-sm font-medium text-foreground">Cost</span>
           <input
             type="number"
             name="costAmount"
@@ -131,9 +119,7 @@ export function ActivityForm({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            Currency
-          </span>
+          <span className="text-sm font-medium text-foreground">Currency</span>
           <input
             name="costCurrency"
             maxLength={3}
@@ -147,9 +133,7 @@ export function ActivityForm({
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Notes
-        </span>
+        <span className="text-sm font-medium text-foreground">Notes</span>
         <textarea
           name="notes"
           autoComplete="off"

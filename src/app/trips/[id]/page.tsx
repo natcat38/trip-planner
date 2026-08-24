@@ -46,6 +46,15 @@ export default async function TripItineraryPage({
     throw err;
   }
 
+  const [shareStatus, votes, checklist, attachments, attachmentUsage] =
+    await Promise.all([
+      isOwner ? getShareStatus(trip.id) : Promise.resolve(null),
+      listVotesForTrip(trip.id),
+      listChecklist(trip.id),
+      listAttachments(trip.id),
+      getAttachmentUsage(trip.id),
+    ]);
+
   // The trip stores destination names, not coordinates — geocode() is
   // cached, so this is cheap on a warm cache. A null geocode (unresolvable
   // destination) just means no weather renders; never an error. This isn't
@@ -68,7 +77,7 @@ export default async function TripItineraryPage({
     })();
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}
@@ -81,7 +90,7 @@ export default async function TripItineraryPage({
         className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-y-2 mb-8">
-          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-foreground">
             {trip.name}
           </h1>
           <nav aria-label="Trip actions" className="flex flex-wrap gap-4">
@@ -114,10 +123,11 @@ export default async function TripItineraryPage({
 
         <BudgetPanel tripId={trip.id} />
 
-        {isOwner && (
+        {isOwner && shareStatus && (
           <SharingPanel
             tripId={trip.id}
-            status={await getShareStatus(trip.id)}
+            status={shareStatus}
+            updatedAt={trip.updatedAt.toISOString()}
           />
         )}
 
@@ -125,15 +135,15 @@ export default async function TripItineraryPage({
           tripId={trip.id}
           days={days}
           weatherPromise={weatherPromise}
-          votes={await listVotesForTrip(trip.id)}
+          votes={votes}
         />
 
-        <Checklist tripId={trip.id} items={await listChecklist(trip.id)} />
+        <Checklist tripId={trip.id} items={checklist} />
 
         <Attachments
           tripId={trip.id}
-          attachments={await listAttachments(trip.id)}
-          usage={await getAttachmentUsage(trip.id)}
+          attachments={attachments}
+          usage={attachmentUsage}
         />
       </main>
     </div>

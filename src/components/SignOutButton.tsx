@@ -35,12 +35,24 @@ export function SignOutButton({ action }: { action: () => Promise<void> }) {
       onClick={async () => {
         try {
           await clearOfflineCaches();
-        } catch {
-          // A failing service worker / Cache API must not trap the user in a
-          // session they asked to end; the worker's own redirect-based
-          // cleanup still runs on the next navigation (ADR-0015 §5).
+          await action();
+        } catch (e) {
+          // next/navigation's redirect() throws a special error to unwind
+          // the render tree — it must propagate, or sign-out would silently
+          // fail to redirect. A failing service worker / Cache API, by
+          // contrast, must not trap the user in a session they asked to end;
+          // the worker's own redirect-based cleanup still runs on the next
+          // navigation (ADR-0015 §5).
+          if (
+            e &&
+            typeof e === 'object' &&
+            'digest' in e &&
+            typeof e.digest === 'string' &&
+            e.digest.startsWith('NEXT_REDIRECT')
+          ) {
+            throw e;
+          }
         }
-        await action();
       }}
     >
       Sign out

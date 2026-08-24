@@ -127,9 +127,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
 
   return (
     <Card as="section" className="mb-10">
-      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
-        Budget
-      </h2>
+      <h2 className="text-lg font-medium text-foreground mb-2">Budget</h2>
 
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
         <span
@@ -187,9 +185,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
       )}
 
       <div className="mt-6">
-        <h3 className="text-15 font-medium text-black dark:text-zinc-50 mb-2">
-          Expenses
-        </h3>
+        <h3 className="text-15 font-medium text-foreground mb-2">Expenses</h3>
         {expenses.length > 0 && (
           <ul className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 gap-y-2 mb-4 text-sm">
             {expenses.map((expense) => (

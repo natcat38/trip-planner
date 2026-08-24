@@ -12,7 +12,7 @@ export function InvitesBanner({ invites }: { invites: PendingInvite[] }) {
           key={invite.tripId}
           className="flex items-center justify-between gap-4 rounded-lg border border-border p-4"
         >
-          <p className="text-sm text-black dark:text-zinc-50">
+          <p className="text-sm text-foreground">
             You&apos;ve been invited to collaborate on{' '}
             <span className="font-medium">{invite.tripName}</span>.
           </p>

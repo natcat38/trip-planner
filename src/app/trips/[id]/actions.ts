@@ -18,7 +18,7 @@ import {
   toggleChecklistItem,
 } from '@/server/checklist';
 import { createExpense, deleteExpense } from '@/server/expenses';
-import { ignoreIfMissing } from '@/server/auth-scope';
+import { ForbiddenOrNotFoundError, ignoreIfMissing } from '@/server/auth-scope';
 import { StaleWriteError, ValidationError } from '@/server/errors';
 import { planJourneyBetweenActivities } from '@/server/transit';
 import { toggleVote } from '@/server/votes';
@@ -89,7 +89,11 @@ export async function updateActivityAction(
       updatedAt: new Date(updatedAt),
     });
   } catch (err) {
-    if (err instanceof ValidationError || err instanceof StaleWriteError)
+    if (
+      err instanceof ValidationError ||
+      err instanceof StaleWriteError ||
+      err instanceof ForbiddenOrNotFoundError
+    )
       return { error: err.message };
     throw err;
   }
@@ -122,8 +126,22 @@ export async function setActivityPinColorAction(
   tripId: string,
   activityId: string,
   color: string | null,
+  updatedAt: string,
 ): Promise<void> {
-  await setActivityPinColor(tripId, activityId, color);
+  await ignoreIfMissing(
+    setActivityPinColor(tripId, activityId, color, new Date(updatedAt)).catch(
+      (err) => {
+        // The pin-colour swatch (ItineraryDays.tsx) has no error UI, unlike
+        // the forms wired to useActionState elsewhere in this file — a
+        // stale write here just means someone else already changed the pin
+        // colour since this page loaded, so it gets the same silent no-op
+        // treatment as a since-deleted activity (ignoreIfMissing above):
+        // revalidatePath re-renders whatever the current colour actually is.
+        if (err instanceof StaleWriteError) return;
+        throw err;
+      },
+    ),
+  );
   revalidatePath(`/trips/${tripId}`);
 }
 
@@ -159,10 +177,17 @@ export async function updateDayNotesAction(
 }
 
 function parseExpenseFormData(formData: FormData) {
+  const costAmountRaw = formData.get('costAmount');
+  const hasCost = costAmountRaw != null && String(costAmountRaw).trim() !== '';
   return {
     label: String(formData.get('label') ?? ''),
     category: String(formData.get('category') ?? ''),
-    costAmount: Number(formData.get('costAmount')),
+    // An absent costAmount becomes NaN rather than 0 — validateExpenseInput's
+    // `!(costAmount >= 0)` check already rejects NaN, turning a missing
+    // amount into the same ValidationError a negative one gets, instead of
+    // silently defaulting to a free "$0" expense. An explicit "0" still
+    // parses to the valid amount 0 (hasCost is true for it).
+    costAmount: hasCost ? Number(costAmountRaw) : NaN,
     costCurrency: String(formData.get('costCurrency') ?? '').toUpperCase(),
   };
 }
@@ -186,7 +211,7 @@ export async function deleteExpenseAction(
   tripId: string,
   expenseId: string,
 ): Promise<void> {
-  await deleteExpense(tripId, expenseId);
+  await ignoreIfMissing(deleteExpense(tripId, expenseId));
   revalidatePath(`/trips/${tripId}`);
 }
 

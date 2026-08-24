@@ -47,7 +47,7 @@ export function SharedTripView({
     }));
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       {/* No AppHeader — this route is the one other unauthenticated page
           (src/proxy.ts doesn't match /shared/*), so it gets the same
           minimal chrome as the public landing page. */}
@@ -68,7 +68,7 @@ export function SharedTripView({
           Read-only shared view
         </p>
         <div className="flex items-baseline justify-between gap-4 mb-2">
-          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-foreground">
             {trip.name}
           </h1>
           {canSaveCopy && (
@@ -93,9 +93,7 @@ export function SharedTripView({
         </p>
 
         <Card as="section" className="mb-10">
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
-            Budget
-          </h2>
+          <h2 className="text-lg font-medium text-foreground mb-2">Budget</h2>
 
           {/* Same departure-board treatment as BudgetPanel.tsx — this view
               is unauthenticated and read-only, but "read-only" doesn't mean
@@ -182,7 +180,7 @@ export function SharedTripView({
 
           {days.map((day) => (
             <section key={day.id}>
-              <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-3 font-mono tabular-nums">
+              <h2 className="text-lg font-medium text-foreground mb-3 font-mono tabular-nums">
                 {formatDay(day.date)}
               </h2>
               {day.activities.length > 0 && (
@@ -192,7 +190,7 @@ export function SharedTripView({
                       key={activity.id}
                       className="rounded-lg border border-border p-4"
                     >
-                      <p className="font-medium text-black dark:text-zinc-50">
+                      <p className="font-medium text-foreground">
                         {activity.title}{' '}
                         <span className="font-normal text-zinc-500 dark:text-zinc-400">
                           ({activity.category})

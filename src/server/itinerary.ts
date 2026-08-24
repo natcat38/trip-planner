@@ -203,6 +203,7 @@ export async function setActivityPinColor(
   tripId: string,
   activityId: string,
   color: string | null,
+  updatedAt: Date,
 ) {
   const activity = await requireActivity(tripId, activityId);
   if (color != null && !HEX_COLOR_PATTERN.test(color)) {
@@ -210,10 +211,11 @@ export async function setActivityPinColor(
       'Pin colour must be a hex code like #e11d48, or left as default.',
     );
   }
-  await db.activity.update({
-    where: { id: activity.id },
+  const result = await db.activity.updateMany({
+    where: { id: activity.id, updatedAt },
     data: { pinColor: color },
   });
+  if (result.count === 0) throw new StaleWriteError();
 }
 
 export async function moveActivity(
@@ -227,18 +229,35 @@ export async function moveActivity(
     orderBy: { sortOrder: 'asc' },
   });
   const index = siblings.findIndex((a) => a.id === activity.id);
+  // requireActivity already confirmed the activity exists and is in scope,
+  // so a -1 here would mean it was deleted between that lookup and this
+  // query — treat it the same as "not found" rather than crashing on
+  // siblings[-1 ± 1] below.
+  if (index === -1) throw new ForbiddenOrNotFoundError();
   const swapIndex = direction === 'up' ? index - 1 : index + 1;
   if (swapIndex < 0 || swapIndex >= siblings.length) return;
 
   const other = siblings[swapIndex];
-  await db.$transaction([
-    db.activity.update({
-      where: { id: activity.id },
+  // Each update's where includes the sortOrder read moments ago, so a
+  // concurrent move of either activity (another tab, another collaborator)
+  // makes one of these updateMany calls affect zero rows instead of
+  // silently overwriting a swap already in flight. An interactive
+  // transaction (not the array form) so a mismatch's throw rolls the whole
+  // swap back instead of committing half of it — the error becomes
+  // ForbiddenOrNotFoundError, which moveActivityAction's ignoreIfMissing
+  // wrapper turns into a silent no-op, and the page re-renders whatever
+  // order actually won the race.
+  await db.$transaction(async (tx) => {
+    const first = await tx.activity.updateMany({
+      where: { id: activity.id, sortOrder: activity.sortOrder },
       data: { sortOrder: other.sortOrder },
-    }),
-    db.activity.update({
-      where: { id: other.id },
+    });
+    const second = await tx.activity.updateMany({
+      where: { id: other.id, sortOrder: other.sortOrder },
       data: { sortOrder: activity.sortOrder },
-    }),
-  ]);
+    });
+    if (first.count === 0 || second.count === 0) {
+      throw new ForbiddenOrNotFoundError();
+    }
+  });
 }

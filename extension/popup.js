@@ -180,8 +180,14 @@ async function init() {
   });
   $('disconnect').addEventListener('click', async () => {
     if (!confirm('Disconnect from Trip Planner?')) return;
-    await store.clear();
-    show('setup');
+    try {
+      await store.clear();
+      show('setup');
+    } catch (err) {
+      // A rejected storage clear must not wedge the popup on whatever
+      // section was showing; report it the way other handlers do.
+      setError('save-error', err.message);
+    }
   });
 
   const { appUrl, token } = await store.get();

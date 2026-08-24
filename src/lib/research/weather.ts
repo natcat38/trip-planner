@@ -11,6 +11,7 @@
 // NEVER be presented as a forecast — `kind` is the discriminator the UI
 // renders off, exactly like Wikivoyage's `coverage` indicator.
 
+import { createTtlCache } from '../ttl-cache';
 import { USER_AGENT } from './userAgent';
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -57,20 +58,15 @@ function weatherLabel(code: number): string {
   );
 }
 
-interface WeatherCacheEntry {
-  weather: DayWeather;
-  fetchedAt: number;
-}
-
 // ponytail: plain Map with a size cap, not an LRU — same rationale as
 // ../geocode.ts. Keys are lat/lng/date triples for every trip ever viewed
 // on a long-lived server, so an uncapped Map would grow without bound.
 const MAX_ENTRIES = 2000;
 
-let cache = new Map<string, WeatherCacheEntry>();
+const cache = createTtlCache<DayWeather>(CACHE_TTL_MS, MAX_ENTRIES);
 
 export function __resetWeatherCacheForTests() {
-  cache = new Map();
+  cache.reset();
 }
 
 function cacheKey(lat: number, lng: number, date: string): string {
@@ -78,11 +74,7 @@ function cacheKey(lat: number, lng: number, date: string): string {
 }
 
 function setCache(lat: number, lng: number, weather: DayWeather) {
-  const key = cacheKey(lat, lng, weather.date);
-  if (!cache.has(key) && cache.size >= MAX_ENTRIES) {
-    cache.delete(cache.keys().next().value!);
-  }
-  cache.set(key, { weather, fetchedAt: Date.now() });
+  cache.set(cacheKey(lat, lng, weather.date), weather);
 }
 
 function todayDateString(): string {
@@ -236,13 +228,12 @@ export async function getTripWeather(
 
   try {
     const uniqueDates = Array.from(new Set(dates));
-    const now = Date.now();
     const toFetch: string[] = [];
 
     for (const date of uniqueDates) {
       const cached = cache.get(cacheKey(lat, lng, date));
-      if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
-        result.set(date, cached.weather);
+      if (cached) {
+        result.set(date, cached);
       } else {
         toFetch.push(date);
       }

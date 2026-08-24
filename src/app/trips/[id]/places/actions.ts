@@ -9,7 +9,7 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { ignoreIfMissing } from '@/server/auth-scope';
+import { ForbiddenOrNotFoundError, ignoreIfMissing } from '@/server/auth-scope';
 import { generateDayPlans, type DayPlanCandidate } from '@/server/dayPlan';
 import { StaleWriteError, ValidationError } from '@/server/errors';
 import { summarizeGuide } from '@/server/guideSummary';
@@ -92,7 +92,11 @@ export async function updatePlaceAction(
       updatedAt: new Date(updatedAt),
     });
   } catch (err) {
-    if (err instanceof ValidationError || err instanceof StaleWriteError)
+    if (
+      err instanceof ValidationError ||
+      err instanceof StaleWriteError ||
+      err instanceof ForbiddenOrNotFoundError
+    )
       return { error: err.message };
     throw err;
   }

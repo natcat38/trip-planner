@@ -59,10 +59,18 @@ afterEach(async () => {
   await db.user.delete({ where: { id: ownerId } });
 });
 
+// enableShareLink/revokeShareLink now guard on updatedAt (stale-write
+// protection, same as every other mutation in this codebase) — re-fetch it
+// fresh before each call rather than tracking it by hand, since every prior
+// call in these tests has already advanced it.
+async function currentUpdatedAt() {
+  return (await db.trip.findUniqueOrThrow({ where: { id: tripId } })).updatedAt;
+}
+
 describe('share link against a real database', () => {
   it('enables, retrieves, and revokes a link end to end', async () => {
     signInAsOwner();
-    const token = await enableShareLink(tripId);
+    const token = await enableShareLink(tripId, await currentUpdatedAt());
 
     const { trip } = await getSharedTrip(token);
     expect(trip.id).toBe(tripId);
@@ -70,7 +78,7 @@ describe('share link against a real database', () => {
     expect(trip).not.toHaveProperty('shareToken');
 
     signInAsOwner();
-    await revokeShareLink(tripId);
+    await revokeShareLink(tripId, await currentUpdatedAt());
 
     await expect(getSharedTrip(token)).rejects.toBeInstanceOf(
       InvalidShareLinkError,
@@ -93,7 +101,7 @@ describe('share link against a real database', () => {
         uploadedBy: 'owner@example.com',
       },
     });
-    const token = await enableShareLink(tripId);
+    const token = await enableShareLink(tripId, await currentUpdatedAt());
 
     const shared = await getSharedTrip(token);
 
@@ -103,9 +111,9 @@ describe('share link against a real database', () => {
 
   it('regenerating invalidates the previous token', async () => {
     signInAsOwner();
-    const firstToken = await enableShareLink(tripId);
+    const firstToken = await enableShareLink(tripId, await currentUpdatedAt());
     signInAsOwner();
-    const secondToken = await enableShareLink(tripId);
+    const secondToken = await enableShareLink(tripId, await currentUpdatedAt());
 
     expect(secondToken).not.toBe(firstToken);
     await expect(getSharedTrip(firstToken)).rejects.toBeInstanceOf(
@@ -185,7 +193,7 @@ describe('duplicateSharedTrip against a real database', () => {
 
   it('requires a signed-in user even though the source link is public', async () => {
     signInAsOwner();
-    const token = await enableShareLink(tripId);
+    const token = await enableShareLink(tripId, await currentUpdatedAt());
 
     vi.mocked(auth).mockResolvedValue(null as never);
 
@@ -206,9 +214,9 @@ describe('duplicateSharedTrip against a real database', () => {
 
       // Same for a token that used to work but was revoked.
       signInAsOwner();
-      const token = await enableShareLink(tripId);
+      const token = await enableShareLink(tripId, await currentUpdatedAt());
       signInAsOwner();
-      await revokeShareLink(tripId);
+      await revokeShareLink(tripId, await currentUpdatedAt());
 
       vi.mocked(auth).mockResolvedValue({
         user: { id: visitorId, email: visitorEmail },
@@ -266,7 +274,7 @@ describe('duplicateSharedTrip against a real database', () => {
         });
 
         signInAsOwner();
-        const token = await enableShareLink(tripId);
+        const token = await enableShareLink(tripId, await currentUpdatedAt());
 
         vi.mocked(auth).mockResolvedValue({
           user: { id: visitorId, email: visitorEmail },

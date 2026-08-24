@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../lib/db';
 import { requireTripOwner } from './auth-scope';
+import { StaleWriteError } from './errors';
 import { enableShareLink, getShareStatus, revokeShareLink } from './sharing';
 
 vi.mock('./auth-scope', () => {
@@ -17,7 +18,7 @@ vi.mock('./auth-scope', () => {
 });
 vi.mock('../lib/db', () => ({
   db: {
-    trip: { update: vi.fn(), findUnique: vi.fn() },
+    trip: { update: vi.fn(), updateMany: vi.fn(), findUnique: vi.fn() },
     day: { findMany: vi.fn() },
     expense: { findMany: vi.fn() },
     tripCollaborator: {
@@ -32,12 +33,19 @@ vi.mock('../lib/db', () => ({
 }));
 vi.mock('./budget', () => ({ summarizeBudget: vi.fn() }));
 
-const trip = { id: 'trip-1', userId: 'user-1', shareToken: null };
+const tripUpdatedAt = new Date('2026-01-01T00:00:00.000Z');
+const trip = {
+  id: 'trip-1',
+  userId: 'user-1',
+  shareToken: null,
+  updatedAt: tripUpdatedAt,
+};
 
 beforeEach(() => {
   vi.mocked(requireTripOwner).mockReset();
   vi.mocked(currentUserEmail).mockReset();
   vi.mocked(db.trip.update).mockReset();
+  vi.mocked(db.trip.updateMany).mockReset();
   vi.mocked(db.tripCollaborator.findMany).mockReset();
   vi.mocked(db.tripCollaborator.findUnique).mockReset();
   vi.mocked(db.tripCollaborator.findFirst).mockReset();
@@ -74,14 +82,14 @@ describe('getShareStatus', () => {
 describe('enableShareLink', () => {
   it('generates and sets a new share token', async () => {
     vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
-    vi.mocked(db.trip.update).mockResolvedValue({} as never);
+    vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    const token = await enableShareLink('trip-1');
+    const token = await enableShareLink('trip-1', tripUpdatedAt);
 
     expect(typeof token).toBe('string');
     expect(token.length).toBeGreaterThan(10);
-    expect(db.trip.update).toHaveBeenCalledWith({
-      where: { id: 'trip-1' },
+    expect(db.trip.updateMany).toHaveBeenCalledWith({
+      where: { id: 'trip-1', updatedAt: tripUpdatedAt },
       data: { shareToken: token },
     });
   });
@@ -91,11 +99,20 @@ describe('enableShareLink', () => {
       ...trip,
       shareToken: 'old-token',
     } as never);
-    vi.mocked(db.trip.update).mockResolvedValue({} as never);
+    vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    const token = await enableShareLink('trip-1');
+    const token = await enableShareLink('trip-1', tripUpdatedAt);
 
     expect(token).not.toBe('old-token');
+  });
+
+  it('throws StaleWriteError when the trip changed since the caller last read it', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue(trip as never);
+    vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 0 } as never);
+
+    await expect(
+      enableShareLink('trip-1', tripUpdatedAt),
+    ).rejects.toBeInstanceOf(StaleWriteError);
   });
 });
 
@@ -105,14 +122,26 @@ describe('revokeShareLink', () => {
       ...trip,
       shareToken: 'abc123',
     } as never);
-    vi.mocked(db.trip.update).mockResolvedValue({} as never);
+    vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 1 } as never);
 
-    await revokeShareLink('trip-1');
+    await revokeShareLink('trip-1', tripUpdatedAt);
 
-    expect(db.trip.update).toHaveBeenCalledWith({
-      where: { id: 'trip-1' },
+    expect(db.trip.updateMany).toHaveBeenCalledWith({
+      where: { id: 'trip-1', updatedAt: tripUpdatedAt },
       data: { shareToken: null },
     });
+  });
+
+  it('throws StaleWriteError when the trip changed since the caller last read it', async () => {
+    vi.mocked(requireTripOwner).mockResolvedValue({
+      ...trip,
+      shareToken: 'abc123',
+    } as never);
+    vi.mocked(db.trip.updateMany).mockResolvedValue({ count: 0 } as never);
+
+    await expect(
+      revokeShareLink('trip-1', tripUpdatedAt),
+    ).rejects.toBeInstanceOf(StaleWriteError);
   });
 });
 

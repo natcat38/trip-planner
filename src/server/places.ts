@@ -88,7 +88,12 @@ function validatePlaceCost(input: {
   }
 }
 
-function resolvePlaceFields(input: PlaceFields) {
+// Fields the OSM search result itself supplies. Deliberately excludes
+// notes/costMinor/costCurrency — those are edited later via updatePlace, and
+// the OSM save form never sends them, so including them here would silently
+// blank out notes/cost on every re-save of an already-annotated place (see
+// the upsert's update branch below).
+function resolveOsmFields(input: PlaceFields) {
   return {
     name: input.name,
     category: input.category,
@@ -96,6 +101,12 @@ function resolvePlaceFields(input: PlaceFields) {
     openingHours: input.openingHours || null,
     website: input.website || null,
     phone: input.phone || null,
+  };
+}
+
+function resolvePlaceFields(input: PlaceFields) {
+  return {
+    ...resolveOsmFields(input),
     notes: input.notes || null,
     // validatePlaceCost already rejects a costAmount with no/invalid
     // costCurrency, so a present costAmount always has a usable currency here.
@@ -135,7 +146,14 @@ export async function savePlace(tripId: string, input: SavePlaceInput) {
         },
       },
       create: data,
-      update: data,
+      // Not `data`: re-saving an already-saved OSM place must not clobber
+      // notes/cost the user has since added via updatePlace, since this form
+      // never carries those fields.
+      update: {
+        lat: input.lat,
+        lng: input.lng,
+        ...resolveOsmFields(input),
+      },
     });
   }
   return db.place.create({ data });

@@ -44,9 +44,7 @@ export function TripForm({
       )}
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Name
-        </span>
+        <span className="text-sm font-medium text-foreground">Name</span>
         <input
           name="name"
           required
@@ -57,7 +55,7 @@ export function TripForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
+        <span className="text-sm font-medium text-foreground">
           Destinations (comma-separated)
         </span>
         <input
@@ -71,7 +69,7 @@ export function TripForm({
 
       <div className="flex gap-4">
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
+          <span className="text-sm font-medium text-foreground">
             Start date
           </span>
           <input
@@ -83,9 +81,7 @@ export function TripForm({
           />
         </label>
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            End date
-          </span>
+          <span className="text-sm font-medium text-foreground">End date</span>
           <input
             type="date"
             name="endDate"
@@ -98,7 +94,7 @@ export function TripForm({
 
       <div className="flex gap-4">
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
+          <span className="text-sm font-medium text-foreground">
             Base currency
           </span>
           <input
@@ -113,7 +109,7 @@ export function TripForm({
           />
         </label>
         <label className="flex flex-col gap-1 flex-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
+          <span className="text-sm font-medium text-foreground">
             Budget amount
           </span>
           <input

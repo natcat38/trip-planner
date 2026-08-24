@@ -70,7 +70,7 @@ function ApiKeyForm() {
       <div>
         <label
           htmlFor="apiKey"
-          className="block mb-1 text-sm font-medium text-black dark:text-zinc-50"
+          className="block mb-1 text-sm font-medium text-foreground"
         >
           API key
         </label>
@@ -86,9 +86,9 @@ function ApiKeyForm() {
 
       <div className="flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-400">
         <p>
-          <strong className="text-black dark:text-zinc-50">Groq</strong> is the
-          default provider — its terms don&apos;t permit training on your
-          prompts, unlike OpenRouter&apos;s free tier. Get a key at{' '}
+          <strong className="text-foreground">Groq</strong> is the default
+          provider — its terms don&apos;t permit training on your prompts,
+          unlike OpenRouter&apos;s free tier. Get a key at{' '}
           <a
             href="https://console.groq.com/keys"
             target="_blank"
@@ -100,9 +100,8 @@ function ApiKeyForm() {
           .
         </p>
         <p>
-          Or use{' '}
-          <strong className="text-black dark:text-zinc-50">OpenRouter</strong> —
-          get a key at{' '}
+          Or use <strong className="text-foreground">OpenRouter</strong> — get a
+          key at{' '}
           <a
             href="https://openrouter.ai/keys"
             target="_blank"
@@ -144,7 +143,7 @@ function StoredKeyPanel({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        <span className="font-medium text-black dark:text-zinc-50">
+        <span className="font-medium text-foreground">
           {status.provider === 'groq' ? 'Groq' : 'OpenRouter'}
         </span>{' '}
         key <code className="font-mono">{status.maskedKey}</code>, saved{' '}
@@ -163,7 +162,7 @@ function StoredKeyPanel({
           <form action={refreshModelsAction}>
             <SubmitButton
               pendingLabel="Retrying…"
-              className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-black dark:text-zinc-50"
+              className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-foreground"
             >
               Retry
             </SubmitButton>
@@ -179,7 +178,7 @@ function StoredKeyPanel({
 
           <label
             htmlFor="model"
-            className="text-sm font-medium text-black dark:text-zinc-50"
+            className="text-sm font-medium text-foreground"
           >
             Model
           </label>
@@ -188,7 +187,7 @@ function StoredKeyPanel({
             name="model"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
-            className="w-full max-w-md px-3 py-2 text-sm text-black dark:text-zinc-50"
+            className="w-full max-w-md px-3 py-2 text-sm text-foreground"
             options={[
               { value: '', label: 'Choose a model…', disabled: true },
               ...models.map((m) => ({

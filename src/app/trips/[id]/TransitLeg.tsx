@@ -62,7 +62,7 @@ export function TransitLeg({
           href={googleMapsTransitUrl(from, to, toLabel)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-black underline dark:text-zinc-50"
+          className="text-foreground underline"
         >
           Google Maps
         </a>
@@ -70,7 +70,7 @@ export function TransitLeg({
           href={appleMapsTransitUrl(from, to, toLabel)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-black underline dark:text-zinc-50"
+          className="text-foreground underline"
         >
           Apple Maps
         </a>
@@ -119,7 +119,7 @@ export function TransitLeg({
                     className="rounded border border-border px-3 py-2"
                   >
                     <details>
-                      <summary className="cursor-pointer text-black dark:text-zinc-50">
+                      <summary className="cursor-pointer text-foreground">
                         {minutes(journey.durationSeconds)} · {journey.transfers}{' '}
                         {journey.transfers === 1 ? 'transfer' : 'transfers'}
                       </summary>

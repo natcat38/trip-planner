@@ -53,7 +53,7 @@ export default async function TripsPage() {
   const now = new Date();
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}
@@ -62,9 +62,7 @@ export default async function TripsPage() {
         <InvitesBanner invites={invites} />
 
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
-          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
-            Your trips
-          </h1>
+          <h1 className="text-4xl font-semibold text-foreground">Your trips</h1>
           <div className="flex items-center gap-4">
             <Link
               href="/settings"
@@ -101,14 +99,14 @@ export default async function TripsPage() {
               return (
                 <li
                   key={trip.id}
-                  className="flex items-center gap-4 rounded-lg border border-border bg-surface-raised hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="flex items-center gap-4 rounded-lg border border-border bg-surface-raised hover:bg-border/40"
                 >
                   <Link
                     href={`/trips/${trip.id}`}
                     className="block flex-1 p-5 min-w-0"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+                      <h2 className="text-lg font-medium text-foreground">
                         {trip.name}
                       </h2>
                       <span

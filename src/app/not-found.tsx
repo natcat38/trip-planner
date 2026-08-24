@@ -8,7 +8,7 @@ import { ThemeToggle } from './ThemeToggle';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       {/* No AppHeader — this can render for a signed-out visitor (an
           unmatched route or a public notFound() call doesn't imply an
           authenticated route), and AppHeader requires a session. Same
@@ -22,7 +22,7 @@ export default function NotFound() {
         tabIndex={-1}
         className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-16 text-center"
       >
-        <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
+        <h1 className="text-4xl font-semibold text-foreground">
           Page not found
         </h1>
         <Link

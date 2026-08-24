@@ -46,13 +46,13 @@ export default async function EditTripPage({
   const boundDelete = deleteTripAction.bind(null, trip.id);
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
       >
-        <h1 className="text-4xl font-semibold text-black dark:text-zinc-50 mb-8">
+        <h1 className="text-4xl font-semibold text-foreground mb-8">
           Edit trip
         </h1>
         <TripForm
