@@ -6,6 +6,7 @@ import { Map } from '@/components/Map';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
+import { daySubtotals, isToday, nextActivityId } from '@/lib/dayRail';
 import type { DayWeather } from '@/lib/research/weather';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import type { VoteSummary } from '@/server/votes';
@@ -64,98 +65,29 @@ function dateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-// Day cost subtotal (rail "station stop" figure): grouped by currency, never
-// converted or summed across currencies — ADR-0018/money rules forbid
-// treating e.g. JPY and USD minor units as fungible. Pure integer addition
-// per currency bucket, same costMinor values BudgetPanel/ExpenseForm already
-// render elsewhere; nothing here reads/writes stored data or does any
-// division/float math. A day with activities in two currencies renders two
-// figures ("¥3,000 + $20"), not a wrong merged total.
-function daySubtotals(
-  activities: Days[number]['activities'],
-): { currency: string; minor: number }[] {
-  // globalThis.Map: this file imports the trip-map component as `Map`,
-  // which shadows the builtin — same disambiguation Map.tsx itself uses for
-  // its marker registry.
-  const totals = new globalThis.Map<string, number>();
-  for (const activity of activities) {
-    if (activity.costMinor != null && activity.costCurrency) {
-      totals.set(
-        activity.costCurrency,
-        (totals.get(activity.costCurrency) ?? 0) + activity.costMinor,
-      );
-    }
-  }
-  return [...totals.entries()].map(([currency, minor]) => ({
-    currency,
-    minor,
-  }));
-}
-
-// "Now/next" (ADR-0019 §2 open question 3, approved in scope): Day.date is
-// UTC-midnight-as-calendar-day and Activity.startTime is a bare "HH:MM" with
-// no zone (ADR-0018 — this app deliberately stores no destination timezone).
-// There is therefore no *correct* way to compute "is it activity X's time
-// right now at the destination" from stored data alone. The honest choice
-// made here: treat the viewing device's own local date/time as the best
-// available proxy for "now" — correct exactly when someone is checking their
-// itinerary while actually at (or in the same zone as) the destination,
-// which is the common real case this feature is for, and degrades
-// gracefully (no highlight, never a *wrong* one) when the day simply doesn't
-// match today's local date, e.g. planning ahead from home in another zone.
-// Computed client-side only, in an effect that runs after mount: the server
-// render and the client's first render both have `now === null` (no
-// highlight), so there is nothing for hydration to disagree about — `now`
-// only changes in a later, post-hydration state update, the same pattern
-// used for any clock-driven UI. Refreshed every minute, which matches the
-// HH:MM granularity being compared; no per-second ticking.
-function useNow(): { dateKey: string; hhmm: string } | null {
-  const [now, setNow] = useState<{ dateKey: string; hhmm: string } | null>(
-    null,
-  );
+// "Now/next" (ADR-0019 §2 open question 3, approved in scope). The actual
+// day/activity selection logic — isToday/nextActivityId/daySubtotals — lives
+// in src/lib/dayRail.ts as pure, unit-tested functions; see that module's
+// header comment for the UTC-vs-local reasoning. This hook's only job is
+// supplying "now" as a real Date, computed client-side only.
+//
+// Computed in an effect that runs after mount: the server render and the
+// client's first render both have `now === null` (no highlight), so there
+// is nothing for hydration to disagree about — `now` only changes in a
+// later, post-hydration state update, the same pattern used for any
+// clock-driven UI. Refreshed every minute, which matches the HH:MM
+// granularity dayRail.ts compares; no per-second ticking.
+function useNow(): Date | null {
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const update = () => {
-      const d = new Date();
-      setNow({
-        dateKey: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-        hhmm: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
-      });
-    };
+    const update = () => setNow(new Date());
     update();
     const id = setInterval(update, 60_000);
     return () => clearInterval(id);
   }, []);
 
   return now;
-}
-
-// Day.date's UTC-pinned calendar day (dateKey above) compared against the
-// browser's *local* calendar day (useNow above) — the same "best available
-// proxy, not a real destination timezone" compromise described there.
-function isTodayLocal(day: Date, now: { dateKey: string } | null): boolean {
-  if (!now) return false;
-  const d = new Date(day);
-  const utcKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-  return utcKey === now.dateKey;
-}
-
-// First activity (in existing sortOrder) whose startTime hasn't passed yet
-// by the device's local wall clock. Activities with no startTime can't be
-// compared and are skipped when looking for "next", but don't block ones
-// after them.
-function nextActivityId(
-  activities: Days[number]['activities'],
-  now: { hhmm: string } | null,
-): string | null {
-  if (!now) return null;
-  for (const activity of activities) {
-    if (activity.startTime && activity.startTime >= now.hhmm) {
-      return activity.id;
-    }
-  }
-  return null;
 }
 
 function ThumbIcon() {
@@ -349,16 +281,19 @@ export function ItineraryDays({
         />
         <div className="flex flex-col gap-8">
           {days.map((day) => {
-            const isToday = isTodayLocal(day.date, now);
+            const isTodayFlag = now != null && isToday(day.date, now);
             const subtotals = daySubtotals(day.activities);
-            const nextId = isToday ? nextActivityId(day.activities, now) : null;
+            const nextId =
+              isTodayFlag && now != null
+                ? nextActivityId(day.activities, now)
+                : null;
 
             return (
               <section key={day.id} className="relative pl-8">
                 <span
                   aria-hidden
                   className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 ${
-                    isToday
+                    isTodayFlag
                       ? 'border-accent bg-accent'
                       : 'border-border bg-surface'
                   }`}
@@ -366,7 +301,7 @@ export function ItineraryDays({
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-2 mb-1">
                   <h2 className="text-lg font-medium text-black dark:text-zinc-50 font-mono tabular-nums">
                     {formatDay(day.date)}
-                    {isToday && (
+                    {isTodayFlag && (
                       <span className="ml-2 rounded-full bg-accent px-2 py-0.5 align-middle text-xs font-sans font-semibold text-accent-fg">
                         Today
                       </span>
