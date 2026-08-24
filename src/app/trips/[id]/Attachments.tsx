@@ -48,7 +48,7 @@ export function Attachments({
 
   return (
     <details className="mb-8 rounded-lg border border-border p-4">
-      <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
+      <summary className="cursor-pointer text-sm font-medium text-foreground">
         Attachments{attachments.length > 0 ? ` (${attachments.length})` : ''}
       </summary>
 
@@ -58,7 +58,7 @@ export function Attachments({
             <li key={attachment.id} className="flex items-center gap-3">
               <a
                 href={`/trips/${tripId}/attachments/${attachment.id}`}
-                className="block min-w-0 flex-1 truncate text-sm text-black underline dark:text-zinc-50"
+                className="block min-w-0 flex-1 truncate text-sm text-foreground underline"
               >
                 {attachment.filename}
               </a>
@@ -100,15 +100,13 @@ export function Attachments({
         )}
         <div className="flex items-end gap-3">
           <label className="flex flex-1 flex-col gap-1">
-            <span className="text-sm font-medium text-black dark:text-zinc-50">
-              File
-            </span>
+            <span className="text-sm font-medium text-foreground">File</span>
             <input
               type="file"
               name="file"
               required
               accept={ACCEPT}
-              className="text-sm text-zinc-600 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:text-zinc-700 dark:text-zinc-400 dark:file:bg-zinc-800 dark:file:text-zinc-300"
+              className="text-sm text-zinc-600 file:mr-3 file:rounded-full file:border-0 file:bg-border file:px-3 file:py-1.5 file:text-sm file:text-zinc-700 dark:text-zinc-400 dark:file:text-zinc-300"
             />
           </label>
           <SubmitButton

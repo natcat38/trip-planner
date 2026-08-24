@@ -9,7 +9,7 @@ import {
   updateTrip,
 } from '@/server/trips';
 import { acceptInvite, declineInvite } from '@/server/sharing';
-import { ignoreIfMissing } from '@/server/auth-scope';
+import { ForbiddenOrNotFoundError, ignoreIfMissing } from '@/server/auth-scope';
 import { StaleWriteError, ValidationError } from '@/server/errors';
 
 export interface TripFormState {
@@ -55,7 +55,11 @@ export async function updateTripAction(
       updatedAt: new Date(updatedAt),
     });
   } catch (err) {
-    if (err instanceof ValidationError || err instanceof StaleWriteError)
+    if (
+      err instanceof ValidationError ||
+      err instanceof StaleWriteError ||
+      err instanceof ForbiddenOrNotFoundError
+    )
       return { error: err.message };
     throw err;
   }

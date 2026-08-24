@@ -8,6 +8,7 @@
 // "average meal cost" derived from these sections; no free source supports
 // that claim (see docs/phase-3-research-layer-handoff.md §3.3).
 
+import { createTtlCache } from '../ttl-cache';
 import { USER_AGENT } from './userAgent';
 
 const API_BASE = 'https://en.wikivoyage.org/w/api.php';
@@ -43,15 +44,10 @@ export interface Guide {
   coverage: 'good' | 'thin' | 'none';
 }
 
-interface GuideCacheEntry {
-  guide: Guide;
-  fetchedAt: number;
-}
-
-let cache = new Map<string, GuideCacheEntry>();
+const cache = createTtlCache<Guide>(CACHE_TTL_MS);
 
 export function __resetGuideCacheForTests() {
-  cache = new Map();
+  cache.reset();
 }
 
 function emptySections(): Record<SectionKey, string | null> {
@@ -353,12 +349,11 @@ async function buildGuide(destination: string): Promise<Guide> {
 export async function getGuide(destination: string): Promise<Guide | null> {
   const key = destination.trim().toLowerCase();
   const cached = cache.get(key);
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS)
-    return cached.guide;
+  if (cached) return cached;
 
   try {
     const guide = await buildGuide(destination);
-    cache.set(key, { guide, fetchedAt: Date.now() });
+    cache.set(key, guide);
     return guide;
   } catch {
     // Network error, timeout, or malformed response: never throw (house

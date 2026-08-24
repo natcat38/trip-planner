@@ -29,7 +29,7 @@ const FEATURES = [
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-1 flex-col bg-surface">
       {/* No AppHeader here — this page is deliberately auth-free (see the
           comment above) — so it carries its own minimal, non-fixed chrome
           just for the theme toggle, matching /shared/[token]'s. */}
@@ -41,7 +41,7 @@ export default function Home() {
         tabIndex={-1}
         className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-8 sm:py-24"
       >
-        <h1 className="text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+        <h1 className="text-4xl font-semibold tracking-tight text-foreground">
           Trip Planner
         </h1>
         <p className="mt-4 max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
@@ -65,9 +65,7 @@ export default function Home() {
         <dl className="mt-16 grid gap-8 sm:grid-cols-2">
           {FEATURES.map((feature) => (
             <div key={feature.title}>
-              <dt className="font-medium text-black dark:text-zinc-50">
-                {feature.title}
-              </dt>
+              <dt className="font-medium text-foreground">{feature.title}</dt>
               <dd className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                 {feature.body}
               </dd>

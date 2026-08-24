@@ -97,6 +97,24 @@ describe('createExpense', () => {
     ).rejects.toThrow(ValidationError);
     expect(db.expense.create).not.toHaveBeenCalled();
   });
+
+  // Regression for parseExpenseFormData (trips/[id]/actions.ts): an absent
+  // costAmount now parses to NaN rather than 0, so a request with no amount
+  // at all is rejected here the same way a negative one is, instead of
+  // silently creating a free "$0" expense.
+  it('rejects a NaN cost amount (an absent form field, not an explicit 0)', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    await expect(
+      createExpense('trip-1', {
+        label: 'Flights',
+        category: 'Transport',
+        costAmount: NaN,
+        costCurrency: 'EUR',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.expense.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('deleteExpense', () => {

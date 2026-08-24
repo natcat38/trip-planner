@@ -102,6 +102,16 @@ describe('buildIcs', () => {
     expect(lines).toContain('DTEND:20260902T003000');
   });
 
+  it('rolls DTEND to the next day when an explicit end time is earlier than the start (overnight)', () => {
+    const ics = buildIcs('My Trip', [
+      baseEvent({ startTime: '23:00', endTime: '01:00' }),
+    ]);
+    const lines = unfold(ics);
+
+    expect(lines).toContain('DTSTART:20260901T230000');
+    expect(lines).toContain('DTEND:20260902T010000');
+  });
+
   it('produces an all-day VALUE=DATE event with DTEND on the next day for an untimed activity', () => {
     const ics = buildIcs('My Trip', [baseEvent({ startTime: null })]);
     const lines = unfold(ics);

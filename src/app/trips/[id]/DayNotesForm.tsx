@@ -24,7 +24,7 @@ export function DayNotesForm({
 
   return (
     <details className="mt-4 rounded-lg border border-dashed border-border p-4">
-      <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
+      <summary className="cursor-pointer text-sm font-medium text-foreground">
         {notes ? 'Day notes' : 'Add day notes'}
       </summary>
       <form action={formAction} className="mt-4 flex flex-col gap-3">
@@ -34,9 +34,7 @@ export function DayNotesForm({
           </p>
         )}
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-black dark:text-zinc-50">
-            Notes
-          </span>
+          <span className="text-sm font-medium text-foreground">Notes</span>
           <textarea
             name="notes"
             autoComplete="off"

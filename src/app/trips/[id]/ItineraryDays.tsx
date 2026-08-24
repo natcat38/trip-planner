@@ -167,7 +167,7 @@ function formatWeatherLine(weather: DayWeather): string {
 // it resolves.
 function WeatherLineSkeleton() {
   return (
-    <span className="mb-3 block h-4 w-48 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+    <span className="mb-3 block h-4 w-48 animate-pulse rounded bg-border" />
   );
 }
 
@@ -299,7 +299,7 @@ export function ItineraryDays({
                   }`}
                 />
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-2 mb-1">
-                  <h2 className="text-lg font-medium text-black dark:text-zinc-50 font-mono tabular-nums">
+                  <h2 className="text-lg font-medium text-foreground font-mono tabular-nums">
                     {formatDay(day.date)}
                     {isTodayFlag && (
                       <span className="ml-2 rounded-full bg-accent px-2 py-0.5 align-middle text-xs font-sans font-semibold text-accent-fg">
@@ -360,7 +360,7 @@ export function ItineraryDays({
                                 className="text-left"
                                 disabled={activity.lat == null}
                               >
-                                <p className="font-medium text-black dark:text-zinc-50">
+                                <p className="font-medium text-foreground">
                                   {activity.title}{' '}
                                   <span className="font-normal text-zinc-500 dark:text-zinc-400">
                                     ({activity.category})
@@ -433,7 +433,7 @@ export function ItineraryDays({
                                     aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
                                     className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
                                       votes[activity.id]?.mine
-                                        ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
+                                        ? 'border-accent text-accent dark:border-accent dark:text-accent'
                                         : 'border-border text-zinc-500 dark:text-zinc-400'
                                     }`}
                                   >
@@ -466,13 +466,14 @@ export function ItineraryDays({
                                           tripId,
                                           activity.id,
                                           color,
+                                          activity.updatedAt.toISOString(),
                                         )}
                                       >
                                         <SubmitButton
                                           aria-label={`Set pin colour ${color}`}
                                           className={`h-6 w-6 rounded-full border ${
                                             activity.pinColor === color
-                                              ? 'border-black dark:border-white'
+                                              ? 'border-accent'
                                               : 'border-border'
                                           }`}
                                           style={{ background: color }}
@@ -487,6 +488,7 @@ export function ItineraryDays({
                                         tripId,
                                         activity.id,
                                         null,
+                                        activity.updatedAt.toISOString(),
                                       )}
                                     >
                                       <SubmitButton
@@ -588,7 +590,7 @@ export function ItineraryDays({
                 )}
 
                 <details className="rounded-lg border border-dashed border-border p-4">
-                  <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
+                  <summary className="cursor-pointer text-sm font-medium text-foreground">
                     Add activity
                   </summary>
                   <div className="mt-4">

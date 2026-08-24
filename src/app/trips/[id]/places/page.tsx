@@ -62,7 +62,7 @@ function GuidePanel({
   if (!destination) {
     return (
       <Card as="section" className="mb-10">
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
+        <h2 className="text-lg font-medium text-foreground mb-2">
           Destination guide
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -78,7 +78,7 @@ function GuidePanel({
   if (guide == null || guide.coverage === 'none') {
     return (
       <Card as="section" className="mb-10">
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
+        <h2 className="text-lg font-medium text-foreground mb-2">
           Destination guide
         </h2>
         <p className="text-sm text-warning">
@@ -105,7 +105,7 @@ function GuidePanel({
   return (
     <Card as="section" className="mb-10">
       <div className="flex items-baseline justify-between mb-2 gap-4">
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+        <h2 className="text-lg font-medium text-foreground">
           Destination guide — {guide.title}
         </h2>
         <span
@@ -137,7 +137,7 @@ function GuidePanel({
               key={key}
               className="rounded border border-dashed border-border p-3"
             >
-              <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
+              <summary className="cursor-pointer text-sm font-medium text-foreground">
                 {label}
               </summary>
               <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
@@ -192,9 +192,9 @@ function GuidePanel({
 function GuideSkeleton() {
   return (
     <Card as="section" className="mb-10">
-      <div className="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-3" />
-      <div className="h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-2" />
-      <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+      <div className="h-5 w-40 animate-pulse rounded bg-border mb-3" />
+      <div className="h-4 w-full animate-pulse rounded bg-border mb-2" />
+      <div className="h-4 w-3/4 animate-pulse rounded bg-border" />
     </Card>
   );
 }
@@ -286,14 +286,14 @@ export default async function PlacesPage({
   const showFreeModelNotice = keyStatus?.model?.endsWith(':free') ?? false;
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-foreground">
             Places — {trip.name}
           </h1>
           <Link
@@ -313,7 +313,7 @@ export default async function PlacesPage({
         </Suspense>
 
         <Card as="section" className="mb-10">
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
+          <h2 className="text-lg font-medium text-foreground mb-4">
             Search places
           </h2>
 
@@ -350,7 +350,7 @@ export default async function PlacesPage({
                   <Select
                     name="category"
                     defaultValue={category ?? ''}
-                    className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+                    className="px-3 py-2 text-sm text-foreground"
                     options={[
                       { value: '', label: 'All categories' },
                       { value: 'Food', label: 'Food' },
@@ -383,7 +383,7 @@ export default async function PlacesPage({
                       className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-border p-4"
                     >
                       <div className="min-w-0">
-                        <p className="font-medium text-black dark:text-zinc-50 truncate">
+                        <p className="font-medium text-foreground truncate">
                           {place.name}{' '}
                           <span className="font-normal text-zinc-500 dark:text-zinc-400">
                             ({place.category})
@@ -476,7 +476,7 @@ export default async function PlacesPage({
         </Card>
 
         <section>
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
+          <h2 className="text-lg font-medium text-foreground mb-4">
             Saved places
           </h2>
 

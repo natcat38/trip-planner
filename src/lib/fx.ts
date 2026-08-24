@@ -1,16 +1,12 @@
 import { requireEnv } from './env';
 import { minorUnitExponent, toMinorUnits } from './money';
-
-interface RatesCacheEntry {
-  rates: Record<string, number>;
-  fetchedAt: number;
-}
+import { createTtlCache } from './ttl-cache';
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // daily refresh per ADR-0004
-let cache = new Map<string, RatesCacheEntry>();
+const cache = createTtlCache<Record<string, number>>(CACHE_TTL_MS);
 
 export function __resetFxCacheForTests() {
-  cache = new Map();
+  cache.reset();
 }
 
 async function fetchRates(
@@ -27,12 +23,11 @@ async function fetchRates(
 
 async function getRates(base: string): Promise<Record<string, number> | null> {
   const cached = cache.get(base);
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS)
-    return cached.rates;
+  if (cached) return cached;
 
   const rates = await fetchRates(base);
   if (!rates) return null;
-  cache.set(base, { rates, fetchedAt: Date.now() });
+  cache.set(base, rates);
   return rates;
 }
 

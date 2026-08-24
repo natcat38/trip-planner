@@ -21,9 +21,7 @@ export function ExpenseForm({
         </p>
       )}
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Label
-        </span>
+        <span className="text-sm font-medium text-foreground">Label</span>
         <input
           name="label"
           required
@@ -33,9 +31,7 @@ export function ExpenseForm({
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Category
-        </span>
+        <span className="text-sm font-medium text-foreground">Category</span>
         <input
           name="category"
           required
@@ -45,9 +41,7 @@ export function ExpenseForm({
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Amount
-        </span>
+        <span className="text-sm font-medium text-foreground">Amount</span>
         <input
           type="number"
           name="costAmount"
@@ -60,9 +54,7 @@ export function ExpenseForm({
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black dark:text-zinc-50">
-          Currency
-        </span>
+        <span className="text-sm font-medium text-foreground">Currency</span>
         <input
           name="costCurrency"
           required

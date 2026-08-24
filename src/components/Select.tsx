@@ -13,7 +13,7 @@
  * Deliberately minimal: only the props the app's seven call sites actually
  * use. Border, text size, and text colour are NOT baked in here — they vary
  * per site (e.g. ThemeToggle's muted `text-zinc-600` vs the standard
- * `text-black dark:text-zinc-50`) and are supplied via `className`.
+ * `text-foreground`) and are supplied via `className`.
  * @packageDocumentation
  */
 

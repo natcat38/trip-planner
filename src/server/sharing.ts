@@ -22,7 +22,11 @@ import {
   ForbiddenOrNotFoundError,
   requireTripOwner,
 } from './auth-scope';
-import { InvalidShareLinkError, ValidationError } from './errors';
+import {
+  InvalidShareLinkError,
+  StaleWriteError,
+  ValidationError,
+} from './errors';
 import { summarizeBudget, type BudgetSummary } from './budget';
 
 export interface CollaboratorSummary {
@@ -52,19 +56,30 @@ export async function getShareStatus(tripId: string): Promise<ShareStatus> {
   };
 }
 
-export async function enableShareLink(tripId: string): Promise<string> {
+export async function enableShareLink(
+  tripId: string,
+  updatedAt: Date,
+): Promise<string> {
   const trip = await requireTripOwner(tripId);
   const shareToken = randomBytes(24).toString('base64url');
-  await db.trip.update({ where: { id: trip.id }, data: { shareToken } });
+  const result = await db.trip.updateMany({
+    where: { id: trip.id, updatedAt },
+    data: { shareToken },
+  });
+  if (result.count === 0) throw new StaleWriteError();
   return shareToken;
 }
 
-export async function revokeShareLink(tripId: string): Promise<void> {
+export async function revokeShareLink(
+  tripId: string,
+  updatedAt: Date,
+): Promise<void> {
   const trip = await requireTripOwner(tripId);
-  await db.trip.update({
-    where: { id: trip.id },
+  const result = await db.trip.updateMany({
+    where: { id: trip.id, updatedAt },
     data: { shareToken: null },
   });
+  if (result.count === 0) throw new StaleWriteError();
 }
 
 function validateEmail(email: string) {

@@ -119,8 +119,10 @@ function timedRange(
 
   const dtstart = `${formatDateOnly(date)}T${formatMinutesOfDay(startMinutes)}`;
   // An end time (explicit or defaulted) that crosses midnight lands on the
-  // next calendar day.
-  const endDate = endMinutes >= 24 * 60 ? addUtcDays(date, 1) : date;
+  // next calendar day. A defaulted end overflows past 24:00; an explicit end
+  // earlier than the start (e.g. 23:00 -> 01:00) means an overnight span.
+  const overnight = endMinutes >= 24 * 60 || endMinutes < startMinutes;
+  const endDate = overnight ? addUtcDays(date, 1) : date;
   const dtend = `${formatDateOnly(endDate)}T${formatMinutesOfDay(endMinutes)}`;
   return { dtstart, dtend };
 }

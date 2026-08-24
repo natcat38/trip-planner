@@ -14,13 +14,19 @@ export interface InviteFormState {
   error?: string;
 }
 
-export async function enableShareLinkAction(tripId: string): Promise<void> {
-  await enableShareLink(tripId);
+export async function enableShareLinkAction(
+  tripId: string,
+  updatedAt: string,
+): Promise<void> {
+  await enableShareLink(tripId, new Date(updatedAt));
   revalidatePath(`/trips/${tripId}`);
 }
 
-export async function revokeShareLinkAction(tripId: string): Promise<void> {
-  await ignoreIfMissing(revokeShareLink(tripId));
+export async function revokeShareLinkAction(
+  tripId: string,
+  updatedAt: string,
+): Promise<void> {
+  await ignoreIfMissing(revokeShareLink(tripId, new Date(updatedAt)));
   revalidatePath(`/trips/${tripId}`);
 }
 

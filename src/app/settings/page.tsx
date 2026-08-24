@@ -20,16 +20,14 @@ export default async function SettingsPage() {
   const models = status ? await listAvailableModels() : null;
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
-            Settings
-          </h1>
+          <h1 className="text-4xl font-semibold text-foreground">Settings</h1>
           <Link
             href="/trips"
             className="text-sm text-zinc-600 dark:text-zinc-400 underline"
@@ -39,9 +37,7 @@ export default async function SettingsPage() {
         </div>
 
         <Card as="section">
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
-            AI key
-          </h2>
+          <h2 className="text-lg font-medium text-foreground mb-4">AI key</h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
             Bring your own Groq or OpenRouter key to enable AI-assisted trip
             guide summaries. The app never holds a shared key — this one is
@@ -52,7 +48,7 @@ export default async function SettingsPage() {
         </Card>
 
         <Card as="section" className="mt-8">
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
+          <h2 className="text-lg font-medium text-foreground mb-4">
             Browser extension
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">

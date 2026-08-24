@@ -62,9 +62,7 @@ export function DayPlanner({
 
   return (
     <Card as="section" className="mt-10">
-      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-1">
-        Plan a day
-      </h2>
+      <h2 className="text-lg font-medium text-foreground mb-1">Plan a day</h2>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         Answer two questions and get 2-3 candidate day plans built from your
         saved places below.
@@ -72,7 +70,7 @@ export function DayPlanner({
 
       <form action={formAction} className="flex flex-col gap-4">
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-black dark:text-zinc-50">
+          <legend className="mb-2 text-sm font-medium text-foreground">
             Focus (pick any)
           </legend>
           <div className="flex flex-wrap gap-4">
@@ -91,7 +89,7 @@ export function DayPlanner({
         <div>
           <label
             htmlFor="pace"
-            className="mb-1 block text-sm font-medium text-black dark:text-zinc-50"
+            className="mb-1 block text-sm font-medium text-foreground"
           >
             Pace
           </label>
@@ -99,7 +97,7 @@ export function DayPlanner({
             id="pace"
             name="pace"
             defaultValue="relaxed"
-            className="px-3 py-2 text-sm text-black dark:text-zinc-50"
+            className="px-3 py-2 text-sm text-foreground"
             options={[
               { value: 'relaxed', label: 'Relaxed' },
               { value: 'packed', label: 'Packed' },
@@ -195,9 +193,7 @@ function CandidateCard({
 
   return (
     <div className="rounded border border-border p-4">
-      <p className="font-medium text-black dark:text-zinc-50">
-        {candidate.label}
-      </p>
+      <p className="font-medium text-foreground">{candidate.label}</p>
       <ol className="mt-2 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
         {candidate.places.map((place) => (
           <li key={place.id}>
@@ -225,7 +221,7 @@ function CandidateCard({
         <Select
           name="dayId"
           required
-          className="px-2 py-1 text-sm text-black dark:text-zinc-50"
+          className="px-2 py-1 text-sm text-foreground"
           options={days.map((day) => ({
             value: day.id,
             label: formatDayOption(day.date),

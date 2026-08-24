@@ -51,9 +51,11 @@ function CopyShareUrlButton({ url }: { url: string }) {
 export function SharingPanel({
   tripId,
   status,
+  updatedAt,
 }: {
   tripId: string;
   status: ShareStatus;
+  updatedAt: string;
 }) {
   const [state, formAction] = useActionState<InviteFormState, FormData>(
     inviteCollaboratorAction.bind(null, tripId),
@@ -72,9 +74,7 @@ export function SharingPanel({
 
   return (
     <Card as="section" className="mb-10">
-      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
-        Sharing
-      </h2>
+      <h2 className="text-lg font-medium text-foreground mb-4">Sharing</h2>
 
       <div className="mb-6">
         {status.shareToken ? (
@@ -86,12 +86,14 @@ export function SharingPanel({
                 value={shareUrl ?? ''}
                 spellCheck={false}
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full min-w-0 rounded border border-border-strong bg-white px-3 py-2 text-sm text-black dark:bg-zinc-900 dark:text-zinc-50"
+                className="w-full min-w-0 rounded border border-border-strong bg-white px-3 py-2 text-sm text-foreground dark:bg-zinc-900"
               />
               <CopyShareUrlButton url={shareUrl ?? ''} />
             </div>
             <div className="flex flex-wrap gap-4">
-              <form action={enableShareLinkAction.bind(null, tripId)}>
+              <form
+                action={enableShareLinkAction.bind(null, tripId, updatedAt)}
+              >
                 <ConfirmSubmitButton
                   confirm="Regenerate the link? Every previously shared link stops working."
                   pendingLabel="Regenerating…"
@@ -100,7 +102,9 @@ export function SharingPanel({
                   Regenerate link
                 </ConfirmSubmitButton>
               </form>
-              <form action={revokeShareLinkAction.bind(null, tripId)}>
+              <form
+                action={revokeShareLinkAction.bind(null, tripId, updatedAt)}
+              >
                 <ConfirmSubmitButton
                   confirm="Turn off the public link? Anyone holding it loses access."
                   pendingLabel="Turning off…"
@@ -112,7 +116,7 @@ export function SharingPanel({
             </div>
           </div>
         ) : (
-          <form action={enableShareLinkAction.bind(null, tripId)}>
+          <form action={enableShareLinkAction.bind(null, tripId, updatedAt)}>
             <SubmitButton
               pendingLabel="Creating…"
               className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
@@ -124,7 +128,7 @@ export function SharingPanel({
       </div>
 
       <div>
-        <h3 className="text-15 font-medium text-black dark:text-zinc-50 mb-2">
+        <h3 className="text-15 font-medium text-foreground mb-2">
           Collaborators
         </h3>
         {status.collaborators.length > 0 && (
@@ -171,9 +175,7 @@ export function SharingPanel({
             </p>
           )}
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-black dark:text-zinc-50">
-              Email
-            </span>
+            <span className="text-sm font-medium text-foreground">Email</span>
             <input
               type="email"
               name="email"
