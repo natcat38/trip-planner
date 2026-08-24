@@ -27,7 +27,7 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]/places` | 6 | "Plan a day" (Phase 3 M4, ADR-0012): a short structured questionnaire — focus + pace, deliberately not a free-text/chat box (handoff §8) — that turns the saved-places tray into 2-3 candidate day plans. |
 | `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
-| `src/components` | 6 | Shared presentational components used across trip pages: currently the Mapbox pin map that plots an itinerary's geocoded activity places. |
+| `src/components` | 7 | The universal `rounded-lg border p-5` container — the panel wrapper that appears, byte-for-byte identical, around most of a trip page's sections (Budget, Sharing, Places, the settings panels, the shared-trip view). |
 | `src/lib` | 11 | Byte-size formatting, shared by the attachment server module and its client component. |
 | `src/lib/ai` | 1 | BYOK AI layer: talks to the user's own Groq or OpenRouter API key over their shared OpenAI-compatible surface (`POST {base}/chat/completions`, `GET {base}/models`, `Authorization: Bearer {key}`) — see docs/adr/0009-gemini-free-tier-unusable-eea.md for why these two providers and not a Gemini-direct or app-held-key design. |
 | `src/lib/dayPlan` | 1 | Algorithmic day-plan candidate generation — the keyless path for Phase 3 M4. |
@@ -36,4 +36,4 @@ block — an orientation gap, not an omission by the generator.
 | `e2e` | 1 | Canonical e2e sign-in: create a real User + Session row and hand the browser the authjs session cookie. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-25 source directories, 97 files, 0 without a declared purpose.
+25 source directories, 98 files, 0 without a declared purpose.
