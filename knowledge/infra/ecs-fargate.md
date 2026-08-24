@@ -9,11 +9,12 @@ timestamp: 2026-06-15T00:00:00Z
 
 # Schema
 
-**Status (2026-07-23):** deferred to post-ship showcase — Phase 1 deploys on Vercel + Neon.
-See [ADR-0001](../../docs/adr/0001-deploy-vercel-neon-defer-aws.md).
+**Status (2026-08-24):** planned, not deployed. The app is deployed and running in production
+on Vercel + Neon (Phases 1–4); this document describes a possible future AWS runtime that has
+not been built. See [ADR-0001](../../docs/adr/0001-deploy-vercel-neon-defer-aws.md).
 
-The app ships as a multi-stage Docker image (`output: 'standalone'`, non-root, `HEALTHCHECK`)
-and runs as an **ECS Fargate** service + task definition behind an **ALB**.
+If built, the app would ship as a multi-stage Docker image (`output: 'standalone'`, non-root,
+`HEALTHCHECK`) and run as an **ECS Fargate** service + task definition behind an **ALB**.
 
 - **Data** — **RDS Postgres**; an **ECR** repo holds images.
 - **Secrets** — DB creds, OAuth client secret, [Mapbox](/integrations/mapbox.md) token, and the
