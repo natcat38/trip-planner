@@ -9,6 +9,9 @@ import {
   type ExtensionTokenFormState,
 } from './actions';
 
+// Hardcoded 'en-US' (not `undefined`): this is a 'use client' component,
+// SSR'd once then hydrated — see ItineraryDays.tsx's formatDay for why
+// `undefined` locale risks a server/client text mismatch here.
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',

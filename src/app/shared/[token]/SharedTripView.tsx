@@ -1,6 +1,8 @@
+import { Fragment } from 'react';
 import { Map } from '@/components/Map';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
+import { formatDay } from '@/lib/format';
 import type {
   getSharedBudgetSummary,
   getSharedTrip,
@@ -14,17 +16,6 @@ import { Card } from '@/components/Card';
 type SharedTripData = Awaited<ReturnType<typeof getSharedTrip>>;
 type BudgetSummary = Awaited<ReturnType<typeof getSharedBudgetSummary>>;
 type SharedExpenses = Awaited<ReturnType<typeof listSharedExpenses>>;
-
-function formatDay(date: Date): string {
-  // Day.date is always stored as UTC midnight — pin the format to UTC so it
-  // reads the same calendar day everywhere, regardless of viewer/server TZ.
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
 
 export function SharedTripView({
   data,
@@ -68,7 +59,7 @@ export function SharedTripView({
           Read-only shared view
         </p>
         <div className="flex items-baseline justify-between gap-4 mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             {trip.name}
           </h1>
           {canSaveCopy && (
@@ -84,7 +75,7 @@ export function SharedTripView({
         </div>
 
         <Card as="section" className="mb-10">
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
           <p
@@ -105,8 +96,10 @@ export function SharedTripView({
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}
-                  {formatMoney(item.originalMinor, item.originalCurrency)} —
-                  Showing original amount — conversion rate unavailable.
+                  <span className="font-mono tabular-nums">
+                    {formatMoney(item.originalMinor, item.originalCurrency)}
+                  </span>{' '}
+                  — Showing original amount — conversion rate unavailable.
                 </li>
               ))}
             </ul>
@@ -118,7 +111,7 @@ export function SharedTripView({
                   <span>
                     {expense.label} ({expense.category})
                   </span>
-                  <span>
+                  <span className="font-mono tabular-nums">
                     {formatMoney(expense.costMinor, expense.costCurrency)}
                   </span>
                 </li>
@@ -134,7 +127,7 @@ export function SharedTripView({
 
           {days.map((day) => (
             <section key={day.id}>
-              <h2 className="font-medium text-black dark:text-zinc-50 mb-3">
+              <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-3 font-mono tabular-nums">
                 {formatDay(day.date)}
               </h2>
               {day.activities.length > 0 && (
@@ -152,19 +145,33 @@ export function SharedTripView({
                       </p>
                       <p className="text-sm text-zinc-600 dark:text-zinc-400">
                         {[
-                          activity.startTime && activity.endTime
-                            ? `${activity.startTime}–${activity.endTime}`
-                            : activity.startTime,
+                          activity.startTime && activity.endTime ? (
+                            <span key="time" className="font-mono tabular-nums">
+                              {activity.startTime}–{activity.endTime}
+                            </span>
+                          ) : activity.startTime ? (
+                            <span key="time" className="font-mono tabular-nums">
+                              {activity.startTime}
+                            </span>
+                          ) : null,
                           activity.placeName,
-                          activity.costMinor != null && activity.costCurrency
-                            ? formatMoney(
+                          activity.costMinor != null &&
+                          activity.costCurrency ? (
+                            <span key="cost" className="font-mono tabular-nums">
+                              {formatMoney(
                                 activity.costMinor,
                                 activity.costCurrency,
-                              )
-                            : null,
+                              )}
+                            </span>
+                          ) : null,
                         ]
                           .filter(Boolean)
-                          .join(' · ')}
+                          .map((seg, i) => (
+                            <Fragment key={i}>
+                              {i > 0 && ' · '}
+                              {seg}
+                            </Fragment>
+                          ))}
                       </p>
                       {activity.notes && (
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">

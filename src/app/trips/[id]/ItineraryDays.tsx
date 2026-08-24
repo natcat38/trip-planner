@@ -35,6 +35,18 @@ const PIN_COLOR_PALETTE = [
   '#9333ea', // purple
 ] as const;
 
+// Deliberately NOT consolidated into src/lib/format.ts and deliberately
+// hardcoded to 'en-US' rather than `undefined`: this is a 'use client'
+// component, so Next.js renders it once on the server (for the initial
+// HTML) and again on the client during hydration. `undefined` lets each
+// environment resolve its own default locale — if the server's default
+// locale differs from the browser's, the two renders produce different
+// text and React discards/rebuilds the whole subtree on hydration
+// mismatch, breaking interactive state under it. A hardcoded locale keeps
+// server and client output identical by construction. Server Components
+// (trips/page.tsx, print/page.tsx, SharedTripView.tsx) don't have this
+// risk — they render once, server-side only — which is why their
+// formatDay import from src/lib/format.ts safely uses `undefined`.
 function formatDay(date: Date): string {
   // Day.date is always stored as UTC midnight — pin the format to UTC so it
   // reads the same calendar day everywhere, regardless of viewer/server TZ.
@@ -170,7 +182,7 @@ export function ItineraryDays({
       {days.map((day) => {
         return (
           <section key={day.id}>
-            <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
+            <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-1 font-mono tabular-nums">
               {formatDay(day.date)}
             </h2>
             <Suspense fallback={<WeatherLineSkeleton />}>
@@ -215,20 +227,42 @@ export function ItineraryDays({
                             </p>
                             <p className="text-sm text-zinc-600 dark:text-zinc-400">
                               {[
-                                activity.startTime && activity.endTime
-                                  ? `${activity.startTime}–${activity.endTime}`
-                                  : activity.startTime,
+                                activity.startTime && activity.endTime ? (
+                                  <span
+                                    key="time"
+                                    className="font-mono tabular-nums"
+                                  >
+                                    {activity.startTime}–{activity.endTime}
+                                  </span>
+                                ) : activity.startTime ? (
+                                  <span
+                                    key="time"
+                                    className="font-mono tabular-nums"
+                                  >
+                                    {activity.startTime}
+                                  </span>
+                                ) : null,
                                 activity.placeName,
                                 activity.costMinor != null &&
-                                activity.costCurrency
-                                  ? formatMoney(
+                                activity.costCurrency ? (
+                                  <span
+                                    key="cost"
+                                    className="font-mono tabular-nums"
+                                  >
+                                    {formatMoney(
                                       activity.costMinor,
                                       activity.costCurrency,
-                                    )
-                                  : null,
+                                    )}
+                                  </span>
+                                ) : null,
                               ]
                                 .filter(Boolean)
-                                .join(' · ')}
+                                .map((seg, i) => (
+                                  <Fragment key={i}>
+                                    {i > 0 && ' · '}
+                                    {seg}
+                                  </Fragment>
+                                ))}
                             </p>
                             {activity.notes && (
                               <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">

@@ -32,7 +32,9 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
 
   return (
     <Card as="section" className="mb-10">
-      <h2 className="font-medium text-black dark:text-zinc-50 mb-2">Budget</h2>
+      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
+        Budget
+      </h2>
       <p
         className={
           summary.isOverBudget
@@ -52,7 +54,9 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
           {Object.entries(summary.byCategory).map(([category, minor]) => (
             <li key={category} className="flex justify-between">
               <span>{category}</span>
-              <span>{formatMoney(minor, summary.baseCurrency)}</span>
+              <span className="font-mono tabular-nums">
+                {formatMoney(minor, summary.baseCurrency)}
+              </span>
             </li>
           ))}
         </ul>
@@ -63,15 +67,17 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
           {summary.unconvertedItems.map((item) => (
             <li key={item.id}>
               {item.label}:{' '}
-              {formatMoney(item.originalMinor, item.originalCurrency)} — Showing
-              original amount — conversion rate unavailable, retrying.
+              <span className="font-mono tabular-nums">
+                {formatMoney(item.originalMinor, item.originalCurrency)}
+              </span>{' '}
+              — Showing original amount — conversion rate unavailable, retrying.
             </li>
           ))}
         </ul>
       )}
 
       <div className="mt-6">
-        <h3 className="text-sm font-medium text-black dark:text-zinc-50 mb-2">
+        <h3 className="text-15 font-medium text-black dark:text-zinc-50 mb-2">
           Expenses
         </h3>
         {expenses.length > 0 && (
@@ -83,7 +89,9 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
               >
                 <span>
                   {expense.label} ({expense.category}) —{' '}
-                  {formatMoney(expense.costMinor, expense.costCurrency)}
+                  <span className="font-mono tabular-nums">
+                    {formatMoney(expense.costMinor, expense.costCurrency)}
+                  </span>
                 </span>
                 <form
                   action={deleteExpenseAction.bind(null, tripId, expense.id)}

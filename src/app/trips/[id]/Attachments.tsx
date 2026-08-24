@@ -20,6 +20,10 @@ const ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 // Day.date is stored as UTC midnight and means a calendar day, so pinning it
 // is correct there. This is a real timestamp: rendering it in UTC would show a
 // file uploaded at 22:00 in Tokyo as having arrived the day before.
+//
+// Also hardcoded to 'en-US' (not `undefined`): this is a 'use client'
+// component, SSR'd once then hydrated — see ItineraryDays.tsx's formatDay
+// for why `undefined` locale risks a server/client text mismatch here.
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',

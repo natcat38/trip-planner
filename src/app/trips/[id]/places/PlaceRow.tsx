@@ -17,6 +17,9 @@ import {
 type Place = Awaited<ReturnType<typeof listPlaces>>[number];
 type Days = Awaited<ReturnType<typeof ensureDaysForTrip>>;
 
+// Hardcoded 'en-US' (not `undefined`): this is a 'use client' component,
+// SSR'd once then hydrated — see ItineraryDays.tsx's formatDay for why
+// `undefined` locale risks a server/client text mismatch here.
 function formatDayOption(date: Date): string {
   // Day.date is always stored as UTC midnight — pin the format to UTC so it
   // reads the same calendar day everywhere, regardless of viewer/server TZ.

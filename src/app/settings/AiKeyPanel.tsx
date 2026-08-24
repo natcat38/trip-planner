@@ -23,6 +23,25 @@ import {
 
 type Models = { id: string; free: boolean }[] | null;
 
+// This component is 'use client' — Next.js SSRs it once for the initial
+// HTML, then hydrates it in the browser. The previous `status.updatedAt
+// .toLocaleDateString()` (no locale, no options) let the server's and the
+// browser's own default locale/implementation each pick their own output
+// shape, and a mismatch between them is exactly what caused this
+// component's SSR/client hydration error. Explicit options make the format
+// deterministic; hardcoding the locale to 'en-US' (rather than `undefined`)
+// is what actually fixes the hydration mismatch — `undefined` still lets
+// server and client resolve different default locales when they differ,
+// which reintroduces the same class of bug (see ItineraryDays.tsx's
+// formatDay for a case where that happened in this exact codebase).
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
 export function AiKeyPanel({
   status,
   models,
@@ -129,7 +148,10 @@ function StoredKeyPanel({
           {status.provider === 'groq' ? 'Groq' : 'OpenRouter'}
         </span>{' '}
         key <code className="font-mono">{status.maskedKey}</code>, saved{' '}
-        {status.updatedAt.toLocaleDateString()}.
+        <span className="font-mono tabular-nums">
+          {formatDate(status.updatedAt)}
+        </span>
+        .
       </p>
 
       {models === null ? (

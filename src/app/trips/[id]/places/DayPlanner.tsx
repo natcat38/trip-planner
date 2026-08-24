@@ -33,6 +33,9 @@ const FOCUS_OPTIONS = ['Food', 'Sightseeing', 'Transport', 'Lodging', 'Other'];
 
 const INITIAL_STATE: DayPlanFormState = {};
 
+// Hardcoded 'en-US' (not `undefined`): this is a 'use client' component,
+// SSR'd once then hydrated — see ItineraryDays.tsx's formatDay for why
+// `undefined` locale risks a server/client text mismatch here.
 function formatDayOption(date: Date): string {
   // Same UTC pin as PlaceRow.tsx's day picker — Day.date is stored as UTC
   // midnight, so this must read the same calendar day everywhere.
@@ -59,7 +62,7 @@ export function DayPlanner({
 
   return (
     <Card as="section" className="mt-10">
-      <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
+      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-1">
         Plan a day
       </h2>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">

@@ -62,6 +62,12 @@
   --color-danger-fg: var(--danger-fg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Six-step type scale (ADR-0019 §3): 36 / 24 / 18 / 15 / 13 / 11px. Four
+   * of the six steps are already exact Tailwind defaults — text-4xl (36px),
+   * text-2xl (24px), text-lg (18px) — so only the 15px step needs a custom
+   * token; nothing here yet needs the 13px/11px steps. */
+  --text-15: 0.9375rem;
 }
 
 .dark {

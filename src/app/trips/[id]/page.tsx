@@ -75,7 +75,7 @@ export default async function TripItineraryPage({
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-y-2 mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             {trip.name}
           </h1>
           <nav aria-label="Trip actions" className="flex flex-wrap gap-4">

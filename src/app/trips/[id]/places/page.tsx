@@ -62,7 +62,7 @@ function GuidePanel({
   if (!destination) {
     return (
       <Card as="section" className="mb-10">
-        <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -78,7 +78,7 @@ function GuidePanel({
   if (guide == null || guide.coverage === 'none') {
     return (
       <Card as="section" className="mb-10">
-        <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
         <p className="text-sm text-warning">
@@ -105,7 +105,7 @@ function GuidePanel({
   return (
     <Card as="section" className="mb-10">
       <div className="flex items-baseline justify-between mb-2 gap-4">
-        <h2 className="font-medium text-black dark:text-zinc-50">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50">
           Destination guide — {guide.title}
         </h2>
         <span
@@ -293,7 +293,7 @@ export default async function PlacesPage({
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             Places — {trip.name}
           </h1>
           <Link
@@ -313,7 +313,7 @@ export default async function PlacesPage({
         </Suspense>
 
         <Card as="section" className="mb-10">
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
             Search places
           </h2>
 
@@ -476,7 +476,7 @@ export default async function PlacesPage({
         </Card>
 
         <section>
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
             Saved places
           </h2>
 

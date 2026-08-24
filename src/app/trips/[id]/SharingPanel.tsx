@@ -72,7 +72,9 @@ export function SharingPanel({
 
   return (
     <Card as="section" className="mb-10">
-      <h2 className="font-medium text-black dark:text-zinc-50 mb-4">Sharing</h2>
+      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
+        Sharing
+      </h2>
 
       <div className="mb-6">
         {status.shareToken ? (
@@ -122,7 +124,7 @@ export function SharingPanel({
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-black dark:text-zinc-50 mb-2">
+        <h3 className="text-15 font-medium text-black dark:text-zinc-50 mb-2">
           Collaborators
         </h3>
         {status.collaborators.length > 0 && (

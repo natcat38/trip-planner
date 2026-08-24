@@ -4,8 +4,10 @@
  * itinerary and budget summary, reached only via requireTripAccess.
  * @packageDocumentation
  */
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
+import { formatDay, formatDateRange } from '@/lib/format';
 import {
   ForbiddenOrNotFoundError,
   requireTripAccess,
@@ -15,26 +17,6 @@ import { listExpenses } from '@/server/expenses';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { ExportButton } from './ExportButton';
 import { budgetBannerText } from '../BudgetPanel';
-
-function formatDay(date: Date): string {
-  // Day.date is always stored as UTC midnight — pin the format to UTC so it
-  // reads the same calendar day everywhere, regardless of viewer/server TZ.
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
-
-function formatDateRange(start: Date, end: Date): string {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  return `${fmt.format(start)} – ${fmt.format(end)}`;
-}
 
 export default async function TripPrintPage({
   params,
@@ -82,14 +64,16 @@ export default async function TripPrintPage({
           <ExportButton />
         </div>
 
-        <h1 className="text-2xl font-semibold text-black mb-1">{trip.name}</h1>
+        <h1 className="text-4xl font-semibold text-black mb-1">{trip.name}</h1>
         <p className="text-sm text-zinc-600 mb-8">
           {trip.destinations.join(', ')} ·{' '}
-          {formatDateRange(trip.startDate, trip.endDate)}
+          <span className="font-mono tabular-nums">
+            {formatDateRange(trip.startDate, trip.endDate)}
+          </span>
         </p>
 
         <section className="mb-10 border border-black/[.08] rounded-lg p-5 break-inside-avoid">
-          <h2 className="font-medium text-black mb-2">Budget</h2>
+          <h2 className="text-lg font-medium text-black mb-2">Budget</h2>
           <p className={budget.isOverBudget ? 'text-red-600' : 'text-zinc-700'}>
             {budgetBannerText(
               budget.spentMinor,
@@ -102,8 +86,10 @@ export default async function TripPrintPage({
               {budget.unconvertedItems.map((item) => (
                 <li key={item.id}>
                   {item.label}:{' '}
-                  {formatMoney(item.originalMinor, item.originalCurrency)} —
-                  Showing original amount — conversion rate unavailable.
+                  <span className="font-mono tabular-nums">
+                    {formatMoney(item.originalMinor, item.originalCurrency)}
+                  </span>{' '}
+                  — Showing original amount — conversion rate unavailable.
                 </li>
               ))}
             </ul>
@@ -113,7 +99,9 @@ export default async function TripPrintPage({
               {Object.entries(budget.byCategory).map(([category, minor]) => (
                 <li key={category} className="flex justify-between">
                   <span>{category}</span>
-                  <span>{formatMoney(minor, budget.baseCurrency)}</span>
+                  <span className="font-mono tabular-nums">
+                    {formatMoney(minor, budget.baseCurrency)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -125,7 +113,7 @@ export default async function TripPrintPage({
                   <span>
                     {expense.label} ({expense.category})
                   </span>
-                  <span>
+                  <span className="font-mono tabular-nums">
                     {formatMoney(expense.costMinor, expense.costCurrency)}
                   </span>
                 </li>
@@ -137,7 +125,7 @@ export default async function TripPrintPage({
         <div className="flex flex-col gap-8">
           {days.map((day) => (
             <section key={day.id} className="break-inside-avoid">
-              <h2 className="font-medium text-black mb-3">
+              <h2 className="text-lg font-medium text-black mb-3 font-mono tabular-nums">
                 {formatDay(day.date)}
               </h2>
               {day.activities.length > 0 ? (
@@ -155,19 +143,33 @@ export default async function TripPrintPage({
                       </p>
                       <p className="text-sm text-zinc-600">
                         {[
-                          activity.startTime && activity.endTime
-                            ? `${activity.startTime}–${activity.endTime}`
-                            : activity.startTime,
+                          activity.startTime && activity.endTime ? (
+                            <span key="time" className="font-mono tabular-nums">
+                              {activity.startTime}–{activity.endTime}
+                            </span>
+                          ) : activity.startTime ? (
+                            <span key="time" className="font-mono tabular-nums">
+                              {activity.startTime}
+                            </span>
+                          ) : null,
                           activity.placeName,
-                          activity.costMinor != null && activity.costCurrency
-                            ? formatMoney(
+                          activity.costMinor != null &&
+                          activity.costCurrency ? (
+                            <span key="cost" className="font-mono tabular-nums">
+                              {formatMoney(
                                 activity.costMinor,
                                 activity.costCurrency,
-                              )
-                            : null,
+                              )}
+                            </span>
+                          ) : null,
                         ]
                           .filter(Boolean)
-                          .join(' · ')}
+                          .map((seg, i) => (
+                            <Fragment key={i}>
+                              {i > 0 && ' · '}
+                              {seg}
+                            </Fragment>
+                          ))}
                       </p>
                       {activity.notes && (
                         <p className="text-sm text-zinc-500 mt-1">

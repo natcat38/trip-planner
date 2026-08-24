@@ -6,19 +6,11 @@
 import Link from 'next/link';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
+import { formatDateRange } from '@/lib/format';
 import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
 import { InvitesBanner } from './InvitesBanner';
 import { duplicateTripAction } from './actions';
-
-function formatDateRange(start: Date, end: Date): string {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  return `${fmt.format(start)} – ${fmt.format(end)}`;
-}
 
 export default async function TripsPage() {
   const [trips, invites] = await Promise.all([
@@ -36,7 +28,7 @@ export default async function TripsPage() {
         <InvitesBanner invites={invites} />
 
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             Your trips
           </h1>
           <div className="flex items-center gap-4">
@@ -76,16 +68,21 @@ export default async function TripsPage() {
               >
                 <Link href={`/trips/${trip.id}`} className="block flex-1 p-5">
                   <div className="flex items-baseline justify-between gap-4">
-                    <h2 className="font-medium text-black dark:text-zinc-50">
+                    <h2 className="text-lg font-medium text-black dark:text-zinc-50">
                       {trip.name}
                     </h2>
                     <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {formatMoney(trip.budgetMinor, trip.baseCurrency)} budget
+                      <span className="font-mono tabular-nums">
+                        {formatMoney(trip.budgetMinor, trip.baseCurrency)}
+                      </span>{' '}
+                      budget
                     </span>
                   </div>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
                     {trip.destinations.join(', ')} ·{' '}
-                    {formatDateRange(trip.startDate, trip.endDate)}
+                    <span className="font-mono tabular-nums">
+                      {formatDateRange(trip.startDate, trip.endDate)}
+                    </span>
                   </p>
                 </Link>
                 <form
