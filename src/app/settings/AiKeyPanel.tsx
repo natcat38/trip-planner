@@ -199,7 +199,7 @@ function StoredKeyPanel({
           />
 
           {selectedIsFree && (
-            <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+            <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning-strong">
               This is a free OpenRouter model. Its endpoint generally requires
               permission to train on and publish the prompts you send —
               including anything in your trip data, like hotel names and travel

@@ -28,6 +28,11 @@
   /* replaces ad hoc amber-700/amber-400 (unconverted-budget-item rows) */
   --warning: #b45309;
   --warning-fg: #ffffff;
+  /* For text sitting on a TINTED warning surface (bg-warning/10), not on a
+     solid one. --warning itself measures 4.38:1 over that composite — below
+     AA — because the tint darkens the ground it needs contrast against.
+     Measured: 6.19:1 over --surface-raised, 5.90:1 over --surface. */
+  --warning-strong: #92400e;
   /* under-budget, confirmed states */
   --positive: #15803d;
   --positive-fg: #ffffff;
@@ -56,6 +61,7 @@
   --color-accent-fg: var(--accent-fg);
   --color-warning: var(--warning);
   --color-warning-fg: var(--warning-fg);
+  --color-warning-strong: var(--warning-strong);
   --color-positive: var(--positive);
   --color-positive-fg: var(--positive-fg);
   --color-danger: var(--danger);
@@ -83,6 +89,9 @@
   --accent-fg: #0a0f1e;
   --warning: #fbbf24;
   --warning-fg: #1c1917;
+  /* Dark needs no darker variant: --warning on the same tint already
+     measures 8.68:1 over --surface-raised and 10.23:1 over --surface. */
+  --warning-strong: #fbbf24;
   --positive: #4ade80;
   --positive-fg: #052e16;
   --danger: #f87171;

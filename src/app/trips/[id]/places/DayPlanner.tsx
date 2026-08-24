@@ -108,7 +108,7 @@ export function DayPlanner({
         </div>
 
         {showFreeModelNotice && (
-          <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+          <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning-strong">
             Your chosen model is a free OpenRouter endpoint, which generally
             requires permission to train on and publish the prompts it receives.
             Generating a day plan sends this trip&apos;s saved place names and
