@@ -72,7 +72,13 @@ export default async function TripItineraryPage({
       <main
         id="main"
         tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
+        // Wider than the old max-w-3xl (768px): the two-pane layout
+        // ItineraryDays.tsx builds at lg (sticky map pane growing beyond its
+        // old h-80) needs the room. Below lg this is still a single column
+        // — a wider max-w has no effect until the viewport itself is wide
+        // enough to reach it, so B11's <=375px no-horizontal-scroll
+        // guarantee for BudgetPanel/SharingPanel/etc. is unaffected.
+        className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-y-2 mb-8">
           <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">

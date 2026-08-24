@@ -171,9 +171,18 @@ export function Map({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, pinsKey]);
 
+  // Same height class on every return path (placeholders included) so the
+  // pane doesn't jump in size as pins/offline/token state changes. Grows
+  // beyond the old flat h-80 only at lg, where the two-pane trip-detail
+  // layout (ItineraryDays.tsx) gives the sticky right-hand pane the room —
+  // below lg it's still h-80, unchanged from before this task.
+  const heightClass = 'h-80 lg:h-[36rem]';
+
   if (pins.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+      <div
+        className={`${heightClass} flex items-center justify-center rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400`}
+      >
         No geocoded places yet — add a place to an activity to see it on the
         map.
       </div>
@@ -182,7 +191,9 @@ export function Map({
 
   if (offline) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+      <div
+        className={`${heightClass} flex items-center justify-center rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400`}
+      >
         The map needs a connection. Your itinerary below is available offline.
       </div>
     );
@@ -190,7 +201,9 @@ export function Map({
 
   if (!hasToken) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+      <div
+        className={`${heightClass} flex items-center justify-center rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400`}
+      >
         Map unavailable — no Mapbox token configured.
       </div>
     );
@@ -203,7 +216,7 @@ export function Map({
       aria-label="Map of itinerary places"
       // overflow-hidden: the Mapbox canvas paints its own square corners
       // over rounded-lg otherwise.
-      className="h-80 w-full overflow-hidden rounded-lg"
+      className={`${heightClass} w-full overflow-hidden rounded-lg`}
     />
   );
 }

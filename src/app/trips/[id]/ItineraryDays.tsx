@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, Suspense, use, useState } from 'react';
+import { Fragment, Suspense, use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
@@ -62,6 +62,154 @@ function formatDay(date: Date): string {
 // midnight, so slicing the ISO string is the same calendar day every time.
 function dateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+// Day cost subtotal (rail "station stop" figure): grouped by currency, never
+// converted or summed across currencies — ADR-0018/money rules forbid
+// treating e.g. JPY and USD minor units as fungible. Pure integer addition
+// per currency bucket, same costMinor values BudgetPanel/ExpenseForm already
+// render elsewhere; nothing here reads/writes stored data or does any
+// division/float math. A day with activities in two currencies renders two
+// figures ("¥3,000 + $20"), not a wrong merged total.
+function daySubtotals(
+  activities: Days[number]['activities'],
+): { currency: string; minor: number }[] {
+  // globalThis.Map: this file imports the trip-map component as `Map`,
+  // which shadows the builtin — same disambiguation Map.tsx itself uses for
+  // its marker registry.
+  const totals = new globalThis.Map<string, number>();
+  for (const activity of activities) {
+    if (activity.costMinor != null && activity.costCurrency) {
+      totals.set(
+        activity.costCurrency,
+        (totals.get(activity.costCurrency) ?? 0) + activity.costMinor,
+      );
+    }
+  }
+  return [...totals.entries()].map(([currency, minor]) => ({
+    currency,
+    minor,
+  }));
+}
+
+// "Now/next" (ADR-0019 §2 open question 3, approved in scope): Day.date is
+// UTC-midnight-as-calendar-day and Activity.startTime is a bare "HH:MM" with
+// no zone (ADR-0018 — this app deliberately stores no destination timezone).
+// There is therefore no *correct* way to compute "is it activity X's time
+// right now at the destination" from stored data alone. The honest choice
+// made here: treat the viewing device's own local date/time as the best
+// available proxy for "now" — correct exactly when someone is checking their
+// itinerary while actually at (or in the same zone as) the destination,
+// which is the common real case this feature is for, and degrades
+// gracefully (no highlight, never a *wrong* one) when the day simply doesn't
+// match today's local date, e.g. planning ahead from home in another zone.
+// Computed client-side only, in an effect that runs after mount: the server
+// render and the client's first render both have `now === null` (no
+// highlight), so there is nothing for hydration to disagree about — `now`
+// only changes in a later, post-hydration state update, the same pattern
+// used for any clock-driven UI. Refreshed every minute, which matches the
+// HH:MM granularity being compared; no per-second ticking.
+function useNow(): { dateKey: string; hhmm: string } | null {
+  const [now, setNow] = useState<{ dateKey: string; hhmm: string } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const update = () => {
+      const d = new Date();
+      setNow({
+        dateKey: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+        hhmm: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+      });
+    };
+    update();
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return now;
+}
+
+// Day.date's UTC-pinned calendar day (dateKey above) compared against the
+// browser's *local* calendar day (useNow above) — the same "best available
+// proxy, not a real destination timezone" compromise described there.
+function isTodayLocal(day: Date, now: { dateKey: string } | null): boolean {
+  if (!now) return false;
+  const d = new Date(day);
+  const utcKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  return utcKey === now.dateKey;
+}
+
+// First activity (in existing sortOrder) whose startTime hasn't passed yet
+// by the device's local wall clock. Activities with no startTime can't be
+// compared and are skipped when looking for "next", but don't block ones
+// after them.
+function nextActivityId(
+  activities: Days[number]['activities'],
+  now: { hhmm: string } | null,
+): string | null {
+  if (!now) return null;
+  for (const activity of activities) {
+    if (activity.startTime && activity.startTime >= now.hhmm) {
+      return activity.id;
+    }
+  }
+  return null;
+}
+
+function ThumbIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6.5 9v8H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h2.5Zm0 0 3.24-5.98a1.4 1.4 0 0 1 2.55 1.06L11.3 9h3.44a1.7 1.7 0 0 1 1.67 2.02l-1.08 5.6A1.7 1.7 0 0 1 13.66 18H9a2.5 2.5 0 0 1-2.5-2.5" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12.5 10 7.5 15 12.5" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 7.5 10 12.5 15 7.5" />
+    </svg>
+  );
 }
 
 // Degrade-honestly rule (ADR-0008, applied to weather): a historical reading
@@ -159,6 +307,7 @@ export function ItineraryDays({
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
     null,
   );
+  const now = useNow();
 
   const pins = days
     .flatMap((day) => day.activities)
@@ -172,300 +321,366 @@ export function ItineraryDays({
     }));
 
   return (
-    <div className="flex flex-col gap-8">
-      <Map
-        pins={pins}
-        selectedId={selectedActivityId}
-        onSelectPin={setSelectedActivityId}
-      />
+    // Two-pane at lg: `order-first`/`order-last` reorder the map without
+    // moving it in the DOM (the itinerary — the day rail — stays document
+    // order-first so the streamed content the Suspense boundaries below
+    // guard is unaffected by this class-only reordering). Below lg it's a
+    // single flex-col column, map above days, unchanged from before this
+    // task. `min-w-0` on the rail keeps a long activity/place name from
+    // forcing the flex item wider than the pane (the same guard B11 added
+    // elsewhere for this reason).
+    <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+      <div className="order-first lg:order-last lg:sticky lg:top-8 lg:w-[26rem] lg:shrink-0">
+        <Map
+          pins={pins}
+          selectedId={selectedActivityId}
+          onSelectPin={setSelectedActivityId}
+        />
+      </div>
 
-      {days.map((day) => {
-        return (
-          <section key={day.id}>
-            <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-1 font-mono tabular-nums">
-              {formatDay(day.date)}
-            </h2>
-            <Suspense fallback={<WeatherLineSkeleton />}>
-              <DayWeatherLine
-                weatherPromise={weatherPromise}
-                dayKey={dateKey(day.date)}
-              />
-            </Suspense>
+      {/* The day rail: a vertical "station stop" timeline. The connecting
+          line is one absolutely-positioned element spanning the whole list
+          (not per-day), so it reads as a continuous route line behind each
+          day's stop marker. */}
+      <div className="relative min-w-0 flex-1">
+        <div
+          aria-hidden
+          className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
+        />
+        <div className="flex flex-col gap-8">
+          {days.map((day) => {
+            const isToday = isTodayLocal(day.date, now);
+            const subtotals = daySubtotals(day.activities);
+            const nextId = isToday ? nextActivityId(day.activities, now) : null;
 
-            {day.activities.length > 0 && (
-              <ul className="flex flex-col gap-2 mb-4">
-                {day.activities.map((activity, index) => {
-                  const nextActivity = day.activities[index + 1];
-                  const showTransitLeg =
-                    nextActivity != null &&
-                    activity.lat != null &&
-                    activity.lng != null &&
-                    nextActivity.lat != null &&
-                    nextActivity.lng != null;
+            return (
+              <section key={day.id} className="relative pl-8">
+                <span
+                  aria-hidden
+                  className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 ${
+                    isToday
+                      ? 'border-accent bg-accent'
+                      : 'border-border bg-surface'
+                  }`}
+                />
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-2 mb-1">
+                  <h2 className="text-lg font-medium text-black dark:text-zinc-50 font-mono tabular-nums">
+                    {formatDay(day.date)}
+                    {isToday && (
+                      <span className="ml-2 rounded-full bg-accent px-2 py-0.5 align-middle text-xs font-sans font-semibold text-accent-fg">
+                        Today
+                      </span>
+                    )}
+                  </h2>
+                  <div className="flex items-center gap-3 text-xs font-mono tabular-nums text-zinc-500 dark:text-zinc-400">
+                    <span>
+                      {day.activities.length}{' '}
+                      {day.activities.length === 1 ? 'activity' : 'activities'}
+                    </span>
+                    {subtotals.length > 0 && (
+                      <span>
+                        {subtotals
+                          .map(({ currency, minor }) =>
+                            formatMoney(minor, currency),
+                          )
+                          .join(' + ')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Suspense fallback={<WeatherLineSkeleton />}>
+                  <DayWeatherLine
+                    weatherPromise={weatherPromise}
+                    dayKey={dateKey(day.date)}
+                  />
+                </Suspense>
 
-                  return (
-                    <Fragment key={activity.id}>
-                      <li
-                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
-                          activity.id === selectedActivityId
-                            ? 'border-red-400 dark:border-red-500'
-                            : 'border-border'
-                        }`}
-                      >
-                        <div className="flex-1 flex flex-col gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedActivityId(activity.id)}
-                            className="text-left"
-                            disabled={activity.lat == null}
+                {day.activities.length > 0 && (
+                  <ul className="flex flex-col gap-2 mb-4">
+                    {day.activities.map((activity, index) => {
+                      const nextActivity = day.activities[index + 1];
+                      const isNext = activity.id === nextId;
+                      const showTransitLeg =
+                        nextActivity != null &&
+                        activity.lat != null &&
+                        activity.lng != null &&
+                        nextActivity.lat != null &&
+                        nextActivity.lng != null;
+
+                      return (
+                        <Fragment key={activity.id}>
+                          <li
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
+                              activity.id === selectedActivityId
+                                ? 'border-accent'
+                                : 'border-border'
+                            }`}
                           >
-                            <p className="font-medium text-black dark:text-zinc-50">
-                              {activity.title}{' '}
-                              <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                                ({activity.category})
-                              </span>
-                            </p>
-                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                              {[
-                                activity.startTime && activity.endTime ? (
-                                  <span
-                                    key="time"
-                                    className="font-mono tabular-nums"
-                                  >
-                                    {activity.startTime}–{activity.endTime}
-                                  </span>
-                                ) : activity.startTime ? (
-                                  <span
-                                    key="time"
-                                    className="font-mono tabular-nums"
-                                  >
-                                    {activity.startTime}
-                                  </span>
-                                ) : null,
-                                activity.placeName,
-                                activity.costMinor != null &&
-                                activity.costCurrency ? (
-                                  <span
-                                    key="cost"
-                                    className="font-mono tabular-nums"
-                                  >
-                                    {formatMoney(
-                                      activity.costMinor,
-                                      activity.costCurrency,
-                                    )}
-                                  </span>
-                                ) : null,
-                              ]
-                                .filter(Boolean)
-                                .map((seg, i) => (
-                                  <Fragment key={i}>
-                                    {i > 0 && ' · '}
-                                    {seg}
-                                  </Fragment>
-                                ))}
-                            </p>
-                            {activity.notes && (
-                              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                                {activity.notes}
-                              </p>
-                            )}
-                          </button>
-
-                          <div className="flex items-center gap-3">
-                            <form
-                              action={toggleVoteAction.bind(
-                                null,
-                                tripId,
-                                activity.id,
-                              )}
-                            >
-                              <SubmitButton
-                                pendingLabel="Voting…"
-                                aria-pressed={votes[activity.id]?.mine ?? false}
-                                aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
-                                className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
-                                  votes[activity.id]?.mine
-                                    ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
-                                    : 'border-border text-zinc-500 dark:text-zinc-400'
-                                }`}
+                            <div className="flex-1 flex flex-col gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedActivityId(activity.id)
+                                }
+                                className="text-left"
+                                disabled={activity.lat == null}
                               >
-                                <span aria-hidden>👍</span>{' '}
-                                {votes[activity.id]?.count ?? 0}
-                              </SubmitButton>
-                            </form>
+                                <p className="font-medium text-black dark:text-zinc-50">
+                                  {activity.title}{' '}
+                                  <span className="font-normal text-zinc-500 dark:text-zinc-400">
+                                    ({activity.category})
+                                  </span>
+                                  {isNext && (
+                                    <span className="ml-2 rounded-full bg-accent px-1.5 py-0.5 align-middle text-[10px] font-semibold text-accent-fg">
+                                      Next
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                  {[
+                                    activity.startTime && activity.endTime ? (
+                                      <span
+                                        key="time"
+                                        className="font-mono tabular-nums"
+                                      >
+                                        {activity.startTime}–{activity.endTime}
+                                      </span>
+                                    ) : activity.startTime ? (
+                                      <span
+                                        key="time"
+                                        className="font-mono tabular-nums"
+                                      >
+                                        {activity.startTime}
+                                      </span>
+                                    ) : null,
+                                    activity.placeName,
+                                    activity.costMinor != null &&
+                                    activity.costCurrency ? (
+                                      <span
+                                        key="cost"
+                                        className="font-mono tabular-nums"
+                                      >
+                                        {formatMoney(
+                                          activity.costMinor,
+                                          activity.costCurrency,
+                                        )}
+                                      </span>
+                                    ) : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .map((seg, i) => (
+                                      <Fragment key={i}>
+                                        {i > 0 && ' · '}
+                                        {seg}
+                                      </Fragment>
+                                    ))}
+                                </p>
+                                {activity.notes && (
+                                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                                    {activity.notes}
+                                  </p>
+                                )}
+                              </button>
 
-                            <details className="relative">
-                              <summary className="cursor-pointer list-none">
-                                <span
-                                  aria-hidden
-                                  className="inline-block h-6 w-6 rounded-full border border-border align-middle"
-                                  style={{
-                                    // ADR-0019 §2: the unset-pin fallback
-                                    // converges on the accent token instead
-                                    // of its own #2563eb literal.
-                                    background:
-                                      activity.pinColor ?? 'var(--accent)',
-                                  }}
-                                />
-                                <span className="sr-only">Pin colour</span>
-                              </summary>
-                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-surface-raised p-2 shadow-sm">
-                                {PIN_COLOR_PALETTE.map((color) => (
-                                  <form
-                                    key={color}
-                                    action={setActivityPinColorAction.bind(
-                                      null,
-                                      tripId,
-                                      activity.id,
-                                      color,
-                                    )}
-                                  >
-                                    <SubmitButton
-                                      aria-label={`Set pin colour ${color}`}
-                                      className={`h-6 w-6 rounded-full border ${
-                                        activity.pinColor === color
-                                          ? 'border-black dark:border-white'
-                                          : 'border-border'
-                                      }`}
-                                      style={{ background: color }}
-                                    >
-                                      {null}
-                                    </SubmitButton>
-                                  </form>
-                                ))}
+                              <div className="flex items-center gap-3">
                                 <form
-                                  action={setActivityPinColorAction.bind(
+                                  action={toggleVoteAction.bind(
                                     null,
                                     tripId,
                                     activity.id,
-                                    null,
                                   )}
                                 >
                                   <SubmitButton
-                                    pendingLabel="Clearing…"
-                                    className="text-xs text-zinc-500 underline dark:text-zinc-400"
+                                    pendingLabel="Voting…"
+                                    aria-pressed={
+                                      votes[activity.id]?.mine ?? false
+                                    }
+                                    aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
+                                    className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
+                                      votes[activity.id]?.mine
+                                        ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
+                                        : 'border-border text-zinc-500 dark:text-zinc-400'
+                                    }`}
                                   >
-                                    Default
+                                    <ThumbIcon />
+                                    {votes[activity.id]?.count ?? 0}
                                   </SubmitButton>
                                 </form>
+
+                                <details className="relative">
+                                  <summary className="cursor-pointer list-none">
+                                    <span
+                                      aria-hidden
+                                      className="inline-block h-6 w-6 rounded-full border border-border align-middle"
+                                      style={{
+                                        // ADR-0019 §2: the unset-pin fallback
+                                        // converges on the accent token instead
+                                        // of its own #2563eb literal.
+                                        background:
+                                          activity.pinColor ?? 'var(--accent)',
+                                      }}
+                                    />
+                                    <span className="sr-only">Pin colour</span>
+                                  </summary>
+                                  <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-surface-raised p-2 shadow-sm">
+                                    {PIN_COLOR_PALETTE.map((color) => (
+                                      <form
+                                        key={color}
+                                        action={setActivityPinColorAction.bind(
+                                          null,
+                                          tripId,
+                                          activity.id,
+                                          color,
+                                        )}
+                                      >
+                                        <SubmitButton
+                                          aria-label={`Set pin colour ${color}`}
+                                          className={`h-6 w-6 rounded-full border ${
+                                            activity.pinColor === color
+                                              ? 'border-black dark:border-white'
+                                              : 'border-border'
+                                          }`}
+                                          style={{ background: color }}
+                                        >
+                                          {null}
+                                        </SubmitButton>
+                                      </form>
+                                    ))}
+                                    <form
+                                      action={setActivityPinColorAction.bind(
+                                        null,
+                                        tripId,
+                                        activity.id,
+                                        null,
+                                      )}
+                                    >
+                                      <SubmitButton
+                                        pendingLabel="Clearing…"
+                                        className="text-xs text-zinc-500 underline dark:text-zinc-400"
+                                      >
+                                        Default
+                                      </SubmitButton>
+                                    </form>
+                                  </div>
+                                </details>
                               </div>
-                            </details>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <form
-                            action={moveActivityAction.bind(
-                              null,
-                              tripId,
-                              activity.id,
-                              'up',
-                            )}
-                          >
-                            <SubmitButton
-                              disabled={index === 0}
-                              aria-label="Move up"
-                              pendingLabel="…"
-                              className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
-                            >
-                              ↑
-                            </SubmitButton>
-                          </form>
-                          <form
-                            action={moveActivityAction.bind(
-                              null,
-                              tripId,
-                              activity.id,
-                              'down',
-                            )}
-                          >
-                            <SubmitButton
-                              disabled={index === day.activities.length - 1}
-                              aria-label="Move down"
-                              pendingLabel="…"
-                              className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
-                            >
-                              ↓
-                            </SubmitButton>
-                          </form>
-                          <Link
-                            href={`/trips/${tripId}/activities/${activity.id}/edit`}
-                            className="text-sm text-zinc-600 dark:text-zinc-400 underline"
-                          >
-                            Edit
-                          </Link>
-                          <form
-                            action={deleteActivityAction.bind(
-                              null,
-                              tripId,
-                              activity.id,
-                            )}
-                          >
-                            <ConfirmSubmitButton
-                              confirm="Delete this activity?"
-                              pendingLabel="Deleting…"
-                              className="text-sm text-danger underline"
-                            >
-                              Delete
-                            </ConfirmSubmitButton>
-                          </form>
-                        </div>
-                      </li>
-                      {showTransitLeg && (
-                        // Keyed on BOTH endpoints so reordering or deleting an
-                        // activity remounts this leg. Without it React keeps the
-                        // component (the Fragment's key and the position are
-                        // unchanged) and useActionState holds the journeys
-                        // fetched for the previous destination — a real route,
-                        // shown against the wrong leg.
-                        <TransitLeg
-                          key={`${activity.id}-${nextActivity.id}`}
-                          tripId={tripId}
-                          from={{
-                            activityId: activity.id,
-                            lat: activity.lat!,
-                            lng: activity.lng!,
-                          }}
-                          to={{
-                            activityId: nextActivity.id,
-                            lat: nextActivity.lat!,
-                            lng: nextActivity.lng!,
-                          }}
-                          toLabel={nextActivity.title}
-                        />
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </ul>
-            )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <form
+                                action={moveActivityAction.bind(
+                                  null,
+                                  tripId,
+                                  activity.id,
+                                  'up',
+                                )}
+                              >
+                                <SubmitButton
+                                  disabled={index === 0}
+                                  aria-label="Move up"
+                                  pendingLabel="…"
+                                  className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                                >
+                                  <ChevronUpIcon />
+                                </SubmitButton>
+                              </form>
+                              <form
+                                action={moveActivityAction.bind(
+                                  null,
+                                  tripId,
+                                  activity.id,
+                                  'down',
+                                )}
+                              >
+                                <SubmitButton
+                                  disabled={index === day.activities.length - 1}
+                                  aria-label="Move down"
+                                  pendingLabel="…"
+                                  className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                                >
+                                  <ChevronDownIcon />
+                                </SubmitButton>
+                              </form>
+                              <Link
+                                href={`/trips/${tripId}/activities/${activity.id}/edit`}
+                                className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                              >
+                                Edit
+                              </Link>
+                              <form
+                                action={deleteActivityAction.bind(
+                                  null,
+                                  tripId,
+                                  activity.id,
+                                )}
+                              >
+                                <ConfirmSubmitButton
+                                  confirm="Delete this activity?"
+                                  pendingLabel="Deleting…"
+                                  className="text-sm text-danger underline"
+                                >
+                                  Delete
+                                </ConfirmSubmitButton>
+                              </form>
+                            </div>
+                          </li>
+                          {showTransitLeg && (
+                            // Keyed on BOTH endpoints so reordering or deleting an
+                            // activity remounts this leg. Without it React keeps the
+                            // component (the Fragment's key and the position are
+                            // unchanged) and useActionState holds the journeys
+                            // fetched for the previous destination — a real route,
+                            // shown against the wrong leg.
+                            <TransitLeg
+                              key={`${activity.id}-${nextActivity.id}`}
+                              tripId={tripId}
+                              from={{
+                                activityId: activity.id,
+                                lat: activity.lat!,
+                                lng: activity.lng!,
+                              }}
+                              to={{
+                                activityId: nextActivity.id,
+                                lat: nextActivity.lat!,
+                                lng: nextActivity.lng!,
+                              }}
+                              toLabel={nextActivity.title}
+                            />
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                  </ul>
+                )}
 
-            <details className="rounded-lg border border-dashed border-border p-4">
-              <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
-                Add activity
-              </summary>
-              <div className="mt-4">
-                <ActivityForm
-                  action={addActivityAction.bind(null, tripId, day.id)}
-                  submitLabel="Add activity"
+                <details className="rounded-lg border border-dashed border-border p-4">
+                  <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
+                    Add activity
+                  </summary>
+                  <div className="mt-4">
+                    <ActivityForm
+                      action={addActivityAction.bind(null, tripId, day.id)}
+                      submitLabel="Add activity"
+                    />
+                  </div>
+                </details>
+
+                <DayNotesForm
+                  tripId={tripId}
+                  dayId={day.id}
+                  updatedAt={day.updatedAt.toISOString()}
+                  notes={day.notes}
                 />
-              </div>
-            </details>
+              </section>
+            );
+          })}
+        </div>
 
-            <DayNotesForm
-              tripId={tripId}
-              dayId={day.id}
-              updatedAt={day.updatedAt.toISOString()}
-              notes={day.notes}
-            />
-          </section>
-        );
-      })}
-
-      {/* No loading fallback: this line is pure attribution, not content —
-          nothing is lost by it simply appearing once weather resolves. */}
-      <Suspense fallback={null}>
-        <WeatherAttribution weatherPromise={weatherPromise} />
-      </Suspense>
+        {/* No loading fallback: this line is pure attribution, not content —
+            nothing is lost by it simply appearing once weather resolves. */}
+        <Suspense fallback={null}>
+          <WeatherAttribution weatherPromise={weatherPromise} />
+        </Suspense>
+      </div>
     </div>
   );
 }
