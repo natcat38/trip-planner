@@ -198,5 +198,19 @@ Settings) and need no extra server-side secret beyond `ENCRYPTION_KEY`.
 
 ## Screenshots
 
-None yet — the app has a real visual design as of Phase 4 (ADR-0019), but no screenshots have
-been captured for this README. Run it locally (above) to see it.
+Captured from the seeded demo trip (`npm run db:seed`), light theme.
+
+**Itinerary with the synced map** — day-by-day activities with costs, last-year weather,
+per-leg transit links, and the Mapbox view that follows the plan:
+
+![Itinerary and map](docs/screenshots/itinerary.png)
+
+**Destination research** — Wikivoyage guide sections with a coverage indicator, and
+OSM/Overpass place search:
+
+![Places and research](docs/screenshots/places.png)
+
+**Public shared view** — the read-only `/shared/<token>` page a stranger can see, with the
+multi-currency budget roll-up:
+
+![Shared read-only view](docs/screenshots/shared-view.png)
