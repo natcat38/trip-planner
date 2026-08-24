@@ -169,7 +169,7 @@ export function Map({
 
   if (pins.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/25 dark:text-zinc-400">
+      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
         No geocoded places yet — add a place to an activity to see it on the
         map.
       </div>
@@ -178,7 +178,7 @@ export function Map({
 
   if (offline) {
     return (
-      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/25 dark:text-zinc-400">
+      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
         The map needs a connection. Your itinerary below is available offline.
       </div>
     );
@@ -186,7 +186,7 @@ export function Map({
 
   if (!hasToken) {
     return (
-      <div className="rounded-lg border border-dashed border-black/[.08] p-8 text-center text-sm text-zinc-500 dark:border-white/25 dark:text-zinc-400">
+      <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
         Map unavailable — no Mapbox token configured.
       </div>
     );

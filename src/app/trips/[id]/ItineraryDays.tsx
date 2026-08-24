@@ -197,7 +197,7 @@ export function ItineraryDays({
                         className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
                           activity.id === selectedActivityId
                             ? 'border-red-400 dark:border-red-500'
-                            : 'border-black/[.08] dark:border-white/25'
+                            : 'border-border'
                         }`}
                       >
                         <div className="flex-1 flex flex-col gap-2">
@@ -252,7 +252,7 @@ export function ItineraryDays({
                                 className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
                                   votes[activity.id]?.mine
                                     ? 'border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400'
-                                    : 'border-black/[.08] text-zinc-500 dark:border-white/25 dark:text-zinc-400'
+                                    : 'border-border text-zinc-500 dark:text-zinc-400'
                                 }`}
                               >
                                 <span aria-hidden>👍</span>{' '}
@@ -264,7 +264,7 @@ export function ItineraryDays({
                               <summary className="cursor-pointer list-none">
                                 <span
                                   aria-hidden
-                                  className="inline-block h-6 w-6 rounded-full border border-black/[.08] align-middle dark:border-white/25"
+                                  className="inline-block h-6 w-6 rounded-full border border-border align-middle"
                                   style={{
                                     background: activity.pinColor ?? '#2563eb',
                                   }}
@@ -272,10 +272,10 @@ export function ItineraryDays({
                                 <span className="sr-only">Pin colour</span>
                               </summary>
                               {/* bg-background resolves to #0a0a0a in dark mode,
-                                  identical to the page's own dark:bg-black
+                                  identical to the page's own dark:bg-zinc-950
                                   backdrop — the popover was invisible against
                                   itself without an explicit surface colour. */}
-                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-black/[.08] bg-background p-2 shadow-sm dark:border-white/25 dark:bg-zinc-900">
+                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-background p-2 shadow-sm dark:bg-zinc-900">
                                 {PIN_COLOR_PALETTE.map((color) => (
                                   <form
                                     key={color}
@@ -291,7 +291,7 @@ export function ItineraryDays({
                                       className={`h-6 w-6 rounded-full border ${
                                         activity.pinColor === color
                                           ? 'border-black dark:border-white'
-                                          : 'border-black/[.08] dark:border-white/25'
+                                          : 'border-border'
                                       }`}
                                       style={{ background: color }}
                                     >
@@ -405,7 +405,7 @@ export function ItineraryDays({
               </ul>
             )}
 
-            <details className="rounded-lg border border-dashed border-black/[.08] p-4 dark:border-white/25">
+            <details className="rounded-lg border border-dashed border-border p-4">
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 Add activity
               </summary>

@@ -8,7 +8,7 @@ import { ThemeToggle } from './ThemeToggle';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader — this can render for a signed-out visitor (an
           unmatched route or a public notFound() call doesn't imply an
           authenticated route), and AppHeader requires a session. Same

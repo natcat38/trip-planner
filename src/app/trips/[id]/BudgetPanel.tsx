@@ -30,7 +30,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
   ]);
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <section className="mb-10 rounded-lg border border-border p-5">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-2">Budget</h2>
       <p
         className={

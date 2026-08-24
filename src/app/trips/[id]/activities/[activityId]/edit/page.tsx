@@ -36,7 +36,7 @@ export default async function EditActivityPage({
   );
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}

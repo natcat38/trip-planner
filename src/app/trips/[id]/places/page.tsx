@@ -60,7 +60,7 @@ function GuidePanel({
 }) {
   if (!destination) {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+      <section className="mb-10 rounded-lg border border-border p-5">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
@@ -76,7 +76,7 @@ function GuidePanel({
   // explicit message and point at OSM search instead of an empty panel.
   if (guide == null || guide.coverage === 'none') {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+      <section className="mb-10 rounded-lg border border-border p-5">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
@@ -102,7 +102,7 @@ function GuidePanel({
   );
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <section className="mb-10 rounded-lg border border-border p-5">
       <div className="flex items-baseline justify-between mb-2 gap-4">
         <h2 className="font-medium text-black dark:text-zinc-50">
           Destination guide — {guide.title}
@@ -134,7 +134,7 @@ function GuidePanel({
           {availableSections.map(({ key, label }) => (
             <details
               key={key}
-              className="rounded border border-dashed border-black/[.08] p-3 dark:border-white/25"
+              className="rounded border border-dashed border-border p-3"
             >
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 {label}
@@ -190,7 +190,7 @@ function GuidePanel({
 // streamed guide content swaps in.
 function GuideSkeleton() {
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <section className="mb-10 rounded-lg border border-border p-5">
       <div className="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-3" />
       <div className="h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-2" />
       <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
@@ -285,7 +285,7 @@ export default async function PlacesPage({
   const showFreeModelNotice = keyStatus?.model?.endsWith(':free') ?? false;
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
@@ -311,7 +311,7 @@ export default async function PlacesPage({
           />
         </Suspense>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <section className="mb-10 rounded-lg border border-border p-5">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Search places
           </h2>
@@ -341,7 +341,7 @@ export default async function PlacesPage({
                     autoComplete="off"
                     defaultValue={q ?? ''}
                     placeholder="Search (e.g. ramen)"
-                    className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+                    className="w-full rounded border border-border px-3 py-2 text-sm bg-transparent"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
@@ -362,7 +362,7 @@ export default async function PlacesPage({
                 </label>
                 <SubmitButton
                   pendingLabel="Searching…"
-                  className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                  className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
                 >
                   Search
                 </SubmitButton>
@@ -379,7 +379,7 @@ export default async function PlacesPage({
                   {searchResults.map((place) => (
                     <li
                       key={place.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/25"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-border p-4"
                     >
                       <div className="min-w-0">
                         <p className="font-medium text-black dark:text-zinc-50 truncate">
@@ -439,7 +439,7 @@ export default async function PlacesPage({
                         />
                         <button
                           type="submit"
-                          className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                          className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
                         >
                           Save
                         </button>

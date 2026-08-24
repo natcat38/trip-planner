@@ -61,7 +61,7 @@ function ApiKeyForm() {
           name="apiKey"
           autoComplete="off"
           placeholder="gsk_… or sk-or-v1-…"
-          className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="w-full rounded border border-border px-3 py-2 text-sm bg-transparent"
         />
       </div>
 
@@ -100,7 +100,7 @@ function ApiKeyForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? 'Saving…' : 'Save key'}
       </button>
@@ -133,7 +133,7 @@ function StoredKeyPanel({
       </p>
 
       {models === null ? (
-        <div className="rounded border border-dashed border-black/[.08] p-4 dark:border-white/25">
+        <div className="rounded border border-dashed border-border p-4">
           <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
             Couldn&apos;t load models from the provider right now — the key may
             be temporarily unreachable or no longer valid.
@@ -141,7 +141,7 @@ function StoredKeyPanel({
           <form action={refreshModelsAction}>
             <SubmitButton
               pendingLabel="Retrying…"
-              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/25 dark:text-zinc-50"
+              className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-black dark:text-zinc-50"
             >
               Retry
             </SubmitButton>
@@ -190,7 +190,7 @@ function StoredKeyPanel({
           <button
             type="submit"
             disabled={modelPending || !selected}
-            className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             {modelPending ? 'Saving…' : 'Set model'}
           </button>

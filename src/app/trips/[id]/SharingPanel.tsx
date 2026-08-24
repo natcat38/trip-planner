@@ -36,7 +36,7 @@ function CopyShareUrlButton({ url }: { url: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="shrink-0 rounded-full border border-black/[.08] px-3 py-1.5 text-sm text-zinc-600 hover:bg-black/[.02] dark:border-white/25 dark:text-zinc-400 dark:hover:bg-white/[.03]"
+      className="shrink-0 rounded-full border border-border px-3 py-1.5 text-sm text-zinc-600 hover:bg-surface-raised dark:text-zinc-400"
     >
       {status === 'copied'
         ? 'Copied'
@@ -70,7 +70,7 @@ export function SharingPanel({
     : null;
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <section className="mb-10 rounded-lg border border-border p-5">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-4">Sharing</h2>
 
       <div className="mb-6">
@@ -83,7 +83,7 @@ export function SharingPanel({
                 value={shareUrl ?? ''}
                 spellCheck={false}
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full min-w-0 rounded border border-black/[.08] bg-white px-3 py-2 text-sm text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
+                className="w-full min-w-0 rounded border border-border bg-white px-3 py-2 text-sm text-black dark:bg-zinc-900 dark:text-zinc-50"
               />
               <CopyShareUrlButton url={shareUrl ?? ''} />
             </div>
@@ -112,7 +112,7 @@ export function SharingPanel({
           <form action={enableShareLinkAction.bind(null, tripId)}>
             <SubmitButton
               pendingLabel="Creating…"
-              className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
             >
               Create public read-only link
             </SubmitButton>
@@ -182,12 +182,12 @@ export function SharingPanel({
               inputMode="email"
               spellCheck={false}
               placeholder="friend@example.com"
-              className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+              className="rounded border border-border px-3 py-2 text-sm bg-transparent"
             />
           </label>
           <SubmitButton
             pendingLabel="Inviting…"
-            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             Invite
           </SubmitButton>

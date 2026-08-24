@@ -18,7 +18,7 @@ function Block({ className }: { className: string }) {
 
 export default function PlacesLoading() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
@@ -29,13 +29,13 @@ export default function PlacesLoading() {
           <Block className="h-4 w-32" />
         </div>
 
-        <div className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <div className="mb-10 rounded-lg border border-border p-5">
           <Block className="h-5 w-40 mb-3" />
           <Block className="h-4 w-full mb-2" />
           <Block className="h-4 w-3/4" />
         </div>
 
-        <div className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <div className="mb-10 rounded-lg border border-border p-5">
           <Block className="h-5 w-32 mb-4" />
           <div className="flex flex-wrap gap-3 mb-4">
             <Block className="h-9 flex-1" />

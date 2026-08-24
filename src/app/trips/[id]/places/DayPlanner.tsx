@@ -57,7 +57,7 @@ export function DayPlanner({
   >(generateDayPlanAction.bind(null, tripId), INITIAL_STATE);
 
   return (
-    <section className="mt-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <section className="mt-10 rounded-lg border border-border p-5">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
         Plan a day
       </h2>
@@ -115,7 +115,7 @@ export function DayPlanner({
         <button
           type="submit"
           disabled={isPending}
-          className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? 'Planning…' : 'Plan a day'}
         </button>
@@ -195,7 +195,7 @@ function CandidateCard({
   >(acceptDayPlanAction.bind(null, tripId), ACCEPT_INITIAL_STATE);
 
   return (
-    <div className="rounded border border-black/[.08] p-4 dark:border-white/25">
+    <div className="rounded border border-border p-4">
       <p className="font-medium text-black dark:text-zinc-50">
         {candidate.label}
       </p>
@@ -235,7 +235,7 @@ function CandidateCard({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-foreground px-3 py-1 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? 'Adding…' : 'Add this day'}
         </button>

@@ -8,22 +8,82 @@
  * touches the toggle is unchanged. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Semantic token set (ADR-0019 §1). Warm-neutral ink/paper base, one
+ * saturated accent (the existing #2563eb blue, reconciled per ADR-0019 §2
+ * rather than replaced), and status colours reused from M9's per-component
+ * AA-checked substitutions rather than re-derived. Every token gets a .dark
+ * override alongside its :root definition — dark mode is not a follow-up. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* page background / default text */
+  --surface: #faf9f7;
+  --surface-fg: #1c1917;
+  /* cards, popovers — today's implicit bg-background surfaces */
+  --surface-raised: #ffffff;
+  --surface-raised-fg: #1c1917;
+  /* replaces every border-black/[.08] / dark:border-white/25 pair */
+  --border: #e5e1da;
+  /* the one saturated colour (ADR-0019 §2: reconciled, not invented) */
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  /* replaces ad hoc amber-700/amber-400 (unconverted-budget-item rows) */
+  --warning: #b45309;
+  --warning-fg: #ffffff;
+  /* under-budget, confirmed states */
+  --positive: #15803d;
+  --positive-fg: #ffffff;
+  /* replaces ad hoc red-600/red-400 (over budget, delete, selected pin) */
+  --danger: #dc2626;
+  --danger-fg: #ffffff;
+
+  /* Back-compat aliases: `bg-background`/`text-foreground` utilities are
+   * still used in a few spots (Select.tsx's popover, print's light-pinned
+   * classes). They now track the surface tokens instead of their own
+   * literal, so there is one paper/ink source of truth, not two. */
+  --background: var(--surface);
+  --foreground: var(--surface-fg);
   color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-fg: var(--surface-fg);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-raised-fg: var(--surface-raised-fg);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-warning: var(--warning);
+  --color-warning-fg: var(--warning-fg);
+  --color-positive: var(--positive);
+  --color-positive-fg: var(--positive-fg);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --surface: #09090b; /* zinc-950 */
+  --surface-fg: #f4f4f5; /* zinc-100 */
+  --surface-raised: #18181b; /* zinc-900 */
+  --surface-raised-fg: #f4f4f5;
+  --border: #3f3f46; /* zinc-700 */
+  /* Lighter/desaturated blue: #2563eb text/icon usage against a near-black
+   * page only reaches ~3.8:1 (fails AA for text). blue-400 clears ~7.6:1
+   * against --surface and --surface-raised. */
+  --accent: #60a5fa;
+  --accent-fg: #0a0f1e;
+  --warning: #fbbf24;
+  --warning-fg: #1c1917;
+  --positive: #4ade80;
+  --positive-fg: #052e16;
+  --danger: #f87171;
+  --danger-fg: #450a0a;
+
+  --background: var(--surface);
+  --foreground: var(--surface-fg);
   color-scheme: dark;
 }
 
@@ -34,7 +94,7 @@ body {
 }
 
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

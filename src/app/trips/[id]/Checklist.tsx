@@ -118,7 +118,7 @@ export function Checklist({
   const doneCount = items.filter((item) => item.done).length;
 
   return (
-    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/25">
+    <details className="mb-8 rounded-lg border border-border p-4">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         Checklist{items.length > 0 ? ` (${doneCount}/${items.length})` : ''}
       </summary>
@@ -147,13 +147,13 @@ export function Checklist({
               required
               autoComplete="off"
               placeholder="Add an item"
-              className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+              className="w-full rounded border border-border px-3 py-2 text-sm bg-transparent"
             />
           </label>
           <button
             type="submit"
             disabled={isPending}
-            className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             {isPending ? 'Adding…' : 'Add'}
           </button>

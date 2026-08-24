@@ -23,7 +23,7 @@ export function DayNotesForm({
   >(updateDayNotesAction.bind(null, tripId, dayId, updatedAt), {});
 
   return (
-    <details className="mt-4 rounded-lg border border-dashed border-black/[.08] p-4 dark:border-white/25">
+    <details className="mt-4 rounded-lg border border-dashed border-border p-4">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         {notes ? 'Day notes' : 'Add day notes'}
       </summary>
@@ -43,13 +43,13 @@ export function DayNotesForm({
             rows={3}
             placeholder="Notes for this day (optional)"
             defaultValue={notes ?? ''}
-            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+            className="rounded border border-border px-3 py-2 text-sm bg-transparent"
           />
         </label>
         <button
           type="submit"
           disabled={isPending}
-          className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? 'Saving…' : 'Save notes'}
         </button>

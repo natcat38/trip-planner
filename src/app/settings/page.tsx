@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   const models = status ? await listAvailableModels() : null;
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <section className="rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <section className="rounded-lg border border-border p-5">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             AI key
           </h2>
@@ -50,7 +50,7 @@ export default async function SettingsPage() {
           <AiKeyPanel status={status} models={models} />
         </section>
 
-        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <section className="mt-8 rounded-lg border border-border p-5">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Browser extension
           </h2>

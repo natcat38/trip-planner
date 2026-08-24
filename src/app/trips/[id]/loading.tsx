@@ -22,7 +22,7 @@ function Block({ className }: { className: string }) {
 
 export default function TripLoading() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
@@ -38,7 +38,7 @@ export default function TripLoading() {
           </div>
         </div>
 
-        <div className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <div className="mb-10 rounded-lg border border-border p-5">
           <Block className="h-5 w-24 mb-3" />
           <Block className="h-4 w-64" />
         </div>
@@ -62,13 +62,13 @@ export default function TripLoading() {
           </div>
         </div>
 
-        <div className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <div className="mb-10 rounded-lg border border-border p-5">
           <Block className="h-5 w-32 mb-3" />
           <Block className="h-4 w-full mb-2" />
           <Block className="h-4 w-3/4" />
         </div>
 
-        <div className="rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <div className="rounded-lg border border-border p-5">
           <Block className="h-5 w-32 mb-3" />
           <Block className="h-4 w-full mb-2" />
           <Block className="h-4 w-2/3" />

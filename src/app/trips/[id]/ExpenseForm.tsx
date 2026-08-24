@@ -32,7 +32,7 @@ export function ExpenseForm({
           required
           autoComplete="off"
           placeholder="Label (e.g. Flights)"
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="rounded border border-border px-3 py-2 text-sm bg-transparent"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -44,7 +44,7 @@ export function ExpenseForm({
           required
           autoComplete="off"
           placeholder="Category"
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="rounded border border-border px-3 py-2 text-sm bg-transparent"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -59,7 +59,7 @@ export function ExpenseForm({
           step="any"
           inputMode="decimal"
           placeholder="Amount"
-          className="w-28 rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="w-28 rounded border border-border px-3 py-2 text-sm bg-transparent"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -73,13 +73,13 @@ export function ExpenseForm({
           spellCheck={false}
           autoCapitalize="characters"
           placeholder="Currency"
-          className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/25 dark:bg-transparent"
+          className="w-24 rounded border border-border px-3 py-2 text-sm uppercase bg-transparent"
         />
       </label>
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? 'Adding…' : 'Add expense'}
       </button>

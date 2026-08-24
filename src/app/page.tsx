@@ -29,7 +29,7 @@ const FEATURES = [
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
+    <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader here — this page is deliberately auth-free (see the
           comment above) — so it carries its own minimal, non-fixed chrome
           just for the theme toggle, matching /shared/[token]'s. */}
@@ -53,7 +53,7 @@ export default function Home() {
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link
             href="/trips"
-            className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-fg hover:opacity-90"
           >
             Go to my trips
           </Link>

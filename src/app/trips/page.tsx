@@ -27,7 +27,7 @@ export default async function TripsPage() {
   ]);
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
@@ -48,7 +48,7 @@ export default async function TripsPage() {
             </Link>
             <Link
               href="/trips/new"
-              className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
             >
               Create trip
             </Link>
@@ -56,7 +56,7 @@ export default async function TripsPage() {
         </div>
 
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-black/[.08] p-12 text-center dark:border-white/25">
+          <div className="rounded-lg border border-dashed border-border p-12 text-center">
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
               You haven&apos;t planned any trips yet.
             </p>
@@ -72,7 +72,7 @@ export default async function TripsPage() {
             {trips.map((trip) => (
               <li
                 key={trip.id}
-                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/25 dark:hover:bg-white/[.03]"
+                className="flex items-center gap-4 rounded-lg border border-border hover:bg-surface-raised"
               >
                 <Link href={`/trips/${trip.id}`} className="block flex-1 p-5">
                   <div className="flex items-baseline justify-between gap-4">

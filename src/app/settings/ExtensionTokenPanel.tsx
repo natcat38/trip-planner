@@ -56,7 +56,7 @@ export function ExtensionTokenPanel({
                 // Selected on focus so copying it is one click plus one
                 // keystroke, rather than a drag across 45 characters of base64.
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full rounded border border-black/[.08] bg-white px-3 py-2 font-mono text-xs text-black dark:border-white/25 dark:bg-zinc-900 dark:text-zinc-50"
+                className="w-full rounded border border-border bg-white px-3 py-2 font-mono text-xs text-black dark:bg-zinc-900 dark:text-zinc-50"
               />
             </label>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -80,7 +80,7 @@ export function ExtensionTokenPanel({
             pendingLabel="Working…"
             name="intent"
             value="generate"
-            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             Generate a new token
           </ConfirmSubmitButton>
@@ -89,7 +89,7 @@ export function ExtensionTokenPanel({
             pendingLabel="Working…"
             name="intent"
             value="generate"
-            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             Generate token
           </SubmitButton>

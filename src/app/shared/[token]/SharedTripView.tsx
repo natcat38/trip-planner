@@ -51,7 +51,7 @@ export function SharedTripView({
     }));
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader — this route is the one other unauthenticated page
           (src/proxy.ts doesn't match /shared/*), so it gets the same
           minimal chrome as the public landing page. */}
@@ -74,7 +74,7 @@ export function SharedTripView({
             <form action={duplicateSharedTripAction.bind(null, token)}>
               <SubmitButton
                 pendingLabel="Saving…"
-                className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
               >
                 Save a copy
               </SubmitButton>
@@ -82,7 +82,7 @@ export function SharedTripView({
           )}
         </div>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+        <section className="mb-10 rounded-lg border border-border p-5">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
@@ -141,7 +141,7 @@ export function SharedTripView({
                   {day.activities.map((activity) => (
                     <li
                       key={activity.id}
-                      className="rounded-lg border border-black/[.08] p-4 dark:border-white/25"
+                      className="rounded-lg border border-border p-4"
                     >
                       <p className="font-medium text-black dark:text-zinc-50">
                         {activity.title}{' '}

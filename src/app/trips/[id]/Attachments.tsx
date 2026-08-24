@@ -43,7 +43,7 @@ export function Attachments({
   );
 
   return (
-    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/25">
+    <details className="mb-8 rounded-lg border border-border p-4">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         Attachments{attachments.length > 0 ? ` (${attachments.length})` : ''}
       </summary>
@@ -109,7 +109,7 @@ export function Attachments({
           </label>
           <SubmitButton
             pendingLabel="Uploading…"
-            className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             Upload
           </SubmitButton>
