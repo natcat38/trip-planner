@@ -1,8 +1,9 @@
 import { Fragment } from 'react';
+import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
-import { formatDay } from '@/lib/format';
+import { formatDay, formatDateRange } from '@/lib/format';
 import type {
   getSharedBudgetSummary,
   getSharedTrip,
@@ -58,10 +59,15 @@ export function SharedTripView({
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
+        {/* Cover header (ADR-0019 M10 C6): trip name, destinations, date
+            range, and day count — every field here already comes from
+            data.trip/data.days, exactly what getSharedTrip() (src/server/
+            sharing.ts) returns after stripping userId/shareToken. Nothing
+            added is owner-identifying: no email, no userId, no token. */}
         <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
           Read-only shared view
         </p>
-        <div className="flex items-baseline justify-between gap-4 mb-8">
+        <div className="flex items-baseline justify-between gap-4 mb-2">
           <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             {trip.name}
           </h1>
@@ -76,6 +82,15 @@ export function SharedTripView({
             </form>
           )}
         </div>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-8">
+          {trip.destinations.join(', ')}
+          {trip.destinations.length > 0 && ' · '}
+          <span className="font-mono tabular-nums">
+            {formatDateRange(trip.startDate, trip.endDate)}
+          </span>{' '}
+          · <span className="font-mono tabular-nums">{days.length}</span>{' '}
+          {days.length === 1 ? 'day' : 'days'}
+        </p>
 
         <Card as="section" className="mb-10">
           <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
@@ -225,6 +240,13 @@ export function SharedTripView({
             </section>
           ))}
         </div>
+
+        <footer className="mt-12 border-t border-border pt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          Planned with{' '}
+          <Link href="/" className="underline">
+            Trip Planner
+          </Link>
+        </footer>
       </main>
     </div>
   );

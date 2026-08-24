@@ -96,6 +96,7 @@ describe('listTrips', () => {
         ],
       },
       orderBy: { startDate: 'desc' },
+      include: { _count: { select: { days: true } } },
     });
   });
 
@@ -111,6 +112,7 @@ describe('listTrips', () => {
     expect(db.trip.findMany).toHaveBeenCalledWith({
       where: { OR: [{ userId: 'user-1' }] },
       orderBy: { startDate: 'desc' },
+      include: { _count: { select: { days: true } } },
     });
   });
 });
