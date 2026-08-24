@@ -4,7 +4,8 @@
 
 ## Context
 Milestone 8 closed three items carried over from the Phase 3 handoff
-(`docs/phase-3-open-items-handoff.md`): the trip list's owner-only scope (§2.8), and two items
+(`docs/phase-3-open-items-handoff.md`, since retired — every item was verified implemented or
+dispositioned before deletion, 2026-08-24): the trip list's owner-only scope (§2.8), and two items
 that only needed re-confirming rather than building — ICS timezone handling and database-size
 monitoring. This records all three, because the trip-list change touched an authorization
 predicate shared with ADR-0017, and the other two are decisions not to act, which are easy to

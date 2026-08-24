@@ -205,6 +205,10 @@ per-leg transit links, and the Mapbox view that follows the plan:
 
 ![Itinerary and map](docs/screenshots/itinerary.png)
 
+The same view in dark mode (system-default theme toggle, no flash on load):
+
+![Itinerary in dark mode](docs/screenshots/itinerary-dark.png)
+
 **Destination research** — Wikivoyage guide sections with a coverage indicator, and
 OSM/Overpass place search:
 
