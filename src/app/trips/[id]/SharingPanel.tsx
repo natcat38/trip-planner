@@ -86,7 +86,7 @@ export function SharingPanel({
                 value={shareUrl ?? ''}
                 spellCheck={false}
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full min-w-0 rounded border border-border bg-white px-3 py-2 text-sm text-black dark:bg-zinc-900 dark:text-zinc-50"
+                className="w-full min-w-0 rounded border border-border-strong bg-white px-3 py-2 text-sm text-black dark:bg-zinc-900 dark:text-zinc-50"
               />
               <CopyShareUrlButton url={shareUrl ?? ''} />
             </div>
@@ -182,7 +182,7 @@ export function SharingPanel({
               inputMode="email"
               spellCheck={false}
               placeholder="friend@example.com"
-              className="rounded border border-border px-3 py-2 text-sm bg-transparent"
+              className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
             />
           </label>
           <SubmitButton

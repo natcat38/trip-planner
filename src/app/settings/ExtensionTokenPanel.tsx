@@ -59,7 +59,7 @@ export function ExtensionTokenPanel({
                 // Selected on focus so copying it is one click plus one
                 // keystroke, rather than a drag across 45 characters of base64.
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full rounded border border-border bg-white px-3 py-2 font-mono text-xs text-black dark:bg-zinc-900 dark:text-zinc-50"
+                className="w-full rounded border border-border-strong bg-white px-3 py-2 font-mono text-xs text-black dark:bg-zinc-900 dark:text-zinc-50"
               />
             </label>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">

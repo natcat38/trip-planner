@@ -50,7 +50,7 @@ export function Select({
       defaultValue={defaultValue}
       onChange={onChange}
       required={required}
-      className={`rounded border border-border bg-white dark:bg-zinc-900 ${className}`}
+      className={`rounded border border-border-strong bg-white dark:bg-zinc-900 ${className}`}
     >
       {options.map((option) => (
         <option

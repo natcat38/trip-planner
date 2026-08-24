@@ -80,7 +80,7 @@ function ApiKeyForm() {
           name="apiKey"
           autoComplete="off"
           placeholder="gsk_… or sk-or-v1-…"
-          className="w-full rounded border border-border px-3 py-2 text-sm bg-transparent"
+          className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
         />
       </div>
 

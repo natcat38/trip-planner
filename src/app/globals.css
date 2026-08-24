@@ -19,9 +19,24 @@
   --surface-fg: #1c1917;
   /* cards, popovers — today's implicit bg-background surfaces */
   --surface-raised: #ffffff;
-  --surface-raised-fg: #1c1917;
-  /* replaces every border-black/[.08] / dark:border-white/25 pair */
+  /* replaces every border-black/[.08] / dark:border-white/25 pair. This is a
+     DECORATIVE divider token (cards, section rules) — it measures ~1.24:1
+     against --surface and ~1.30:1 against --surface-raised, well below
+     WCAG 1.4.11's 3:1 for UI-component boundaries. That's fine for a card
+     edge or a divider line (1.4.11 doesn't apply — no information depends on
+     seeing it), but it must never be the only thing marking a form control's
+     boundary. See --border-strong for that. */
   --border: #e5e1da;
+  /* Control-boundary token (WCAG 1.4.11): the ONLY border used on
+     text/time/number/date inputs, selects, and textareas, where the border
+     is the sole cue that a boundary — and therefore an editable control —
+     exists there. Measured: 4.56:1 over --surface, 4.80:1 over
+     --surface-raised (both clear the 3:1 floor with margin). Do not use this
+     for cards/dividers — that's --border's job; using it there would fight
+     the approved warm-neutral design for no accessibility gain.
+     extension/popup.css hand-copies this literal (see its header comment) —
+     keep the two in step. */
+  --border-strong: #78716c;
   /* the one saturated colour (ADR-0019 §2: reconciled, not invented) */
   --accent: #2563eb;
   --accent-fg: #ffffff;
@@ -55,8 +70,8 @@
   --color-surface: var(--surface);
   --color-surface-fg: var(--surface-fg);
   --color-surface-raised: var(--surface-raised);
-  --color-surface-raised-fg: var(--surface-raised-fg);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-warning: var(--warning);
@@ -80,8 +95,9 @@
   --surface: #09090b; /* zinc-950 */
   --surface-fg: #f4f4f5; /* zinc-100 */
   --surface-raised: #18181b; /* zinc-900 */
-  --surface-raised-fg: #f4f4f5;
   --border: #3f3f46; /* zinc-700 */
+  /* Measured: 7.89:1 over --surface, 7.02:1 over --surface-raised. */
+  --border-strong: #a8a29e; /* stone-400 */
   /* Lighter/desaturated blue: #2563eb text/icon usage against a near-black
    * page only reaches ~3.8:1 (fails AA for text). blue-400 clears ~7.6:1
    * against --surface and --surface-raised. */
@@ -177,8 +193,8 @@ summary {
     --surface: #ffffff;
     --surface-fg: #000000;
     --surface-raised: #ffffff;
-    --surface-raised-fg: #000000;
     --border: rgb(0 0 0 / 0.15);
+    --border-strong: #78716c;
     --accent: #2563eb;
     --accent-fg: #ffffff;
     --warning: #b45309;

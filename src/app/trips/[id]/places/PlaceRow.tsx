@@ -137,7 +137,7 @@ export function PlaceRow({
                 autoComplete="off"
                 placeholder="Notes (optional)"
                 defaultValue={place.notes ?? ''}
-                className="rounded border border-border px-3 py-2 text-sm bg-transparent"
+                className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
               />
             </label>
             <div className="flex gap-3">
@@ -160,7 +160,7 @@ export function PlaceRow({
                         )
                       : ''
                   }
-                  className="w-full rounded border border-border px-3 py-2 text-sm bg-transparent"
+                  className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
                 />
               </label>
               <label className="flex flex-col gap-1">
@@ -174,7 +174,7 @@ export function PlaceRow({
                   autoCapitalize="characters"
                   placeholder="Currency"
                   defaultValue={place.costCurrency ?? ''}
-                  className="w-24 rounded border border-border px-3 py-2 text-sm uppercase bg-transparent"
+                  className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
                 />
               </label>
             </div>

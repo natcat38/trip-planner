@@ -47,14 +47,19 @@ textarea {
   background: transparent;
   color: inherit;
   /* light-dark() resolves against :root's color-scheme above, so this one
-   * declaration replaces a prefers-color-scheme media query. */
-  border: 1px solid light-dark(rgb(0 0 0 / 0.2), rgb(255 255 255 / 0.25));
+   * declaration replaces a prefers-color-scheme media query.
+   * --border-strong literal (src/app/globals.css): the border is the only
+   * cue these controls are editable, so it needs WCAG 1.4.11's 3:1, which
+   * the previous rgb(0 0 0/0.2) / rgb(255 255 255/0.25) pair measured only
+   * ~1.6:1 against. #78716c / #a8a29e measure 4.56:1 / 7.89:1 — keep this
+   * in step with globals.css's --border-strong value. */
+  border: 1px solid light-dark(#78716c, #a8a29e);
 }
 
 input:hover,
 select:hover,
 textarea:hover {
-  border-color: light-dark(rgb(0 0 0 / 0.35), rgb(255 255 255 / 0.4));
+  border-color: light-dark(#57534e, #d6d3d1);
 }
 
 input:focus-visible,

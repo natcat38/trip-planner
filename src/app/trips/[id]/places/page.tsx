@@ -342,7 +342,7 @@ export default async function PlacesPage({
                     autoComplete="off"
                     defaultValue={q ?? ''}
                     placeholder="Search (e.g. ramen)"
-                    className="w-full rounded border border-border px-3 py-2 text-sm bg-transparent"
+                    className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
                   />
                 </label>
                 <label className="flex flex-col gap-1">

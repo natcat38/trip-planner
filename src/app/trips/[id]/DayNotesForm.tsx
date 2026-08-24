@@ -43,7 +43,7 @@ export function DayNotesForm({
             rows={3}
             placeholder="Notes for this day (optional)"
             defaultValue={notes ?? ''}
-            className="rounded border border-border px-3 py-2 text-sm bg-transparent"
+            className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
         <button
