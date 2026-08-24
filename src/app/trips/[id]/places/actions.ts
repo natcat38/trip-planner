@@ -9,9 +9,8 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { ForbiddenOrNotFoundError, ignoreIfMissing } from '@/server/auth-scope';
+import { ignoreIfMissing, withFormErrors } from '@/server/auth-scope';
 import { generateDayPlans, type DayPlanCandidate } from '@/server/dayPlan';
-import { StaleWriteError, ValidationError } from '@/server/errors';
 import { summarizeGuide } from '@/server/guideSummary';
 import {
   addActivityFromPlace,
@@ -79,30 +78,22 @@ function parsePlaceEditFormData(formData: FormData) {
   };
 }
 
-export async function updatePlaceAction(
-  tripId: string,
-  placeId: string,
-  updatedAt: string,
-  _prevState: PlaceFormState,
-  formData: FormData,
-): Promise<PlaceFormState> {
-  try {
+export const updatePlaceAction = withFormErrors(
+  async (
+    tripId: string,
+    placeId: string,
+    updatedAt: string,
+    _prevState: PlaceFormState,
+    formData: FormData,
+  ): Promise<PlaceFormState> => {
     await updatePlace(tripId, placeId, {
       ...parsePlaceEditFormData(formData),
       updatedAt: new Date(updatedAt),
     });
-  } catch (err) {
-    if (
-      err instanceof ValidationError ||
-      err instanceof StaleWriteError ||
-      err instanceof ForbiddenOrNotFoundError
-    )
-      return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}/places`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}/places`);
+    return {};
+  },
+);
 
 export async function deletePlaceAction(
   tripId: string,

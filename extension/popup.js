@@ -106,6 +106,23 @@ async function loadSaveView(appUrl, token, tab) {
   $('name').value = await suggestedName(tab);
 }
 
+// Shared disable-button/pending-text/try-finally boilerplate for connect()
+// and save(): both disable their button, swap in a pending label, run the
+// action, and restore the button's original label whether it succeeded or
+// not — this is that pattern extracted once.
+async function withBusyButton(buttonId, pendingText, action) {
+  const btn = $(buttonId);
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = pendingText;
+  try {
+    await action();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
 async function connect() {
   setError('setup-error', null);
   const appUrl = $('app-url').value.trim();
@@ -115,26 +132,22 @@ async function connect() {
     return;
   }
 
-  const btn = $('connect');
-  btn.disabled = true;
-  btn.textContent = 'Connecting…';
-  try {
-    // Verified before storing, so a mistyped token fails here rather than on
-    // first use with no obvious cause.
-    await api(appUrl, token, '/api/extension/trips');
-    await store.set({ appUrl, token });
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    await loadSaveView(appUrl, token, tab);
-    show('save');
-  } catch (err) {
-    setError('setup-error', err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Connect';
-  }
+  await withBusyButton('connect', 'Connecting…', async () => {
+    try {
+      // Verified before storing, so a mistyped token fails here rather than
+      // on first use with no obvious cause.
+      await api(appUrl, token, '/api/extension/trips');
+      await store.set({ appUrl, token });
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      await loadSaveView(appUrl, token, tab);
+      show('save');
+    } catch (err) {
+      setError('setup-error', err.message);
+    }
+  });
 }
 
 async function save() {
@@ -143,28 +156,24 @@ async function save() {
   const { appUrl, token } = await store.get();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  const btn = $('submit');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-  try {
-    const { place } = await api(appUrl, token, '/api/extension/places', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tripId: $('trip').value,
-        name: $('name').value,
-        url: tab.url,
-        category: $('category').value,
-        notes: $('notes').value,
-      }),
-    });
-    setStatus(`Saved “${place.name}”.`);
-  } catch (err) {
-    setError('save-error', err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save to trip';
-  }
+  await withBusyButton('submit', 'Saving…', async () => {
+    try {
+      const { place } = await api(appUrl, token, '/api/extension/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tripId: $('trip').value,
+          name: $('name').value,
+          url: tab.url,
+          category: $('category').value,
+          notes: $('notes').value,
+        }),
+      });
+      setStatus(`Saved “${place.name}”.`);
+    } catch (err) {
+      setError('save-error', err.message);
+    }
+  });
 }
 
 async function init() {

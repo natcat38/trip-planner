@@ -4,7 +4,7 @@ import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
 import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
-import { StaleWriteError, ValidationError } from './errors';
+import { optimisticUpdate, ValidationError } from './errors';
 
 async function requireDay(tripId: string, dayId: string) {
   const trip = await requireTripAccess(tripId);
@@ -72,11 +72,12 @@ export async function updateDayNotes(
   updatedAt: Date,
 ) {
   const day = await requireDay(tripId, dayId);
-  const result = await db.day.updateMany({
-    where: { id: day.id, updatedAt },
-    data: { notes: notes || null },
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.day.updateMany({
+      where: { id: day.id, updatedAt },
+      data: { notes: notes || null },
+    }),
+  );
 }
 
 export interface ActivityInput {
@@ -182,11 +183,12 @@ export async function updateActivity(
   const activity = await requireActivity(tripId, activityId);
   validateActivityInput(input);
   const data = await resolveActivityData(input, activity);
-  const result = await db.activity.updateMany({
-    where: { id: activity.id, updatedAt: input.updatedAt },
-    data,
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.activity.updateMany({
+      where: { id: activity.id, updatedAt: input.updatedAt },
+      data,
+    }),
+  );
 }
 
 export async function deleteActivity(tripId: string, activityId: string) {
@@ -211,11 +213,12 @@ export async function setActivityPinColor(
       'Pin colour must be a hex code like #e11d48, or left as default.',
     );
   }
-  const result = await db.activity.updateMany({
-    where: { id: activity.id, updatedAt },
-    data: { pinColor: color },
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.activity.updateMany({
+      where: { id: activity.id, updatedAt },
+      data: { pinColor: color },
+    }),
+  );
 }
 
 export async function moveActivity(

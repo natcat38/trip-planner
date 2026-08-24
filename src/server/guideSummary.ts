@@ -11,6 +11,7 @@
  */
 
 import { complete } from '../lib/ai/provider';
+import { SECTION_ORDER } from '../lib/guideSections';
 import { getGuide, type Guide } from '../lib/research/wikivoyage';
 import { getDecryptedKey } from './aiSettings';
 import { requireTripAccess } from './auth-scope';
@@ -58,14 +59,6 @@ const COMPLETE_FAILED_ERROR =
 const NO_ROOM_ERROR =
   'That model ran out of room before it answered — reasoning models use most ' +
   'of their budget thinking. Try a different model in Settings.';
-
-const SECTION_ORDER: { key: keyof Guide['sections']; label: string }[] = [
-  { key: 'eat', label: 'Eat' },
-  { key: 'see', label: 'See' },
-  { key: 'do', label: 'Do' },
-  { key: 'getAround', label: 'Get around' },
-  { key: 'getIn', label: 'Get in' },
-];
 
 // Builds the model's user-message text from only the sections the research
 // layer actually retrieved — never anything else. Sections with no content

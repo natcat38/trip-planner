@@ -9,8 +9,8 @@ import {
   updateTrip,
 } from '@/server/trips';
 import { acceptInvite, declineInvite } from '@/server/sharing';
-import { ForbiddenOrNotFoundError, ignoreIfMissing } from '@/server/auth-scope';
-import { StaleWriteError, ValidationError } from '@/server/errors';
+import { ignoreIfMissing, withFormErrors } from '@/server/auth-scope';
+import { ValidationError } from '@/server/errors';
 
 export interface TripFormState {
   error?: string;
@@ -30,41 +30,31 @@ function parseTripFormData(formData: FormData) {
   };
 }
 
-export async function createTripAction(
-  _prevState: TripFormState,
-  formData: FormData,
-): Promise<TripFormState> {
-  try {
+export const createTripAction = withFormErrors(
+  async (
+    _prevState: TripFormState,
+    formData: FormData,
+  ): Promise<TripFormState> => {
     await createTrip(parseTripFormData(formData));
-  } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
-    throw err;
-  }
-  redirect('/trips');
-}
+    redirect('/trips');
+  },
+  [ValidationError],
+);
 
-export async function updateTripAction(
-  tripId: string,
-  updatedAt: string,
-  _prevState: TripFormState,
-  formData: FormData,
-): Promise<TripFormState> {
-  try {
+export const updateTripAction = withFormErrors(
+  async (
+    tripId: string,
+    updatedAt: string,
+    _prevState: TripFormState,
+    formData: FormData,
+  ): Promise<TripFormState> => {
     await updateTrip(tripId, {
       ...parseTripFormData(formData),
       updatedAt: new Date(updatedAt),
     });
-  } catch (err) {
-    if (
-      err instanceof ValidationError ||
-      err instanceof StaleWriteError ||
-      err instanceof ForbiddenOrNotFoundError
-    )
-      return { error: err.message };
-    throw err;
-  }
-  redirect('/trips');
-}
+    redirect('/trips');
+  },
+);
 
 export async function deleteTripAction(tripId: string): Promise<void> {
   await deleteTrip(tripId);

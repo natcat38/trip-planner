@@ -16,7 +16,7 @@ import {
 } from '../lib/money';
 import { searchPlaces as searchOsmPlaces } from '../lib/research/overpass';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
-import { StaleWriteError, ValidationError } from './errors';
+import { optimisticUpdate, ValidationError } from './errors';
 import { createActivity } from './itinerary';
 
 export async function requirePlace(tripId: string, placeId: string) {
@@ -167,11 +167,12 @@ export async function updatePlace(
   const place = await requirePlace(tripId, placeId);
   validatePlaceName(input.name);
   validatePlaceCost(input);
-  const result = await db.place.updateMany({
-    where: { id: place.id, updatedAt: input.updatedAt },
-    data: resolvePlaceFields(input),
-  });
-  if (result.count === 0) throw new StaleWriteError();
+  await optimisticUpdate(
+    db.place.updateMany({
+      where: { id: place.id, updatedAt: input.updatedAt },
+      data: resolvePlaceFields(input),
+    }),
+  );
 }
 
 export async function deletePlace(tripId: string, placeId: string) {

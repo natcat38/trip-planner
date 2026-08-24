@@ -1,5 +1,5 @@
 'use client';
-import { useFormStatus } from 'react-dom';
+import { SubmitButton } from './SubmitButton';
 
 // ponytail: window.confirm, not <dialog> — matches AiKeyPanel's proven
 // pattern; upgrade to a styled dialog if design ever needs it.
@@ -26,25 +26,19 @@ export function ConfirmSubmitButton({
   disabled?: boolean;
   'aria-label'?: string;
 }) {
-  const { pending, data } = useFormStatus();
-  // See SubmitButton's comment: useFormStatus().pending is form-wide, so a
-  // button with a name/value pair only shows its pending label when the
-  // submitted FormData confirms it was the one clicked.
-  const isMine = !name || data?.get(name) === value;
   return (
-    <button
-      type="submit"
+    <SubmitButton
+      pendingLabel={pendingLabel}
+      className={className}
       name={name}
       value={value}
-      disabled={pending || disabled}
-      aria-busy={pending}
+      disabled={disabled}
       aria-label={ariaLabel}
-      className={className}
       onClick={(e) => {
         if (!window.confirm(confirm)) e.preventDefault();
       }}
     >
-      {pending && isMine ? pendingLabel : children}
-    </button>
+      {children}
+    </SubmitButton>
   );
 }

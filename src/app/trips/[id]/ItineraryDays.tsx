@@ -108,7 +108,7 @@ function ThumbIcon() {
   );
 }
 
-function ChevronUpIcon() {
+function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
   return (
     <svg
       aria-hidden="true"
@@ -121,25 +121,13 @@ function ChevronUpIcon() {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M5 12.5 10 7.5 15 12.5" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 7.5 10 12.5 15 7.5" />
+      <path
+        d={
+          direction === 'up'
+            ? 'M5 12.5 10 7.5 15 12.5'
+            : 'M5 7.5 10 12.5 15 7.5'
+        }
+      />
     </svg>
   );
 }
@@ -517,7 +505,7 @@ export function ItineraryDays({
                                   pendingLabel="…"
                                   className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                                 >
-                                  <ChevronUpIcon />
+                                  <ChevronIcon direction="up" />
                                 </SubmitButton>
                               </form>
                               <form
@@ -534,7 +522,7 @@ export function ItineraryDays({
                                   pendingLabel="…"
                                   className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                                 >
-                                  <ChevronDownIcon />
+                                  <ChevronIcon direction="down" />
                                 </SubmitButton>
                               </form>
                               <Link

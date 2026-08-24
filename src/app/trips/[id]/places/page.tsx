@@ -18,6 +18,7 @@ import { geocode } from '@/lib/geocode';
 import type { Guide } from '@/lib/research/wikivoyage';
 import { getGuide } from '@/lib/research/wikivoyage';
 import { getKeyStatus } from '@/server/aiSettings';
+import { SECTION_ORDER as GUIDE_SECTIONS } from '@/lib/guideSections';
 import { ensureDaysForTrip } from '@/server/itinerary';
 import { listPlaces, searchPlaces } from '@/server/places';
 import { Map } from '@/components/Map';
@@ -39,14 +40,6 @@ const SEARCH_RADIUS_M = 1500;
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
-
-const GUIDE_SECTIONS: { key: keyof Guide['sections']; label: string }[] = [
-  { key: 'eat', label: 'Eat' },
-  { key: 'see', label: 'See' },
-  { key: 'do', label: 'Do' },
-  { key: 'getAround', label: 'Get around' },
-  { key: 'getIn', label: 'Get in' },
-];
 
 function GuidePanel({
   destination,

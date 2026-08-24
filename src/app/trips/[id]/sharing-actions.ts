@@ -7,7 +7,7 @@ import {
   removeCollaborator,
   revokeShareLink,
 } from '@/server/sharing';
-import { ignoreIfMissing } from '@/server/auth-scope';
+import { ignoreIfMissing, withFormErrors } from '@/server/auth-scope';
 import { ValidationError } from '@/server/errors';
 
 export interface InviteFormState {
@@ -30,20 +30,18 @@ export async function revokeShareLinkAction(
   revalidatePath(`/trips/${tripId}`);
 }
 
-export async function inviteCollaboratorAction(
-  tripId: string,
-  _prevState: InviteFormState,
-  formData: FormData,
-): Promise<InviteFormState> {
-  try {
+export const inviteCollaboratorAction = withFormErrors(
+  async (
+    tripId: string,
+    _prevState: InviteFormState,
+    formData: FormData,
+  ): Promise<InviteFormState> => {
     await inviteCollaborator(tripId, String(formData.get('email') ?? ''));
-  } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [ValidationError],
+);
 
 export async function removeCollaboratorAction(
   tripId: string,

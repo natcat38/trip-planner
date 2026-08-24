@@ -1,8 +1,14 @@
 import { defineConfig } from '@playwright/test';
 
+// PLAYWRIGHT_BASE_URL lets the ux-smoke suite run against an arbitrary
+// deployment (see "test:e2e:prod" in package.json) instead of the local
+// build this config otherwise boots via webServer. Unset, behavior is
+// unchanged: localhost baseURL, webServer boots `next build && next start`.
+const remoteBaseURL = process.env.PLAYWRIGHT_BASE_URL;
+
 export default defineConfig({
   testDir: './e2e',
-  use: { baseURL: 'http://localhost:3000' },
+  use: { baseURL: remoteBaseURL ?? 'http://localhost:3000' },
   // Most assertions here wait on a real server-action round-trip — a DB
   // write, a revalidate and a re-render — not on client state. That
   // overruns Playwright's 5s default on CI's two-core runner under parallel
@@ -18,13 +24,19 @@ export default defineConfig({
   // runner rather than a broken feature. Playwright still reports a retried
   // test as flaky, so a genuine failure stays visible instead of hiding.
   retries: process.env.CI ? 2 : 0,
-  webServer: {
-    // Production build, not `next dev`: CI has no other `next build` step, so a
-    // build-breaking commit would otherwise only surface on Vercel — after
-    // ADR-0002 has already migrated Neon.
-    command: 'npm run build && npm run start',
-    url: 'http://localhost:3000',
-    timeout: 180_000,
-    reuseExistingServer: !process.env.CI,
-  },
+  // Only boot a local server when no remote target was given — against a
+  // real deployment there's nothing local to build/start.
+  ...(remoteBaseURL
+    ? {}
+    : {
+        webServer: {
+          // Production build, not `next dev`: CI has no other `next build` step, so a
+          // build-breaking commit would otherwise only surface on Vercel — after
+          // ADR-0002 has already migrated Neon.
+          command: 'npm run build && npm run start',
+          url: 'http://localhost:3000',
+          timeout: 180_000,
+          reuseExistingServer: !process.env.CI,
+        },
+      }),
 });

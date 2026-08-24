@@ -9,6 +9,7 @@ export function SubmitButton({
   name,
   value,
   disabled,
+  onClick,
   'aria-label': ariaLabel,
   'aria-pressed': ariaPressed,
 }: {
@@ -28,6 +29,9 @@ export function SubmitButton({
   name?: string;
   value?: string;
   disabled?: boolean;
+  // Passed through to the rendered <button> — ConfirmSubmitButton is the one
+  // caller today, using it to run a window.confirm() guard before submit.
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   'aria-label'?: string;
   // Toggle-button state (the vote button, the checklist done-toggle) — not
   // redundant with aria-label: it's what tells a screen reader whether *this*
@@ -57,6 +61,7 @@ export function SubmitButton({
       aria-pressed={ariaPressed}
       className={className}
       style={style}
+      onClick={onClick}
     >
       {pending && isMine ? (pendingLabel ?? children) : children}
     </button>

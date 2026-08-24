@@ -18,7 +18,7 @@ import {
   toggleChecklistItem,
 } from '@/server/checklist';
 import { createExpense, deleteExpense } from '@/server/expenses';
-import { ForbiddenOrNotFoundError, ignoreIfMissing } from '@/server/auth-scope';
+import { ignoreIfMissing, withFormErrors } from '@/server/auth-scope';
 import { StaleWriteError, ValidationError } from '@/server/errors';
 import { planJourneyBetweenActivities } from '@/server/transit';
 import { toggleVote } from '@/server/votes';
@@ -60,45 +60,35 @@ function parseActivityFormData(formData: FormData) {
   };
 }
 
-export async function addActivityAction(
-  tripId: string,
-  dayId: string,
-  _prevState: ActivityFormState,
-  formData: FormData,
-): Promise<ActivityFormState> {
-  try {
+export const addActivityAction = withFormErrors(
+  async (
+    tripId: string,
+    dayId: string,
+    _prevState: ActivityFormState,
+    formData: FormData,
+  ): Promise<ActivityFormState> => {
     await createActivity(tripId, dayId, parseActivityFormData(formData));
-  } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [ValidationError],
+);
 
-export async function updateActivityAction(
-  tripId: string,
-  activityId: string,
-  updatedAt: string,
-  _prevState: ActivityFormState,
-  formData: FormData,
-): Promise<ActivityFormState> {
-  try {
+export const updateActivityAction = withFormErrors(
+  async (
+    tripId: string,
+    activityId: string,
+    updatedAt: string,
+    _prevState: ActivityFormState,
+    formData: FormData,
+  ): Promise<ActivityFormState> => {
     await updateActivity(tripId, activityId, {
       ...parseActivityFormData(formData),
       updatedAt: new Date(updatedAt),
     });
-  } catch (err) {
-    if (
-      err instanceof ValidationError ||
-      err instanceof StaleWriteError ||
-      err instanceof ForbiddenOrNotFoundError
-    )
-      return { error: err.message };
-    throw err;
-  }
-  redirect(`/trips/${tripId}`);
-}
+    redirect(`/trips/${tripId}`);
+  },
+);
 
 export async function deleteActivityAction(
   tripId: string,
@@ -153,28 +143,25 @@ export async function toggleVoteAction(
   revalidatePath(`/trips/${tripId}`);
 }
 
-export async function updateDayNotesAction(
-  tripId: string,
-  dayId: string,
-  updatedAt: string,
-  _prevState: DayNotesFormState,
-  formData: FormData,
-): Promise<DayNotesFormState> {
-  try {
+export const updateDayNotesAction = withFormErrors(
+  async (
+    tripId: string,
+    dayId: string,
+    updatedAt: string,
+    _prevState: DayNotesFormState,
+    formData: FormData,
+  ): Promise<DayNotesFormState> => {
     await updateDayNotes(
       tripId,
       dayId,
       String(formData.get('notes') ?? ''),
       new Date(updatedAt),
     );
-  } catch (err) {
-    if (err instanceof ValidationError || err instanceof StaleWriteError)
-      return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [ValidationError, StaleWriteError],
+);
 
 function parseExpenseFormData(formData: FormData) {
   const costAmountRaw = formData.get('costAmount');
@@ -192,20 +179,18 @@ function parseExpenseFormData(formData: FormData) {
   };
 }
 
-export async function addExpenseAction(
-  tripId: string,
-  _prevState: ExpenseFormState,
-  formData: FormData,
-): Promise<ExpenseFormState> {
-  try {
+export const addExpenseAction = withFormErrors(
+  async (
+    tripId: string,
+    _prevState: ExpenseFormState,
+    formData: FormData,
+  ): Promise<ExpenseFormState> => {
     await createExpense(tripId, parseExpenseFormData(formData));
-  } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [ValidationError],
+);
 
 export async function deleteExpenseAction(
   tripId: string,
@@ -215,20 +200,18 @@ export async function deleteExpenseAction(
   revalidatePath(`/trips/${tripId}`);
 }
 
-export async function addChecklistItemAction(
-  tripId: string,
-  _prevState: ChecklistFormState,
-  formData: FormData,
-): Promise<ChecklistFormState> {
-  try {
+export const addChecklistItemAction = withFormErrors(
+  async (
+    tripId: string,
+    _prevState: ChecklistFormState,
+    formData: FormData,
+  ): Promise<ChecklistFormState> => {
     await addChecklistItem(tripId, String(formData.get('label') ?? ''));
-  } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [ValidationError],
+);
 
 // Called directly from Checklist.tsx's checkbox onChange (inside
 // useTransition), not bound to a <form>'s action — a raw form submission
@@ -247,21 +230,19 @@ export interface ToggleChecklistItemResult {
   error?: string;
 }
 
-export async function toggleChecklistItemAction(
-  tripId: string,
-  itemId: string,
-  done: boolean,
-  updatedAt: string,
-): Promise<ToggleChecklistItemResult> {
-  try {
+export const toggleChecklistItemAction = withFormErrors(
+  async (
+    tripId: string,
+    itemId: string,
+    done: boolean,
+    updatedAt: string,
+  ): Promise<ToggleChecklistItemResult> => {
     await toggleChecklistItem(tripId, itemId, done, new Date(updatedAt));
-  } catch (err) {
-    if (err instanceof StaleWriteError) return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [StaleWriteError],
+);
 
 export async function deleteChecklistItemAction(
   tripId: string,
@@ -302,24 +283,22 @@ export async function planTransitAction(
 // because that is how every other mutation in this app is written. Note
 // next.config.ts raises serverActions.bodySizeLimit — the 1 MB default would
 // reject a file well under the per-attachment cap before this ever runs.
-export async function addAttachmentAction(
-  tripId: string,
-  _prevState: AttachmentFormState,
-  formData: FormData,
-): Promise<AttachmentFormState> {
-  const file = formData.get('file');
-  if (!(file instanceof File)) {
-    return { error: 'Choose a file to upload.' };
-  }
-  try {
+export const addAttachmentAction = withFormErrors(
+  async (
+    tripId: string,
+    _prevState: AttachmentFormState,
+    formData: FormData,
+  ): Promise<AttachmentFormState> => {
+    const file = formData.get('file');
+    if (!(file instanceof File)) {
+      return { error: 'Choose a file to upload.' };
+    }
     await addAttachment(tripId, file);
-  } catch (err) {
-    if (err instanceof ValidationError) return { error: err.message };
-    throw err;
-  }
-  revalidatePath(`/trips/${tripId}`);
-  return {};
-}
+    revalidatePath(`/trips/${tripId}`);
+    return {};
+  },
+  [ValidationError],
+);
 
 export async function deleteAttachmentAction(
   tripId: string,
