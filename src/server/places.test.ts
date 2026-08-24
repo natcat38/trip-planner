@@ -62,7 +62,7 @@ beforeEach(() => {
   vi.mocked(searchOsmPlaces).mockReset();
 });
 
-const trip = { id: 'trip-1', userId: 'user-1' };
+const trip = { id: 'trip-1', userId: 'user-1', destinations: [] as string[] };
 
 const savedPlace = {
   id: 'place-1',

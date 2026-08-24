@@ -74,8 +74,24 @@ test.describe('ux-smoke', () => {
     test('renders trip name, itinerary days, and the budget roll-up, with no edit/delete controls', async ({
       page,
     }) => {
-      const response = await page.goto(sharedPath!);
+      // Accept either "/shared/<token>" or a full URL, so the value can be
+      // pasted straight from the sharing panel — and so shells that rewrite
+      // leading slashes into filesystem paths (Git Bash) can be worked around
+      // by passing the full URL instead.
+      const target = /^https?:\/\//.test(sharedPath!)
+        ? sharedPath!
+        : sharedPath!.replace(/^\/?/, '/');
+      const response = await page.goto(target);
       expect(response?.ok()).toBe(true);
+
+      // A revoked or wrong-database token still renders 200 with the
+      // "Link not found" page, whose own <h1> would satisfy the check below.
+      // Fail loudly here instead, or the real cause reads as a missing <h2>.
+      await expect(
+        page.getByRole('heading', { name: /link not found/i }),
+        'SHARED_TRIP_PATH points at a token this deployment does not have — ' +
+          'check it was created against the same database this target reads.',
+      ).toHaveCount(0);
 
       // Trip name: SharedTripView.tsx renders it as the page's <h1>.
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

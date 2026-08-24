@@ -10,7 +10,7 @@ async function requireDay(tripId: string, dayId: string) {
   const trip = await requireTripAccess(tripId);
   const day = await db.day.findFirst({ where: { id: dayId, tripId: trip.id } });
   if (!day) throw new ForbiddenOrNotFoundError();
-  return day;
+  return { day, trip };
 }
 
 export async function requireActivity(tripId: string, activityId: string) {
@@ -71,7 +71,7 @@ export async function updateDayNotes(
   notes: string,
   updatedAt: Date,
 ) {
-  const day = await requireDay(tripId, dayId);
+  const { day } = await requireDay(tripId, dayId);
   await optimisticUpdate(
     db.day.updateMany({
       where: { id: day.id, updatedAt },
@@ -120,6 +120,7 @@ interface ExistingPlace {
 // a failed lookup.
 async function resolveActivityData(
   input: ActivityInput,
+  destination: string | undefined,
   existing?: ExistingPlace,
 ) {
   const placeName = input.placeName || null;
@@ -135,7 +136,12 @@ async function resolveActivityData(
     lat = input.lat;
     lng = input.lng;
   } else if (placeName !== (existing?.placeName ?? null)) {
-    const result = placeName ? await geocode(placeName) : null;
+    // Destination-biased lookup first, same failure mode and fix as
+    // savePlaceFromPage in src/server/extensionApi.ts.
+    const result = placeName
+      ? ((destination ? await geocode(`${placeName}, ${destination}`) : null) ??
+        (await geocode(placeName)))
+      : null;
     lat = result?.lat ?? null;
     lng = result?.lng ?? null;
   }
@@ -164,14 +170,14 @@ export async function createActivity(
   dayId: string,
   input: ActivityInput,
 ) {
-  const day = await requireDay(tripId, dayId);
+  const { day, trip } = await requireDay(tripId, dayId);
   validateActivityInput(input);
   const maxSortOrder = await db.activity.aggregate({
     where: { dayId: day.id },
     _max: { sortOrder: true },
   });
   const sortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1;
-  const data = await resolveActivityData(input);
+  const data = await resolveActivityData(input, trip.destinations[0]);
   return db.activity.create({ data: { dayId: day.id, ...data, sortOrder } });
 }
 
@@ -181,8 +187,9 @@ export async function updateActivity(
   input: ActivityUpdateInput,
 ) {
   const activity = await requireActivity(tripId, activityId);
+  const trip = await requireTripAccess(tripId);
   validateActivityInput(input);
-  const data = await resolveActivityData(input, activity);
+  const data = await resolveActivityData(input, trip.destinations[0], activity);
   await optimisticUpdate(
     db.activity.updateMany({
       where: { id: activity.id, updatedAt: input.updatedAt },
