@@ -6,8 +6,9 @@
 Phase 3 asks the app to answer three questions about a place without opening another tab:
 where to eat and what a meal costs, whether an attraction needs tickets and what admission is,
 and how to get there. The obvious shape is "point an LLM at it", and the first draft of the
-plan assumed a free-tier model would supply the facts. Live verification
-(`docs/phase-3-research-layer-handoff.md` §3) falsified the assumptions underneath that:
+plan assumed a free-tier model would supply the facts. Live verification (handoff retired
+2026-08-24; see `knowledge/integrations/research-sources.md`) falsified the assumptions underneath
+that:
 
 - **OpenStreetMap has no price data at all.** Across a live Fukuoka sample, *zero* of 83
   restaurants carried any price/cost tag, and the `fee` tag appeared on 3 of 106 attractions —

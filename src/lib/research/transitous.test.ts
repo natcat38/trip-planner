@@ -15,7 +15,7 @@ const WHEN = new Date('2026-09-01T09:00:00.000Z');
 
 // A realistic-shaped itinerary, deliberately carrying the heavy fields the real API returns
 // (alerts / intermediateStops / steps / verbose from-tripFrom) that transitous.ts must drop
-// before returning anything to a caller (docs/phase-3-research-layer-handoff.md §3.8: a Paris
+// before returning anything to a caller (see ADR-0010: a Paris
 // route runs 1.8MB, mostly these fields).
 function heavyItinerary() {
   return {

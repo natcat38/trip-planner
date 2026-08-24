@@ -3,7 +3,7 @@
  * candidate day plans from a pool of real places with no network call, no database, and no
  * external dependency: proximity clustering + a nearest-neighbour route, biased by the
  * requester's stated pace and focus. This is the same route-optimisation math Wanderlog
- * paywalls (docs/phase-3-research-layer-handoff.md §3.10, §8 M4) — a first-class feature, not
+ * paywalls (knowledge/domain/day-generation.md) — a first-class feature, not
  * a fallback of last resort. A parallel AI path (src/lib/ai/*) covers users with a BYOK key;
  * this module exists so a keyless user is never locked out.
  *

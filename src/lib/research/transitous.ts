@@ -1,6 +1,6 @@
 /**
  * Transit routing via Transitous (`https://api.transitous.org/api/`, community-hosted MOTIS
- * v2) — free, keyless, best-effort, **no SLA** (docs/phase-3-research-layer-handoff.md §3.8).
+ * v2) — free, keyless, best-effort, **no SLA** (see knowledge/integrations/transit-routing.md).
  * We are deliberately not sending the courtesy-volume email their usage policy suggests, so this
  * module has to throttle itself for real instead of trusting the maintainers to do it for us.
  * Server-only, never throws, module-level cache — same fallback philosophy as ../fx.ts and

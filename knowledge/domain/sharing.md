@@ -2,7 +2,7 @@
 type: Domain Entity
 title: Sharing
 description: A public read-only link plus named Collaborators (invited by email, accept/decline) granting edit access to a trip.
-resource: ../../docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md
+resource: ../../docs/adr/0006-collaborator-matched-by-email.md
 tags: [domain, auth]
 timestamp: 2026-08-11T00:00:00Z
 ---
@@ -25,4 +25,6 @@ itself (the link, invites) are owner-only.
 
 # Citations
 
-[Phase 2 sharing & export design spec](../../docs/superpowers/specs/2026-08-11-phase2-sharing-export-design.md).
+[ADR-0006 — Collaborators matched by email](../../docs/adr/0006-collaborator-matched-by-email.md) and
+[ADR-0007 — export via browser print](../../docs/adr/0007-export-via-browser-print.md); the
+original Phase 2 design spec was retired once both were implemented (2026-08-24).

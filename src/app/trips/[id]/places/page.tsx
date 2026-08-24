@@ -3,7 +3,7 @@
  * tray for one trip, reached only via `requireTripAccess(tripId)` like the
  * rest of `src/app/trips/[id]/*`. Top to bottom: a Wikivoyage destination
  * guide panel that degrades honestly when coverage is thin/none/unavailable
- * (docs/phase-3-research-layer-handoff.md §4), an OSM place search, and the
+ * (see ADR-0008), an OSM place search, and the
  * saved tray with a day picker to promote a place onto the itinerary.
  * @packageDocumentation
  */
@@ -31,7 +31,7 @@ import { PlaceRow } from './PlaceRow';
 import { Card } from '@/components/Card';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
-// retries (docs/phase-3-research-layer-handoff.md §5.9).
+// retries (see knowledge/integrations/research-sources.md).
 export const maxDuration = 60;
 
 const SEARCH_RADIUS_M = 1500;

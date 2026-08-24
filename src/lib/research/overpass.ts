@@ -2,7 +2,7 @@
  * Free, keyless destination-research data sources — currently OpenStreetMap via the Overpass
  * API. Every module here is server-only and never throws: network or parse failures resolve to
  * `[]`/`null`, matching the fallback philosophy of ../fx.ts and ../geocode.ts. OSM has no price
- * data (verified live — see docs/phase-3-research-layer-handoff.md §3.1), so nothing in this
+ * data (verified live — see knowledge/integrations/research-sources.md), so nothing in this
  * directory reads, exposes, or invents a cost field.
  * @packageDocumentation
  */
@@ -45,7 +45,7 @@ const QUERY_TIMEOUT_S = 20;
 const MAX_RADIUS_M = 2000;
 const MAX_RESULTS = 50;
 
-// Category mapping per docs/phase-3-research-layer-handoff.md §9 item 2 — same vocabulary as
+// Category mapping (see knowledge/integrations/research-sources.md) — same vocabulary as
 // Activity.category. Anything not matched below falls through to "Other".
 const TAG_CATEGORY_RULES: {
   key: string;

@@ -2,7 +2,7 @@
 type: Integration
 title: Research sources
 description: The two keyless data sources behind destination research — Overpass/OpenStreetMap for places and Wikivoyage for guide prose and sample prices.
-resource: ../../docs/phase-3-research-layer-handoff.md
+resource: ../../docs/adr/0008-grounded-research-no-generative-layer.md
 tags: [integration, research, osm, wikivoyage]
 timestamp: 2026-08-20T00:00:00Z
 ---
@@ -31,5 +31,4 @@ that claim. Attribution is mandatory: OSM is ODbL, Wikivoyage is CC BY-SA.
 
 # Citations
 
-[Phase 3 handoff §3.1-3.3, §5.1, §5.2](../../docs/phase-3-research-layer-handoff.md),
 [ADR-0008](../../docs/adr/0008-grounded-research-no-generative-layer.md).

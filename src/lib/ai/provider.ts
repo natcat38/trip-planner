@@ -83,7 +83,7 @@ async function request(
 
 // Groq's own docs contradict themselves about which chat models are currently live (the API
 // schema lists models the same docs page calls deprecated — verified live, see
-// docs/phase-3-research-layer-handoff.md). So this module never hardcodes a model list: it asks
+// knowledge/integrations/byok-ai.md). So this module never hardcodes a model list: it asks
 // the provider with the user's own key and offers back whatever actually comes back right now.
 interface ModelsApiEntry {
   id?: string;
