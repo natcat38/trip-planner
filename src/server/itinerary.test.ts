@@ -68,7 +68,10 @@ const trip = {
   userId: 'user-1',
   startDate: new Date('2026-09-01'),
   endDate: new Date('2026-09-03'),
+  destinations: [] as string[],
 };
+
+const tripWithDestination = { ...trip, destinations: ['Fukuoka'] };
 
 describe('ensureDaysForTrip', () => {
   it('creates the missing days for the trip range', async () => {
@@ -219,6 +222,60 @@ describe('createActivity', () => {
     expect(db.activity.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ lat: 35.6586, lng: 139.7454 }),
+      }),
+    );
+  });
+
+  it('biases the geocode query with the trip destination when one is set', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(
+      tripWithDestination as never,
+    );
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+    vi.mocked(geocode).mockResolvedValue({ lat: 33.5904, lng: 130.4017 });
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Kushida Shrine',
+      category: 'Sightseeing',
+      placeName: 'Kushida Shrine',
+    });
+
+    expect(geocode).toHaveBeenCalledWith('Kushida Shrine, Fukuoka');
+    expect(geocode).toHaveBeenCalledTimes(1);
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 33.5904, lng: 130.4017 }),
+      }),
+    );
+  });
+
+  it('falls back to the bare name when the biased lookup misses', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(
+      tripWithDestination as never,
+    );
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+    vi.mocked(geocode)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ lat: 33.5904, lng: 130.4017 });
+
+    await createActivity('trip-1', 'day-1', {
+      title: 'Kushida Shrine',
+      category: 'Sightseeing',
+      placeName: 'Kushida Shrine',
+    });
+
+    expect(geocode).toHaveBeenNthCalledWith(1, 'Kushida Shrine, Fukuoka');
+    expect(geocode).toHaveBeenNthCalledWith(2, 'Kushida Shrine');
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 33.5904, lng: 130.4017 }),
       }),
     );
   });
@@ -500,6 +557,37 @@ describe('updateActivity and deleteActivity', () => {
     expect(db.activity.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ lat: 35.71, lng: 139.81 }),
+      }),
+    );
+  });
+
+  it('biases the geocode query with the trip destination when placeName changes', async () => {
+    const withPlace = {
+      id: 'activity-1',
+      dayId: 'day-1',
+      placeName: 'Tokyo Tower',
+      lat: 35.6586,
+      lng: 139.7454,
+    };
+    vi.mocked(requireTripAccess).mockResolvedValue(
+      tripWithDestination as never,
+    );
+    vi.mocked(db.activity.findFirst).mockResolvedValue(withPlace as never);
+    vi.mocked(db.activity.updateMany).mockResolvedValue({ count: 1 } as never);
+    vi.mocked(geocode).mockResolvedValue({ lat: 33.5904, lng: 130.4017 });
+
+    await updateActivity('trip-1', 'activity-1', {
+      title: 'Renamed',
+      category: 'Sightseeing',
+      placeName: 'Kushida Shrine',
+      updatedAt,
+    });
+
+    expect(geocode).toHaveBeenCalledWith('Kushida Shrine, Fukuoka');
+    expect(geocode).toHaveBeenCalledTimes(1);
+    expect(db.activity.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 33.5904, lng: 130.4017 }),
       }),
     );
   });
