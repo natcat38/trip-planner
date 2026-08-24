@@ -266,16 +266,16 @@ export function ItineraryDays({
                                   aria-hidden
                                   className="inline-block h-6 w-6 rounded-full border border-border align-middle"
                                   style={{
-                                    background: activity.pinColor ?? '#2563eb',
+                                    // ADR-0019 §2: the unset-pin fallback
+                                    // converges on the accent token instead
+                                    // of its own #2563eb literal.
+                                    background:
+                                      activity.pinColor ?? 'var(--accent)',
                                   }}
                                 />
                                 <span className="sr-only">Pin colour</span>
                               </summary>
-                              {/* bg-background resolves to #0a0a0a in dark mode,
-                                  identical to the page's own dark:bg-zinc-950
-                                  backdrop — the popover was invisible against
-                                  itself without an explicit surface colour. */}
-                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-background p-2 shadow-sm dark:bg-zinc-900">
+                              <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-surface-raised p-2 shadow-sm">
                                 {PIN_COLOR_PALETTE.map((color) => (
                                   <form
                                     key={color}

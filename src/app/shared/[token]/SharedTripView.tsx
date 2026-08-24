@@ -9,6 +9,7 @@ import type {
 import { ThemeToggle } from '@/app/ThemeToggle';
 import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
 import { duplicateSharedTripAction } from './actions';
+import { Card } from '@/components/Card';
 
 type SharedTripData = Awaited<ReturnType<typeof getSharedTrip>>;
 type BudgetSummary = Awaited<ReturnType<typeof getSharedBudgetSummary>>;
@@ -82,7 +83,7 @@ export function SharedTripView({
           )}
         </div>
 
-        <section className="mb-10 rounded-lg border border-border p-5">
+        <Card as="section" className="mb-10">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
@@ -124,7 +125,7 @@ export function SharedTripView({
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
         <div className="flex flex-col gap-8">
           {/* Read-only view: no pin selection, so no handler to pass — and a

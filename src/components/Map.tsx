@@ -22,7 +22,11 @@ export interface MapPin {
   color?: string | null;
 }
 
-const PIN_COLOR = '#2563eb';
+// ADR-0019 §2: converges on the app's one accent token instead of its own
+// literal. `el.style.background` is a DOM style value, so the browser
+// resolves the CSS custom property at paint time — this is not a Mapbox API
+// color option, so var() works here.
+const PIN_COLOR = 'var(--accent)';
 const SELECTED_PIN_COLOR = '#dc2626';
 
 export function Map({

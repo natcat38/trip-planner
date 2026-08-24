@@ -17,6 +17,7 @@
 
 import { useActionState } from 'react';
 import { Select } from '@/components/Select';
+import { Card } from '@/components/Card';
 import type { DayPlanCandidate } from '@/server/dayPlan';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import {
@@ -57,7 +58,7 @@ export function DayPlanner({
   >(generateDayPlanAction.bind(null, tripId), INITIAL_STATE);
 
   return (
-    <section className="mt-10 rounded-lg border border-border p-5">
+    <Card as="section" className="mt-10">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
         Plan a day
       </h2>
@@ -174,7 +175,7 @@ export function DayPlanner({
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 

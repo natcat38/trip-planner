@@ -8,6 +8,8 @@
  * @packageDocumentation
  */
 
+import { Card } from '@/components/Card';
+
 function Block({ className }: { className: string }) {
   return (
     <div
@@ -29,13 +31,13 @@ export default function PlacesLoading() {
           <Block className="h-4 w-32" />
         </div>
 
-        <div className="mb-10 rounded-lg border border-border p-5">
+        <Card className="mb-10">
           <Block className="h-5 w-40 mb-3" />
           <Block className="h-4 w-full mb-2" />
           <Block className="h-4 w-3/4" />
-        </div>
+        </Card>
 
-        <div className="mb-10 rounded-lg border border-border p-5">
+        <Card className="mb-10">
           <Block className="h-5 w-32 mb-4" />
           <div className="flex flex-wrap gap-3 mb-4">
             <Block className="h-9 flex-1" />
@@ -43,7 +45,7 @@ export default function PlacesLoading() {
             <Block className="h-9 w-24" />
           </div>
           <Block className="h-4 w-56" />
-        </div>
+        </Card>
 
         <div>
           <Block className="h-5 w-32 mb-4" />

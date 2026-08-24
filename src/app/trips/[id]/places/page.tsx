@@ -28,6 +28,7 @@ import { saveOsmPlaceAction } from './actions';
 import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
 import { PlaceRow } from './PlaceRow';
+import { Card } from '@/components/Card';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
 // retries (docs/phase-3-research-layer-handoff.md §5.9).
@@ -60,14 +61,14 @@ function GuidePanel({
 }) {
   if (!destination) {
     return (
-      <section className="mb-10 rounded-lg border border-border p-5">
+      <Card as="section" className="mb-10">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           This trip has no destination set, so there&apos;s no guide to show.
         </p>
-      </section>
+      </Card>
     );
   }
 
@@ -76,7 +77,7 @@ function GuidePanel({
   // explicit message and point at OSM search instead of an empty panel.
   if (guide == null || guide.coverage === 'none') {
     return (
-      <section className="mb-10 rounded-lg border border-border p-5">
+      <Card as="section" className="mb-10">
         <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
@@ -93,7 +94,7 @@ function GuidePanel({
             See the full guide on Wikivoyage
           </a>
         )}
-      </section>
+      </Card>
     );
   }
 
@@ -102,7 +103,7 @@ function GuidePanel({
   );
 
   return (
-    <section className="mb-10 rounded-lg border border-border p-5">
+    <Card as="section" className="mb-10">
       <div className="flex items-baseline justify-between mb-2 gap-4">
         <h2 className="font-medium text-black dark:text-zinc-50">
           Destination guide — {guide.title}
@@ -181,7 +182,7 @@ function GuidePanel({
         </a>
         .
       </p>
-    </section>
+    </Card>
   );
 }
 
@@ -190,11 +191,11 @@ function GuidePanel({
 // streamed guide content swaps in.
 function GuideSkeleton() {
   return (
-    <section className="mb-10 rounded-lg border border-border p-5">
+    <Card as="section" className="mb-10">
       <div className="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-3" />
       <div className="h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-2" />
       <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-    </section>
+    </Card>
   );
 }
 
@@ -311,7 +312,7 @@ export default async function PlacesPage({
           />
         </Suspense>
 
-        <section className="mb-10 rounded-lg border border-border p-5">
+        <Card as="section" className="mb-10">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Search places
           </h2>
@@ -472,7 +473,7 @@ export default async function PlacesPage({
               </p>
             </>
           )}
-        </section>
+        </Card>
 
         <section>
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">

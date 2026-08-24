@@ -12,6 +12,7 @@ import { getKeyStatus, listAvailableModels } from '@/server/aiSettings';
 import { getExtensionTokenStatus } from '@/server/extensionToken';
 import { AiKeyPanel } from './AiKeyPanel';
 import { ExtensionTokenPanel } from './ExtensionTokenPanel';
+import { Card } from '@/components/Card';
 
 export default async function SettingsPage() {
   const status = await getKeyStatus();
@@ -37,7 +38,7 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <section className="rounded-lg border border-border p-5">
+        <Card as="section">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             AI key
           </h2>
@@ -48,9 +49,9 @@ export default async function SettingsPage() {
             once saved.
           </p>
           <AiKeyPanel status={status} models={models} />
-        </section>
+        </Card>
 
-        <section className="mt-8 rounded-lg border border-border p-5">
+        <Card as="section" className="mt-8">
           <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
             Browser extension
           </h2>
@@ -61,7 +62,7 @@ export default async function SettingsPage() {
             without signing out anywhere.
           </p>
           <ExtensionTokenPanel status={await getExtensionTokenStatus()} />
-        </section>
+        </Card>
       </main>
     </div>
   );

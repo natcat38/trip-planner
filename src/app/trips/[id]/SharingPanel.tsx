@@ -11,6 +11,7 @@ import {
   revokeShareLinkAction,
 } from './sharing-actions';
 import type { ShareStatus } from '@/server/sharing';
+import { Card } from '@/components/Card';
 
 // navigator.clipboard.writeText needs a secure context and can reject (a
 // permissions prompt denial, or a browser that refuses outright) — the
@@ -70,7 +71,7 @@ export function SharingPanel({
     : null;
 
   return (
-    <section className="mb-10 rounded-lg border border-border p-5">
+    <Card as="section" className="mb-10">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-4">Sharing</h2>
 
       <div className="mb-6">
@@ -193,6 +194,6 @@ export function SharingPanel({
           </SubmitButton>
         </form>
       </div>
-    </section>
+    </Card>
   );
 }

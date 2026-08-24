@@ -4,6 +4,7 @@ import { getBudgetSummary } from '@/server/budget';
 import { listExpenses } from '@/server/expenses';
 import { addExpenseAction, deleteExpenseAction } from './actions';
 import { ExpenseForm } from './ExpenseForm';
+import { Card } from '@/components/Card';
 
 export function budgetBannerText(
   spentMinor: number,
@@ -30,7 +31,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
   ]);
 
   return (
-    <section className="mb-10 rounded-lg border border-border p-5">
+    <Card as="section" className="mb-10">
       <h2 className="font-medium text-black dark:text-zinc-50 mb-2">Budget</h2>
       <p
         className={
@@ -101,6 +102,6 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
         )}
         <ExpenseForm action={addExpenseAction.bind(null, tripId)} />
       </div>
-    </section>
+    </Card>
   );
 }
