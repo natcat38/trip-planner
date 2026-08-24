@@ -2,7 +2,7 @@
 type: Domain Entity
 title: Places
 description: The saved-places research tray under a trip — candidate places gathered from OpenStreetMap before any of them reach the itinerary.
-resource: ../../docs/phase-3-research-layer-handoff.md
+resource: ../../docs/adr/0008-grounded-research-no-generative-layer.md
 tags: [domain, prisma, research]
 timestamp: 2026-08-20T00:00:00Z
 ---
@@ -33,5 +33,4 @@ payload — it is a private workspace, not published output.
 
 # Citations
 
-[Phase 3 handoff §5.3, §5.5, §5.6](../../docs/phase-3-research-layer-handoff.md),
 [ADR-0008](../../docs/adr/0008-grounded-research-no-generative-layer.md).

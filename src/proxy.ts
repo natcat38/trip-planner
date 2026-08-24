@@ -14,7 +14,7 @@ export const proxy = auth((req) => {
 // simply public — the proxy never runs for it, and nothing else in the app
 // re-checks at the routing layer. `/settings` holds encrypted provider API keys,
 // so it was added here BEFORE that route existed rather than after
-// (docs/phase-3-research-layer-handoff.md §3.6). The in-action currentUserId()
+// (see ADR-0009). The in-action currentUserId()
 // guard in src/server/aiSettings.ts is the defence-in-depth behind this line,
 // not a substitute for it.
 export const config = {

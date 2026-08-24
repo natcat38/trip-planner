@@ -58,9 +58,6 @@ are repo changes.
   key throws until it exists. Generate with
   `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; it must differ
   from the local `.env` value, and rotating it later invalidates every stored user key.
-- **Rotate the Google and GitHub OAuth client secrets.** For the Google client (live in
-  Vercel): add the new secret and update the Vercel env var *before* deleting the old one, or
-  production sign-in breaks between the two steps. The GitHub one is the localhost-only app.
 - **Production has been smoke-tested, not functionally tested.** Sign-in, geocoding, FX, and
   the share flow have each been exercised, but no full end-to-end pass has been run against the
   production deployment itself.

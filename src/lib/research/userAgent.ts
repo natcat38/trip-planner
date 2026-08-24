@@ -1,6 +1,6 @@
 // Shared User-Agent for every fetch in this directory. Third-party research
 // APIs' usage policies (Overpass, Wikivoyage, and especially Transitous —
-// see docs/phase-3-research-layer-handoff.md §3.8) ask for an application
+// see knowledge/integrations/transit-routing.md) ask for an application
 // name, version, and contact so they can identify and, if needed, throttle
 // or block a specific consumer instead of the whole internet.
 //

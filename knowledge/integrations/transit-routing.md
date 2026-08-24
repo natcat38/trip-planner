@@ -41,5 +41,4 @@ and the API's usage policy requires this repository stay open-source licensed (M
 
 # Citations
 
-[ADR-0010](../../docs/adr/0010-transitous-for-transit-routing.md),
-[Phase 3 handoff §3.8, §8](../../docs/phase-3-research-layer-handoff.md).
+[ADR-0010](../../docs/adr/0010-transitous-for-transit-routing.md).

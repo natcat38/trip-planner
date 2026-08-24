@@ -2,7 +2,7 @@
  * Google/Apple Maps transit deep links — the free fallback when Transitous returns zero
  * itineraries (e.g. bus-only routes it doesn't cover) or is rate-limited. No key, no quota,
  * no ToS agreement, so these are permanent secondary actions, not just an error state
- * (docs/phase-3-research-layer-handoff.md §3.8).
+ * (knowledge/integrations/transit-routing.md).
  */
 
 export interface LatLng {

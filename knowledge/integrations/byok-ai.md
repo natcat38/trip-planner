@@ -40,5 +40,4 @@ verbatim, never computed. Output is labelled as AI-reformatted with the source a
 
 # Citations
 
-[ADR-0011](../../docs/adr/0011-byok-ai-groq-default.md),
-[Phase 3 handoff §3.9, §8](../../docs/phase-3-research-layer-handoff.md).
+[ADR-0011](../../docs/adr/0011-byok-ai-groq-default.md).

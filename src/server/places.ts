@@ -190,7 +190,7 @@ export async function listPlaces(tripId: string) {
 // Promotes a saved place onto a Day as an Activity. Passes placeName + lat/lng
 // together so createActivity's coordinate passthrough (resolveActivityData)
 // trusts the place's known coordinates instead of firing a Mapbox text
-// geocode — see docs/phase-3-research-layer-handoff.md §3.5/§5.4. Cost is
+// geocode — see knowledge/domain/places.md. Cost is
 // converted from Place's minor-unit storage back to a decimal amount because
 // ActivityInput's public surface takes costAmount, not costMinor; the round
 // trip through toMinorUnits inside createActivity reproduces the same

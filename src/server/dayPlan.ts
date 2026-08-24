@@ -1,6 +1,6 @@
 /**
  * Guided day-plan generation (Phase 3 M4, ADR-0008/0011, see
- * docs/phase-3-research-layer-handoff.md §8's M4 section): turns a trip's
+ * knowledge/domain/day-generation.md): turns a trip's
  * saved places (src/server/places.ts) into 2-3 candidate day plans. Mirrors
  * src/server/guideSummary.ts's shape (auth -> key -> data -> prompt ->
  * friendly errors) with one addition specific to this feature: a keyless or
@@ -122,7 +122,7 @@ interface RawPlan {
 }
 
 // Providers sometimes wrap JSON in ```json fences even when told not to
-// (observed live, see docs/phase-3-research-layer-handoff.md) — strip them
+// (observed live, see knowledge/domain/day-generation.md) — strip them
 // before parsing rather than fail on a well-formed answer.
 function stripCodeFence(text: string): string {
   const trimmed = text.trim();

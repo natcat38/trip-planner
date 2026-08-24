@@ -34,5 +34,4 @@ Attribution to Open-Meteo (CC BY 4.0) is required wherever it appears.
 
 # Citations
 
-[ADR-0013](../../docs/adr/0013-qol-pack-ics-duplication-weather.md),
-[Phase 3 handoff §8](../../docs/phase-3-research-layer-handoff.md).
+[ADR-0013](../../docs/adr/0013-qol-pack-ics-duplication-weather.md).

@@ -7,7 +7,7 @@ Phase 3's third product question is "how do I get there, and what transport exis
 answered it only partially, via Wikivoyage's *Get around* prose and the nearest OSM station.
 
 Options were re-verified live against the real APIs before this decision, per the lesson recorded
-in `docs/phase-3-research-layer-handoff.md` §3.7:
+in `knowledge/integrations/transit-routing.md` (handoff retired 2026-08-24):
 
 - **Transitous** (`https://api.transitous.org/api/`, community-hosted MOTIS 2) is live and keyless.
   `GET /api/v1/plan` returned 10 valid itineraries for Tokyo Station → Tokyo Tower via 大手町 and

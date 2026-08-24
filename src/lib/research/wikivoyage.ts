@@ -6,7 +6,7 @@
 // must trace back to fetched Wikivoyage wikitext, or be `null`. Wikivoyage
 // gives *sample* prices in prose, not a computable average — do NOT add an
 // "average meal cost" derived from these sections; no free source supports
-// that claim (see docs/phase-3-research-layer-handoff.md §3.3).
+// that claim (see knowledge/integrations/research-sources.md).
 
 import { createTtlCache } from '../ttl-cache';
 import { USER_AGENT } from './userAgent';

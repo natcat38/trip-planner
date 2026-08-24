@@ -20,7 +20,7 @@ and that human reviewers may read and annotate API input and output. Trip data c
 names and travel-companion names, so this would need explicit disclosure even where the EEA
 clause does not bite.
 
-Surveyed alternatives (`docs/phase-3-research-layer-handoff.md` §3.9, Aug 2026):
+Surveyed alternatives (handoff retired 2026-08-24; see `knowledge/integrations/byok-ai.md`, Aug 2026):
 
 - **GitHub Models is retired** (2026-07-30). Articles still recommending it are stale.
 - **OpenRouter** — ToS §5.2 explicitly contemplates serving your own end users, no EEA

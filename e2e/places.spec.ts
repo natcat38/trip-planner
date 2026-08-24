@@ -21,7 +21,7 @@ test('the places page redirects to sign-in when signed out', async ({
 // Playwright's context.addCookies() (same technique as e2e/export.spec.ts).
 //
 // The saved Place is seeded directly via Prisma rather than driven through
-// the OSM search UI (docs/phase-3-research-layer-handoff.md §6 item 7):
+// the OSM search UI (see knowledge/integrations/research-sources.md):
 // searching would hit the live Overpass API from CI, which is both flaky
 // and rude to a fair-use community service. Its costCurrency matches the
 // trip's baseCurrency so the budget assertion doesn't depend on a live FX

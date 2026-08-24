@@ -40,5 +40,4 @@ Generation happens **only on explicit user action** — it spends the user's own
 # Citations
 
 [ADR-0012](../../docs/adr/0012-day-generation-grounded-by-id-validation.md),
-[ADR-0008](../../docs/adr/0008-grounded-research-no-generative-layer.md),
-[Phase 3 handoff §8, §3.10](../../docs/phase-3-research-layer-handoff.md).
+[ADR-0008](../../docs/adr/0008-grounded-research-no-generative-layer.md).
