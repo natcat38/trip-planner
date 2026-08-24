@@ -1,22 +1,40 @@
+/* Trip Planner extension popup — literal copies of the app's design tokens
+ * (src/app/globals.css, ADR-0019) and type stack. This bundle is not part of
+ * the Next build (see extension/README.md) and cannot `var()` off the app's
+ * CSS custom properties, so every value below is a hand-copied literal that
+ * will silently drift the moment globals.css's tokens change. Whoever next
+ * edits --accent/--border/--danger there should grep the repo for
+ * "extension/popup.css" (also named directly in
+ * docs/adr/0019-visual-design-direction.md §2, "reconcile, don't invent")
+ * and update the matching literal here in the same change.
+ */
+
 :root {
   color-scheme: light dark;
-  font-family: system-ui, sans-serif;
+  /* Same fallback stack Tailwind's font-sans (and so Geist Sans, once
+   * loaded) resolves to — not the Geist webfont itself, which would mean
+   * shipping a font file into a 320px popup for a bundle this small. */
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
+
 body {
   width: 320px;
   margin: 0;
   padding: 12px;
 }
+
 h1 {
   font-size: 14px;
   margin: 0 0 8px;
 }
+
 label {
   display: block;
-  font-size: 11px;
+  font-size: 12px; /* 12px floor — the previous 11px read as sub-legible */
   margin: 8px 0 2px;
   opacity: 0.7;
 }
+
 input,
 select,
 textarea {
@@ -25,11 +43,32 @@ textarea {
   font: inherit;
   font-size: 13px;
   padding: 6px;
-  border: 1px solid rgb(0 0 0 / 0.15);
-  border-radius: 4px;
+  border-radius: 4px; /* matches the app's `rounded` input radius */
   background: transparent;
   color: inherit;
+  /* light-dark() resolves against :root's color-scheme above, so this one
+   * declaration replaces a prefers-color-scheme media query.
+   * --border-strong literal (src/app/globals.css): the border is the only
+   * cue these controls are editable, so it needs WCAG 1.4.11's 3:1, which
+   * the previous rgb(0 0 0/0.2) / rgb(255 255 255/0.25) pair measured only
+   * ~1.6:1 against. #78716c / #a8a29e measure 4.56:1 / 7.89:1 — keep this
+   * in step with globals.css's --border-strong value. */
+  border: 1px solid light-dark(#78716c, #a8a29e);
 }
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: light-dark(#57534e, #d6d3d1);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #2563eb; /* --accent, src/app/globals.css */
+  outline-offset: 1px;
+}
+
 button {
   margin-top: 12px;
   width: 100%;
@@ -38,15 +77,26 @@ button {
   font-size: 13px;
   font-weight: 500;
   border: 0;
-  border-radius: 999px;
-  background: #2563eb;
-  color: #fff;
+  border-radius: 999px; /* matches the app's pill buttons */
+  background: #2563eb; /* --accent, src/app/globals.css */
+  color: #fff; /* --accent-fg */
   cursor: pointer;
 }
+
+button:hover:not(:disabled) {
+  opacity: 0.9; /* same hover recipe as the app's bg-accent buttons */
+}
+
+button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 button:disabled {
   opacity: 0.5;
   cursor: default;
 }
+
 button.link {
   background: none;
   color: inherit;
@@ -55,13 +105,24 @@ button.link {
   font-weight: 400;
   margin-top: 8px;
 }
+
+button.link:hover {
+  opacity: 0.85;
+}
+
+button.link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .hint {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.6;
   margin: 6px 0 0;
 }
+
 .error {
   font-size: 12px;
-  color: #dc2626;
+  color: #dc2626; /* --danger, src/app/globals.css */
   margin: 8px 0 0;
 }

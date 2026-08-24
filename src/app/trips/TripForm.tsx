@@ -38,7 +38,7 @@ export function TripForm({
   return (
     <form action={formAction} className="flex flex-col gap-4 max-w-md">
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}
@@ -52,7 +52,7 @@ export function TripForm({
           required
           autoComplete="off"
           defaultValue={defaults.name}
-          className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25 dark:bg-transparent"
+          className="rounded border border-border-strong px-3 py-2 bg-transparent"
         />
       </label>
 
@@ -65,7 +65,7 @@ export function TripForm({
           required
           autoComplete="off"
           defaultValue={defaults.destinations}
-          className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25 dark:bg-transparent"
+          className="rounded border border-border-strong px-3 py-2 bg-transparent"
         />
       </label>
 
@@ -79,7 +79,7 @@ export function TripForm({
             name="startDate"
             required
             defaultValue={defaults.startDate}
-            className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25 dark:bg-transparent"
+            className="rounded border border-border-strong px-3 py-2 bg-transparent"
           />
         </label>
         <label className="flex flex-col gap-1 flex-1">
@@ -91,7 +91,7 @@ export function TripForm({
             name="endDate"
             required
             defaultValue={defaults.endDate}
-            className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25 dark:bg-transparent"
+            className="rounded border border-border-strong px-3 py-2 bg-transparent"
           />
         </label>
       </div>
@@ -109,7 +109,7 @@ export function TripForm({
             spellCheck={false}
             autoCapitalize="characters"
             defaultValue={defaults.baseCurrency}
-            className="rounded border border-black/[.08] px-3 py-2 uppercase dark:border-white/25 dark:bg-transparent"
+            className="rounded border border-border-strong px-3 py-2 uppercase bg-transparent"
           />
         </label>
         <label className="flex flex-col gap-1 flex-1">
@@ -124,7 +124,7 @@ export function TripForm({
             step="any"
             inputMode="decimal"
             defaultValue={defaults.budgetAmount}
-            className="rounded border border-black/[.08] px-3 py-2 dark:border-white/25 dark:bg-transparent"
+            className="rounded border border-border-strong px-3 py-2 bg-transparent"
           />
         </label>
       </div>
@@ -132,7 +132,7 @@ export function TripForm({
       <button
         type="submit"
         disabled={isPending}
-        className="mt-2 rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="mt-2 rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? 'Saving…' : submitLabel}
       </button>

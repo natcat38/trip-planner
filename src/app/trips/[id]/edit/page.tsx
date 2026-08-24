@@ -46,13 +46,13 @@ export default async function EditTripPage({
   const boundDelete = deleteTripAction.bind(null, trip.id);
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
       >
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-8">
+        <h1 className="text-4xl font-semibold text-black dark:text-zinc-50 mb-8">
           Edit trip
         </h1>
         <TripForm
@@ -74,7 +74,7 @@ export default async function EditTripPage({
             <ConfirmSubmitButton
               confirm="Delete this trip and all its days, activities, expenses and attachments? This cannot be undone."
               pendingLabel="Deleting…"
-              className="text-sm text-red-600 dark:text-red-400 underline"
+              className="text-sm text-danger underline"
             >
               Delete trip
             </ConfirmSubmitButton>

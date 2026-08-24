@@ -18,7 +18,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader — this boundary can render for a signed-out visitor
           too (a render error doesn't imply an authenticated route), and
           AppHeader requires a session. Same minimal chrome as the other
@@ -31,7 +31,7 @@ export default function GlobalError({
         tabIndex={-1}
         className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-16 text-center"
       >
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+        <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
           Something went wrong
         </h1>
         <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
@@ -41,7 +41,7 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
           >
             Try again
           </button>

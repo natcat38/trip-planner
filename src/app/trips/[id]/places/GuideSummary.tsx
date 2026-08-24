@@ -24,12 +24,12 @@ export function GuideSummary({ tripId }: { tripId: string }) {
   >(summarizeGuideAction.bind(null, tripId), INITIAL_STATE);
 
   return (
-    <div className="mt-4 border-t border-dashed border-black/[.08] pt-4 dark:border-white/25">
+    <div className="mt-4 border-t border-dashed border-border pt-4">
       <form action={formAction}>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? 'Summarizing…' : 'Summarize this guide'}
         </button>
@@ -40,16 +40,13 @@ export function GuideSummary({ tripId }: { tripId: string }) {
           nothing on its first appearance. */}
       <div aria-live="polite" aria-busy={isPending}>
         {state.error && (
-          <p
-            className="mt-2 text-sm text-red-600 dark:text-red-400"
-            role="alert"
-          >
+          <p className="mt-2 text-sm text-danger" role="alert">
             {state.error}
           </p>
         )}
 
         {state.text && (
-          <div className="mt-3 rounded border border-black/[.08] p-3 dark:border-white/25">
+          <div className="mt-3 rounded border border-border p-3">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               AI-reformatted from the Wikivoyage text above
             </p>

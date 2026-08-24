@@ -13,7 +13,7 @@ import { ThemeToggle } from '../ThemeToggle';
 
 export default function OfflinePage() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader — this page is offline by definition, so a session
           check would just fail. Same minimal chrome as the other
           auth-agnostic routes (/, /shared/[token]). ThemeToggle only reads

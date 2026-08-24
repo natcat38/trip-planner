@@ -28,6 +28,7 @@ import { saveOsmPlaceAction } from './actions';
 import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
 import { PlaceRow } from './PlaceRow';
+import { Card } from '@/components/Card';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
 // retries (docs/phase-3-research-layer-handoff.md §5.9).
@@ -60,14 +61,14 @@ function GuidePanel({
 }) {
   if (!destination) {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-        <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
+      <Card as="section" className="mb-10">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           This trip has no destination set, so there&apos;s no guide to show.
         </p>
-      </section>
+      </Card>
     );
   }
 
@@ -76,11 +77,11 @@ function GuidePanel({
   // explicit message and point at OSM search instead of an empty panel.
   if (guide == null || guide.coverage === 'none') {
     return (
-      <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-        <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
+      <Card as="section" className="mb-10">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
           Destination guide
         </h2>
-        <p className="text-sm text-amber-700 dark:text-amber-400">
+        <p className="text-sm text-warning">
           Limited guide data for {destination}. Use place search below instead.
         </p>
         {guide?.url && (
@@ -93,7 +94,7 @@ function GuidePanel({
             See the full guide on Wikivoyage
           </a>
         )}
-      </section>
+      </Card>
     );
   }
 
@@ -102,16 +103,16 @@ function GuidePanel({
   );
 
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <Card as="section" className="mb-10">
       <div className="flex items-baseline justify-between mb-2 gap-4">
-        <h2 className="font-medium text-black dark:text-zinc-50">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50">
           Destination guide — {guide.title}
         </h2>
         <span
           className={
             guide.coverage === 'good'
-              ? 'shrink-0 text-xs text-green-700 dark:text-green-400'
-              : 'shrink-0 text-xs text-amber-700 dark:text-amber-400'
+              ? 'shrink-0 text-xs text-positive'
+              : 'shrink-0 text-xs text-warning'
           }
         >
           {guide.coverage === 'good' ? 'Good coverage' : 'Limited coverage'}
@@ -119,7 +120,7 @@ function GuidePanel({
       </div>
 
       {guide.coverage === 'thin' && (
-        <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
+        <p className="mb-4 text-sm text-warning">
           Limited guide data for {destination} — some sections may be missing.
           Place search below still works.
         </p>
@@ -134,7 +135,7 @@ function GuidePanel({
           {availableSections.map(({ key, label }) => (
             <details
               key={key}
-              className="rounded border border-dashed border-black/[.08] p-3 dark:border-white/25"
+              className="rounded border border-dashed border-border p-3"
             >
               <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
                 {label}
@@ -181,7 +182,7 @@ function GuidePanel({
         </a>
         .
       </p>
-    </section>
+    </Card>
   );
 }
 
@@ -190,11 +191,11 @@ function GuidePanel({
 // streamed guide content swaps in.
 function GuideSkeleton() {
   return (
-    <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
+    <Card as="section" className="mb-10">
       <div className="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-3" />
       <div className="h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800 mb-2" />
       <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-    </section>
+    </Card>
   );
 }
 
@@ -285,14 +286,14 @@ export default async function PlacesPage({
   const showFreeModelNotice = keyStatus?.model?.endsWith(':free') ?? false;
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             Places — {trip.name}
           </h1>
           <Link
@@ -311,8 +312,8 @@ export default async function PlacesPage({
           />
         </Suspense>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+        <Card as="section" className="mb-10">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
             Search places
           </h2>
 
@@ -341,7 +342,7 @@ export default async function PlacesPage({
                     autoComplete="off"
                     defaultValue={q ?? ''}
                     placeholder="Search (e.g. ramen)"
-                    className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+                    className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
@@ -362,7 +363,7 @@ export default async function PlacesPage({
                 </label>
                 <SubmitButton
                   pendingLabel="Searching…"
-                  className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                  className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
                 >
                   Search
                 </SubmitButton>
@@ -379,7 +380,7 @@ export default async function PlacesPage({
                   {searchResults.map((place) => (
                     <li
                       key={place.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-black/[.08] p-4 dark:border-white/25"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-border p-4"
                     >
                       <div className="min-w-0">
                         <p className="font-medium text-black dark:text-zinc-50 truncate">
@@ -439,7 +440,7 @@ export default async function PlacesPage({
                         />
                         <button
                           type="submit"
-                          className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                          className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
                         >
                           Save
                         </button>
@@ -472,10 +473,10 @@ export default async function PlacesPage({
               </p>
             </>
           )}
-        </section>
+        </Card>
 
         <section>
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
             Saved places
           </h2>
 

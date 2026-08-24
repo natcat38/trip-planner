@@ -23,6 +23,25 @@ import {
 
 type Models = { id: string; free: boolean }[] | null;
 
+// This component is 'use client' — Next.js SSRs it once for the initial
+// HTML, then hydrates it in the browser. The previous `status.updatedAt
+// .toLocaleDateString()` (no locale, no options) let the server's and the
+// browser's own default locale/implementation each pick their own output
+// shape, and a mismatch between them is exactly what caused this
+// component's SSR/client hydration error. Explicit options make the format
+// deterministic; hardcoding the locale to 'en-US' (rather than `undefined`)
+// is what actually fixes the hydration mismatch — `undefined` still lets
+// server and client resolve different default locales when they differ,
+// which reintroduces the same class of bug (see ItineraryDays.tsx's
+// formatDay for a case where that happened in this exact codebase).
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
 export function AiKeyPanel({
   status,
   models,
@@ -43,7 +62,7 @@ function ApiKeyForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}
@@ -61,7 +80,7 @@ function ApiKeyForm() {
           name="apiKey"
           autoComplete="off"
           placeholder="gsk_… or sk-or-v1-…"
-          className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
         />
       </div>
 
@@ -100,7 +119,7 @@ function ApiKeyForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? 'Saving…' : 'Save key'}
       </button>
@@ -129,19 +148,22 @@ function StoredKeyPanel({
           {status.provider === 'groq' ? 'Groq' : 'OpenRouter'}
         </span>{' '}
         key <code className="font-mono">{status.maskedKey}</code>, saved{' '}
-        {status.updatedAt.toLocaleDateString()}.
+        <span className="font-mono tabular-nums">
+          {formatDate(status.updatedAt)}
+        </span>
+        .
       </p>
 
       {models === null ? (
-        <div className="rounded border border-dashed border-black/[.08] p-4 dark:border-white/25">
-          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
+        <div className="rounded border border-dashed border-border p-4">
+          <p className="mb-3 text-sm text-warning">
             Couldn&apos;t load models from the provider right now — the key may
             be temporarily unreachable or no longer valid.
           </p>
           <form action={refreshModelsAction}>
             <SubmitButton
               pendingLabel="Retrying…"
-              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium text-black dark:border-white/25 dark:text-zinc-50"
+              className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-black dark:text-zinc-50"
             >
               Retry
             </SubmitButton>
@@ -150,7 +172,7 @@ function StoredKeyPanel({
       ) : (
         <form action={modelAction} className="flex flex-col gap-3">
           {modelState.error && (
-            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            <p className="text-sm text-danger" role="alert">
               {modelState.error}
             </p>
           )}
@@ -177,7 +199,7 @@ function StoredKeyPanel({
           />
 
           {selectedIsFree && (
-            <p className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-300">
+            <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning-strong">
               This is a free OpenRouter model. Its endpoint generally requires
               permission to train on and publish the prompts you send —
               including anything in your trip data, like hotel names and travel
@@ -190,7 +212,7 @@ function StoredKeyPanel({
           <button
             type="submit"
             disabled={modelPending || !selected}
-            className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             {modelPending ? 'Saving…' : 'Set model'}
           </button>
@@ -205,10 +227,7 @@ function StoredKeyPanel({
           }
         }}
       >
-        <button
-          type="submit"
-          className="text-sm text-red-600 dark:text-red-400 underline"
-        >
+        <button type="submit" className="text-sm text-danger underline">
           Remove key
         </button>
       </form>

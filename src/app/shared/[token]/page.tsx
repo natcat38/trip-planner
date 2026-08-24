@@ -46,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // keep it verbatim.
 function InvalidShareLink() {
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader — this route has no auth gate at all (see the file
           header comment above). Same minimal chrome as the other
           auth-agnostic routes (/, and SharedTripView's own chrome for a
@@ -59,7 +59,7 @@ function InvalidShareLink() {
         tabIndex={-1}
         className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-16 text-center"
       >
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+        <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
           Link not found
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400">

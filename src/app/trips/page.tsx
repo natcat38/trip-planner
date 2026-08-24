@@ -6,18 +6,43 @@
 import Link from 'next/link';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
+import { formatDateRange } from '@/lib/format';
 import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
 import { InvitesBanner } from './InvitesBanner';
 import { duplicateTripAction } from './actions';
 
-function formatDateRange(start: Date, end: Date): string {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  return `${fmt.format(start)} – ${fmt.format(end)}`;
+// Departure status for the trip card badge. Trip.startDate/endDate are
+// stored as UTC-midnight calendar days (same convention formatDay/
+// formatDateRange already pin to), so this compares UTC calendar days, not
+// browser-local ones — deterministic from the two dates and the server's
+// current instant alone. Computed here, in a Server Component, and rendered
+// straight to static text: there's no client-side re-render of this markup
+// to disagree with (unlike ItineraryDays.tsx's "now/next", which lives in a
+// 'use client' component and had to move its "now" into a post-mount
+// useEffect to avoid a hydration mismatch — this page never hydrates a
+// second computation of "now" at all, so that whole category of risk
+// doesn't apply here).
+function departureStatus(
+  startDate: Date,
+  endDate: Date,
+  now: Date,
+): { label: string; tone: 'accent' | 'muted' } {
+  const utcDay = (d: Date) =>
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const dayMs = 24 * 60 * 60 * 1000;
+  const startsIn = Math.round((utcDay(startDate) - utcDay(now)) / dayMs);
+  const endsIn = Math.round((utcDay(endDate) - utcDay(now)) / dayMs);
+
+  if (startsIn > 1) return { label: `In ${startsIn} days`, tone: 'accent' };
+  if (startsIn === 1) return { label: 'Tomorrow', tone: 'accent' };
+  if (startsIn === 0) return { label: 'Departs today', tone: 'accent' };
+  if (endsIn >= 0) return { label: 'In progress', tone: 'accent' };
+  const endedDaysAgo = -endsIn;
+  return {
+    label: `Ended ${endedDaysAgo} ${endedDaysAgo === 1 ? 'day' : 'days'} ago`,
+    tone: 'muted',
+  };
 }
 
 export default async function TripsPage() {
@@ -25,9 +50,10 @@ export default async function TripsPage() {
     listTrips(),
     listPendingInvites(),
   ]);
+  const now = new Date();
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
@@ -36,7 +62,7 @@ export default async function TripsPage() {
         <InvitesBanner invites={invites} />
 
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             Your trips
           </h1>
           <div className="flex items-center gap-4">
@@ -48,7 +74,7 @@ export default async function TripsPage() {
             </Link>
             <Link
               href="/trips/new"
-              className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
             >
               Create trip
             </Link>
@@ -56,7 +82,7 @@ export default async function TripsPage() {
         </div>
 
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-black/[.08] p-12 text-center dark:border-white/25">
+          <div className="rounded-lg border border-dashed border-border p-12 text-center">
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
               You haven&apos;t planned any trips yet.
             </p>
@@ -69,38 +95,63 @@ export default async function TripsPage() {
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
-            {trips.map((trip) => (
-              <li
-                key={trip.id}
-                className="flex items-center gap-4 rounded-lg border border-black/[.08] hover:bg-black/[.02] dark:border-white/25 dark:hover:bg-white/[.03]"
-              >
-                <Link href={`/trips/${trip.id}`} className="block flex-1 p-5">
-                  <div className="flex items-baseline justify-between gap-4">
-                    <h2 className="font-medium text-black dark:text-zinc-50">
-                      {trip.name}
-                    </h2>
-                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {formatMoney(trip.budgetMinor, trip.baseCurrency)} budget
-                    </span>
-                  </div>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                    {trip.destinations.join(', ')} ·{' '}
-                    {formatDateRange(trip.startDate, trip.endDate)}
-                  </p>
-                </Link>
-                <form
-                  action={duplicateTripAction.bind(null, trip.id)}
-                  className="shrink-0 pr-5"
+            {trips.map((trip) => {
+              const status = departureStatus(trip.startDate, trip.endDate, now);
+              const dayCount = trip._count.days;
+              return (
+                <li
+                  key={trip.id}
+                  className="flex items-center gap-4 rounded-lg border border-border bg-surface-raised hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
-                  <SubmitButton
-                    pendingLabel="Duplicating…"
-                    className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                  <Link
+                    href={`/trips/${trip.id}`}
+                    className="block flex-1 p-5 min-w-0"
                   >
-                    Duplicate
-                  </SubmitButton>
-                </form>
-              </li>
-            ))}
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+                        {trip.name}
+                      </h2>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-mono tabular-nums font-semibold ${
+                          status.tone === 'accent'
+                            ? 'bg-accent text-accent-fg'
+                            : 'bg-border text-zinc-600 dark:text-zinc-300'
+                        }`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                      {trip.destinations.join(', ')}
+                      {trip.destinations.length > 0 && ' · '}
+                      <span className="font-mono tabular-nums">
+                        {formatDateRange(trip.startDate, trip.endDate)}
+                      </span>{' '}
+                      ·{' '}
+                      <span className="font-mono tabular-nums">{dayCount}</span>{' '}
+                      {dayCount === 1 ? 'day' : 'days'}
+                    </p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                      <span className="font-mono tabular-nums">
+                        {formatMoney(trip.budgetMinor, trip.baseCurrency)}
+                      </span>{' '}
+                      budget
+                    </p>
+                  </Link>
+                  <form
+                    action={duplicateTripAction.bind(null, trip.id)}
+                    className="shrink-0 pr-5"
+                  >
+                    <SubmitButton
+                      pendingLabel="Duplicating…"
+                      className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                    >
+                      Duplicate
+                    </SubmitButton>
+                  </form>
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>

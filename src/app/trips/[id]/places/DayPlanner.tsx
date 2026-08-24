@@ -17,6 +17,7 @@
 
 import { useActionState } from 'react';
 import { Select } from '@/components/Select';
+import { Card } from '@/components/Card';
 import type { DayPlanCandidate } from '@/server/dayPlan';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import {
@@ -32,6 +33,9 @@ const FOCUS_OPTIONS = ['Food', 'Sightseeing', 'Transport', 'Lodging', 'Other'];
 
 const INITIAL_STATE: DayPlanFormState = {};
 
+// Hardcoded 'en-US' (not `undefined`): this is a 'use client' component,
+// SSR'd once then hydrated — see ItineraryDays.tsx's formatDay for why
+// `undefined` locale risks a server/client text mismatch here.
 function formatDayOption(date: Date): string {
   // Same UTC pin as PlaceRow.tsx's day picker — Day.date is stored as UTC
   // midnight, so this must read the same calendar day everywhere.
@@ -57,8 +61,8 @@ export function DayPlanner({
   >(generateDayPlanAction.bind(null, tripId), INITIAL_STATE);
 
   return (
-    <section className="mt-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-      <h2 className="font-medium text-black dark:text-zinc-50 mb-1">
+    <Card as="section" className="mt-10">
+      <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-1">
         Plan a day
       </h2>
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
@@ -104,7 +108,7 @@ export function DayPlanner({
         </div>
 
         {showFreeModelNotice && (
-          <p className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/40 dark:text-amber-300">
+          <p className="rounded border border-warning/40 bg-warning/10 p-3 text-sm text-warning-strong">
             Your chosen model is a free OpenRouter endpoint, which generally
             requires permission to train on and publish the prompts it receives.
             Generating a day plan sends this trip&apos;s saved place names and
@@ -115,7 +119,7 @@ export function DayPlanner({
         <button
           type="submit"
           disabled={isPending}
-          className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? 'Planning…' : 'Plan a day'}
         </button>
@@ -126,10 +130,7 @@ export function DayPlanner({
           nothing on its first appearance. */}
       <div aria-live="polite" aria-busy={isPending}>
         {state.error && (
-          <p
-            className="mt-4 text-sm text-red-600 dark:text-red-400"
-            role="alert"
-          >
+          <p className="mt-4 text-sm text-danger" role="alert">
             {state.error} Save more places in the tray below and try again.
           </p>
         )}
@@ -140,7 +141,7 @@ export function DayPlanner({
               <span
                 className={
                   state.source === 'ai'
-                    ? 'text-xs text-green-700 dark:text-green-400'
+                    ? 'text-xs text-positive'
                     : 'text-xs text-zinc-500 dark:text-zinc-400'
                 }
               >
@@ -151,9 +152,7 @@ export function DayPlanner({
             </div>
 
             {state.notice && (
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                {state.notice}
-              </p>
+              <p className="text-xs text-warning">{state.notice}</p>
             )}
 
             {days.length === 0 ? (
@@ -174,7 +173,7 @@ export function DayPlanner({
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -195,7 +194,7 @@ function CandidateCard({
   >(acceptDayPlanAction.bind(null, tripId), ACCEPT_INITIAL_STATE);
 
   return (
-    <div className="rounded border border-black/[.08] p-4 dark:border-white/25">
+    <div className="rounded border border-border p-4">
       <p className="font-medium text-black dark:text-zinc-50">
         {candidate.label}
       </p>
@@ -211,7 +210,7 @@ function CandidateCard({
       </ol>
 
       {state.error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-2 text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}
@@ -235,7 +234,7 @@ function CandidateCard({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-foreground px-3 py-1 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? 'Adding…' : 'Add this day'}
         </button>

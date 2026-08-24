@@ -12,6 +12,7 @@ import { getKeyStatus, listAvailableModels } from '@/server/aiSettings';
 import { getExtensionTokenStatus } from '@/server/extensionToken';
 import { AiKeyPanel } from './AiKeyPanel';
 import { ExtensionTokenPanel } from './ExtensionTokenPanel';
+import { Card } from '@/components/Card';
 
 export default async function SettingsPage() {
   const status = await getKeyStatus();
@@ -19,14 +20,14 @@ export default async function SettingsPage() {
   const models = status ? await listAvailableModels() : null;
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       <main
         id="main"
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             Settings
           </h1>
           <Link
@@ -37,8 +38,8 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <section className="rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+        <Card as="section">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
             AI key
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
@@ -48,10 +49,10 @@ export default async function SettingsPage() {
             once saved.
           </p>
           <AiKeyPanel status={status} models={models} />
-        </section>
+        </Card>
 
-        <section className="mt-8 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-4">
+        <Card as="section" className="mt-8">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
             Browser extension
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
@@ -61,7 +62,7 @@ export default async function SettingsPage() {
             without signing out anywhere.
           </p>
           <ExtensionTokenPanel status={await getExtensionTokenStatus()} />
-        </section>
+        </Card>
       </main>
     </div>
   );

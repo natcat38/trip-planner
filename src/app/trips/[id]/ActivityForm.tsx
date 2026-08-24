@@ -44,7 +44,7 @@ export function ActivityForm({
   return (
     <form action={formAction} className="flex flex-col gap-3">
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {state.error}
         </p>
       )}
@@ -60,7 +60,7 @@ export function ActivityForm({
             autoComplete="off"
             placeholder="Title"
             defaultValue={defaults.title}
-            className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+            className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -85,7 +85,7 @@ export function ActivityForm({
           autoComplete="off"
           placeholder="Place (optional)"
           defaultValue={defaults.placeName}
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
         />
       </label>
 
@@ -98,7 +98,7 @@ export function ActivityForm({
             type="time"
             name="startTime"
             defaultValue={defaults.startTime}
-            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+            className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
         <label className="flex flex-1 flex-col gap-1">
@@ -109,7 +109,7 @@ export function ActivityForm({
             type="time"
             name="endTime"
             defaultValue={defaults.endTime}
-            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+            className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
       </div>
@@ -127,7 +127,7 @@ export function ActivityForm({
             inputMode="decimal"
             placeholder="Cost (optional)"
             defaultValue={defaults.costAmount}
-            className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+            className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -141,7 +141,7 @@ export function ActivityForm({
             autoCapitalize="characters"
             placeholder="Currency"
             defaultValue={defaults.costCurrency}
-            className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/25 dark:bg-transparent"
+            className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
           />
         </label>
       </div>
@@ -155,14 +155,14 @@ export function ActivityForm({
           autoComplete="off"
           placeholder="Notes (optional)"
           defaultValue={defaults.notes}
-          className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+          className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
         />
       </label>
 
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? 'Saving…' : submitLabel}
       </button>

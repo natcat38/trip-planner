@@ -17,6 +17,9 @@ import {
 type Place = Awaited<ReturnType<typeof listPlaces>>[number];
 type Days = Awaited<ReturnType<typeof ensureDaysForTrip>>;
 
+// Hardcoded 'en-US' (not `undefined`): this is a 'use client' component,
+// SSR'd once then hydrated — see ItineraryDays.tsx's formatDay for why
+// `undefined` locale risks a server/client text mismatch here.
 function formatDayOption(date: Date): string {
   // Day.date is always stored as UTC midnight — pin the format to UTC so it
   // reads the same calendar day everywhere, regardless of viewer/server TZ.
@@ -50,7 +53,7 @@ export function PlaceRow({
   );
 
   return (
-    <li className="rounded-lg border border-black/[.08] p-4 dark:border-white/25">
+    <li className="rounded-lg border border-border p-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
         <div className="min-w-0">
           <p className="font-medium text-black dark:text-zinc-50 truncate">
@@ -96,7 +99,7 @@ export function PlaceRow({
             </label>
             <SubmitButton
               pendingLabel="Adding…"
-              className="rounded-full bg-foreground px-3 py-1 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              className="rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-fg hover:opacity-90"
             >
               Add to day
             </SubmitButton>
@@ -111,10 +114,7 @@ export function PlaceRow({
           </summary>
           <form action={formAction} className="mt-3 flex flex-col gap-3">
             {state.error && (
-              <p
-                className="text-sm text-red-600 dark:text-red-400"
-                role="alert"
-              >
+              <p className="text-sm text-danger" role="alert">
                 {state.error}
               </p>
             )}
@@ -137,7 +137,7 @@ export function PlaceRow({
                 autoComplete="off"
                 placeholder="Notes (optional)"
                 defaultValue={place.notes ?? ''}
-                className="rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+                className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
               />
             </label>
             <div className="flex gap-3">
@@ -160,7 +160,7 @@ export function PlaceRow({
                         )
                       : ''
                   }
-                  className="w-full rounded border border-black/[.08] px-3 py-2 text-sm dark:border-white/25 dark:bg-transparent"
+                  className="w-full rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
                 />
               </label>
               <label className="flex flex-col gap-1">
@@ -174,7 +174,7 @@ export function PlaceRow({
                   autoCapitalize="characters"
                   placeholder="Currency"
                   defaultValue={place.costCurrency ?? ''}
-                  className="w-24 rounded border border-black/[.08] px-3 py-2 text-sm uppercase dark:border-white/25 dark:bg-transparent"
+                  className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
                 />
               </label>
             </div>
@@ -184,7 +184,7 @@ export function PlaceRow({
             <button
               type="submit"
               disabled={isPending}
-              className="self-start rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+              className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
             >
               {isPending ? 'Saving…' : 'Save changes'}
             </button>
@@ -195,7 +195,7 @@ export function PlaceRow({
           <ConfirmSubmitButton
             confirm="Delete this saved place?"
             pendingLabel="Deleting…"
-            className="text-sm text-red-600 dark:text-red-400 underline"
+            className="text-sm text-danger underline"
           >
             Delete
           </ConfirmSubmitButton>

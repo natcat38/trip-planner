@@ -20,6 +20,10 @@ const ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 // Day.date is stored as UTC midnight and means a calendar day, so pinning it
 // is correct there. This is a real timestamp: rendering it in UTC would show a
 // file uploaded at 22:00 in Tokyo as having arrived the day before.
+//
+// Also hardcoded to 'en-US' (not `undefined`): this is a 'use client'
+// component, SSR'd once then hydrated — see ItineraryDays.tsx's formatDay
+// for why `undefined` locale risks a server/client text mismatch here.
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -43,7 +47,7 @@ export function Attachments({
   );
 
   return (
-    <details className="mb-8 rounded-lg border border-black/[.08] p-4 dark:border-white/25">
+    <details className="mb-8 rounded-lg border border-border p-4">
       <summary className="cursor-pointer text-sm font-medium text-black dark:text-zinc-50">
         Attachments{attachments.length > 0 ? ` (${attachments.length})` : ''}
       </summary>
@@ -78,7 +82,7 @@ export function Attachments({
                 <ConfirmSubmitButton
                   confirm="Delete this file? It cannot be recovered."
                   pendingLabel="Deleting…"
-                  className="text-sm text-red-600 underline dark:text-red-400"
+                  className="text-sm text-danger underline"
                 >
                   Delete
                 </ConfirmSubmitButton>
@@ -90,7 +94,7 @@ export function Attachments({
 
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         {state.error && (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="text-sm text-danger" role="alert">
             {state.error}
           </p>
         )}
@@ -109,7 +113,7 @@ export function Attachments({
           </label>
           <SubmitButton
             pendingLabel="Uploading…"
-            className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+            className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
             Upload
           </SubmitButton>

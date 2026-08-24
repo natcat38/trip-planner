@@ -87,6 +87,27 @@ test.describe('print page, signed in', () => {
     // exported PDF must not carry a sign-out control and the owner's email.
     await expect(page.getByRole('button', { name: 'Sign out' })).toBeHidden();
     await expect(page.getByText('Fushimi Inari')).toBeVisible();
+
+    // Regression guard for task C7's print treatment: the per-activity
+    // bordered box (a rounded rect around every activity) is gone in favour
+    // of a horizontal-rule list, and a background that carries budget
+    // status (over/under-budget pill) is opted in to print backgrounds
+    // rather than silently dropped by the browser's default
+    // "background graphics off" print setting.
+    const activityItem = page
+      .getByText('Fushimi Inari')
+      .locator('xpath=ancestor::li[1]');
+    await expect(activityItem).toHaveCSS('border-radius', '0px');
+    await expect(activityItem).toHaveCSS('border-top-width', '0px');
+
+    const pill = page.locator('.print-color-exact').first();
+    const colorAdjust = await pill.evaluate((el) => {
+      const style = getComputedStyle(el) as CSSStyleDeclaration & {
+        webkitPrintColorAdjust?: string;
+      };
+      return style.printColorAdjust || style.webkitPrintColorAdjust;
+    });
+    expect(colorAdjust).toBe('exact');
   });
 
   test("a different signed-in user can't access the trip", async ({

@@ -26,10 +26,17 @@
 
     <!-- Save: the normal path. Also a real <form> for the same reason. -->
     <form id="save" novalidate hidden>
+      <h1>Save to Trip Planner</h1>
       <label for="name">Place</label>
       <input id="name" type="text" />
       <label for="trip">Trip</label>
-      <select id="trip"></select>
+      <!-- Seeded so the select shows something meaningful (not a blank box)
+           for the moment between show('save') and loadSaveView()'s trips
+           fetch resolving. popup.js's loadSaveView() clears this option
+           along with any stale ones before appending the real list. -->
+      <select id="trip">
+        <option>Loading trips…</option>
+      </select>
       <label for="category">Category</label>
       <select id="category">
         <option>Food</option>

@@ -17,7 +17,7 @@ export async function AppHeader() {
   return (
     // print:hidden — /trips/[id]/print is a nav-free print surface and
     // hides its own controls the same way.
-    <header className="w-full border-b border-black/[.08] print:hidden dark:border-white/25">
+    <header className="w-full border-b border-border print:hidden">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
         <span className="min-w-0 truncate text-sm text-zinc-600 dark:text-zinc-400">
           {email}

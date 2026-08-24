@@ -1,29 +1,25 @@
+import { Fragment } from 'react';
+import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
+import { formatDay, formatDateRange } from '@/lib/format';
 import type {
   getSharedBudgetSummary,
   getSharedTrip,
   listSharedExpenses,
 } from '@/server/sharing';
 import { ThemeToggle } from '@/app/ThemeToggle';
-import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
+import {
+  budgetBannerText,
+  CategoryShareBar,
+} from '@/app/trips/[id]/BudgetPanel';
 import { duplicateSharedTripAction } from './actions';
+import { Card } from '@/components/Card';
 
 type SharedTripData = Awaited<ReturnType<typeof getSharedTrip>>;
 type BudgetSummary = Awaited<ReturnType<typeof getSharedBudgetSummary>>;
 type SharedExpenses = Awaited<ReturnType<typeof listSharedExpenses>>;
-
-function formatDay(date: Date): string {
-  // Day.date is always stored as UTC midnight — pin the format to UTC so it
-  // reads the same calendar day everywhere, regardless of viewer/server TZ.
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
 
 export function SharedTripView({
   data,
@@ -51,7 +47,7 @@ export function SharedTripView({
     }));
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-zinc-950">
       {/* No AppHeader — this route is the one other unauthenticated page
           (src/proxy.ts doesn't match /shared/*), so it gets the same
           minimal chrome as the public landing page. */}
@@ -63,34 +59,71 @@ export function SharedTripView({
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
+        {/* Cover header (ADR-0019 M10 C6): trip name, destinations, date
+            range, and day count — every field here already comes from
+            data.trip/data.days, exactly what getSharedTrip() (src/server/
+            sharing.ts) returns after stripping userId/shareToken. Nothing
+            added is owner-identifying: no email, no userId, no token. */}
         <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
           Read-only shared view
         </p>
-        <div className="flex items-baseline justify-between gap-4 mb-8">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+        <div className="flex items-baseline justify-between gap-4 mb-2">
+          <h1 className="text-4xl font-semibold text-black dark:text-zinc-50">
             {trip.name}
           </h1>
           {canSaveCopy && (
             <form action={duplicateSharedTripAction.bind(null, token)}>
               <SubmitButton
                 pendingLabel="Saving…"
-                className="shrink-0 rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]"
+                className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
               >
                 Save a copy
               </SubmitButton>
             </form>
           )}
         </div>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-8">
+          {trip.destinations.join(', ')}
+          {trip.destinations.length > 0 && ' · '}
+          <span className="font-mono tabular-nums">
+            {formatDateRange(trip.startDate, trip.endDate)}
+          </span>{' '}
+          · <span className="font-mono tabular-nums">{days.length}</span>{' '}
+          {days.length === 1 ? 'day' : 'days'}
+        </p>
 
-        <section className="mb-10 rounded-lg border border-black/[.08] p-5 dark:border-white/25">
-          <h2 className="font-medium text-black dark:text-zinc-50 mb-2">
+        <Card as="section" className="mb-10">
+          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
+
+          {/* Same departure-board treatment as BudgetPanel.tsx — this view
+              is unauthenticated and read-only, but "read-only" doesn't mean
+              a plainer visual language: the shared view gets the same
+              tokens (they're already dark-aware here, unlike print). */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+            <span
+              className={`inline-flex items-baseline rounded-full px-4 py-1.5 font-mono tabular-nums text-4xl font-semibold ${
+                budget.isOverBudget
+                  ? 'bg-danger text-danger-fg'
+                  : 'bg-positive text-positive-fg'
+              }`}
+            >
+              {formatMoney(
+                Math.abs(budget.remainingMinor),
+                budget.baseCurrency,
+              )}
+            </span>
+            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+              {budget.isOverBudget ? 'over budget' : 'remaining'}
+            </span>
+          </div>
+
           <p
             className={
               budget.isOverBudget
-                ? 'text-red-600 dark:text-red-400'
-                : 'text-zinc-700 dark:text-zinc-300'
+                ? 'text-danger text-sm'
+                : 'text-zinc-700 dark:text-zinc-300 text-sm'
             }
           >
             {budgetBannerText(
@@ -99,32 +132,48 @@ export function SharedTripView({
               budget.baseCurrency,
             )}
           </p>
-          {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700 dark:text-amber-400">
-              {budget.unconvertedItems.map((item) => (
-                <li key={item.id}>
-                  {item.label}:{' '}
-                  {formatMoney(item.originalMinor, item.originalCurrency)} —
-                  Showing original amount — conversion rate unavailable.
-                </li>
-              ))}
-            </ul>
+
+          {Object.keys(budget.byCategory).length > 0 && (
+            <CategoryShareBar
+              byCategory={budget.byCategory}
+              spentMinor={budget.spentMinor}
+              currency={budget.baseCurrency}
+            />
           )}
+
+          {budget.unconvertedItems.length > 0 && (
+            <div className="mt-4 rounded-lg bg-warning p-3">
+              <ul className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-warning-fg">
+                {budget.unconvertedItems.map((item) => (
+                  <li key={item.id} className="contents">
+                    <span>
+                      {item.label} — showing original amount, conversion rate
+                      unavailable.
+                    </span>
+                    <span className="font-mono tabular-nums text-right">
+                      {formatMoney(item.originalMinor, item.originalCurrency)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {expenses.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <ul className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
               {expenses.map((expense) => (
-                <li key={expense.id} className="flex justify-between">
+                <li key={expense.id} className="contents">
                   <span>
                     {expense.label} ({expense.category})
                   </span>
-                  <span>
+                  <span className="font-mono tabular-nums text-right">
                     {formatMoney(expense.costMinor, expense.costCurrency)}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
         <div className="flex flex-col gap-8">
           {/* Read-only view: no pin selection, so no handler to pass — and a
@@ -133,7 +182,7 @@ export function SharedTripView({
 
           {days.map((day) => (
             <section key={day.id}>
-              <h2 className="font-medium text-black dark:text-zinc-50 mb-3">
+              <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-3 font-mono tabular-nums">
                 {formatDay(day.date)}
               </h2>
               {day.activities.length > 0 && (
@@ -141,7 +190,7 @@ export function SharedTripView({
                   {day.activities.map((activity) => (
                     <li
                       key={activity.id}
-                      className="rounded-lg border border-black/[.08] p-4 dark:border-white/25"
+                      className="rounded-lg border border-border p-4"
                     >
                       <p className="font-medium text-black dark:text-zinc-50">
                         {activity.title}{' '}
@@ -151,19 +200,33 @@ export function SharedTripView({
                       </p>
                       <p className="text-sm text-zinc-600 dark:text-zinc-400">
                         {[
-                          activity.startTime && activity.endTime
-                            ? `${activity.startTime}–${activity.endTime}`
-                            : activity.startTime,
+                          activity.startTime && activity.endTime ? (
+                            <span key="time" className="font-mono tabular-nums">
+                              {activity.startTime}–{activity.endTime}
+                            </span>
+                          ) : activity.startTime ? (
+                            <span key="time" className="font-mono tabular-nums">
+                              {activity.startTime}
+                            </span>
+                          ) : null,
                           activity.placeName,
-                          activity.costMinor != null && activity.costCurrency
-                            ? formatMoney(
+                          activity.costMinor != null &&
+                          activity.costCurrency ? (
+                            <span key="cost" className="font-mono tabular-nums">
+                              {formatMoney(
                                 activity.costMinor,
                                 activity.costCurrency,
-                              )
-                            : null,
+                              )}
+                            </span>
+                          ) : null,
                         ]
                           .filter(Boolean)
-                          .join(' · ')}
+                          .map((seg, i) => (
+                            <Fragment key={i}>
+                              {i > 0 && ' · '}
+                              {seg}
+                            </Fragment>
+                          ))}
                       </p>
                       {activity.notes && (
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
@@ -177,6 +240,13 @@ export function SharedTripView({
             </section>
           ))}
         </div>
+
+        <footer className="mt-12 border-t border-border pt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          Planned with{' '}
+          <Link href="/" className="underline">
+            Trip Planner
+          </Link>
+        </footer>
       </main>
     </div>
   );

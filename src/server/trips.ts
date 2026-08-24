@@ -47,9 +47,13 @@ function validateTripInput(input: TripInput) {
 
 export async function listTrips() {
   const { userId, email } = await currentUserIdentity();
+  // _count.days rides along on the same findMany — one query, not an N+1 —
+  // so the trip list can show a day count (ADR-0019 M10 C6) without a
+  // separate fetch per trip.
   return db.trip.findMany({
     where: tripAccessWhere(userId, email),
     orderBy: { startDate: 'desc' },
+    include: { _count: { select: { days: true } } },
   });
 }
 

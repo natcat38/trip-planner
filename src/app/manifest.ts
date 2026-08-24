@@ -18,6 +18,10 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/trips',
     display: 'standalone',
     background_color: '#ffffff',
+    // Matches --accent in src/app/globals.css. A web manifest is a static
+    // JSON value outside the CSS cascade, so it can't `var()` off the app's
+    // token — kept in sync by hand (ADR-0019 §2), same literal, one comment
+    // pointing at the source of truth instead of an undocumented duplicate.
     theme_color: '#2563eb',
     icons: [
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
