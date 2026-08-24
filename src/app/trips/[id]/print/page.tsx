@@ -18,6 +18,84 @@ import { ensureDaysForTrip } from '@/server/itinerary';
 import { ExportButton } from './ExportButton';
 import { budgetBannerText } from '../BudgetPanel';
 
+// Static, print-safe mirror of BudgetPanel.tsx's CategoryShareBar. Same
+// display-only percentage derivation (each category's share of
+// summary.spentMinor, computed fresh on every render, never stored or fed
+// back into any budget figure) — the only difference from the authenticated
+// component is that the segment colour is the literal light-mode accent hex
+// (#2563eb) instead of `var(--accent)`, so this route can't pick up the
+// token's .dark override.
+function BudgetCategoryShareBarStatic({
+  byCategory,
+  spentMinor,
+  currency,
+}: {
+  byCategory: Record<string, number>;
+  spentMinor: number;
+  currency: string;
+}) {
+  const entries = Object.entries(byCategory);
+  if (entries.length === 0 || spentMinor <= 0) return null;
+
+  const OPACITIES = [1, 0.75, 0.55, 0.4, 0.25];
+  const shares = entries.map(([category, minor], index) => ({
+    category,
+    minor,
+    index,
+    pct: (minor / spentMinor) * 100,
+  }));
+
+  return (
+    <div className="mt-4">
+      {/* Decorative: the legend below is the accessible version of this
+          same information (label + % + amount, in the same order as the
+          segments), so the bar itself is hidden from assistive tech rather
+          than announced twice. */}
+      <div
+        aria-hidden="true"
+        className="flex h-3 w-full overflow-hidden rounded-full border border-black/[.08]"
+      >
+        {shares.map((s) => (
+          <div
+            key={s.category}
+            className="h-full border-r border-white last:border-r-0"
+            style={{
+              width: `${s.pct}%`,
+              backgroundColor: `color-mix(in srgb, #2563eb ${Math.round(
+                OPACITIES[s.index % OPACITIES.length] * 100,
+              )}%, transparent)`,
+            }}
+          />
+        ))}
+      </div>
+      <ul className="mt-2 grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 text-sm text-zinc-600">
+        {shares.map((s) => (
+          <li key={s.category} className="contents">
+            <span className="flex items-center gap-2 truncate">
+              <span
+                aria-hidden="true"
+                className="h-2 w-2 shrink-0 rounded-full border border-black/[.08]"
+                style={{
+                  backgroundColor: `color-mix(in srgb, #2563eb ${Math.round(
+                    OPACITIES[s.index % OPACITIES.length] * 100,
+                  )}%, transparent)`,
+                }}
+              />
+              {s.category}
+            </span>
+            <span className="font-mono tabular-nums text-right">
+              {Math.round(s.pct)}%
+            </span>
+            <span className="font-mono tabular-nums text-right">
+              {formatMoney(s.minor, currency)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default async function TripPrintPage({
   params,
 }: {
@@ -74,46 +152,79 @@ export default async function TripPrintPage({
 
         <section className="mb-10 border border-black/[.08] rounded-lg p-5 break-inside-avoid">
           <h2 className="text-lg font-medium text-black mb-2">Budget</h2>
-          <p className={budget.isOverBudget ? 'text-red-600' : 'text-zinc-700'}>
+
+          {/* Same departure-board treatment as BudgetPanel.tsx (big
+              over/under figure, proportion bar, right-aligned tabular
+              columns), reproduced statically and with print's own
+              always-light literal colours — bg-danger/bg-positive/var(--accent)
+              are NOT used here because they carry a .dark override, which
+              would break "light regardless of viewer theme" the moment
+              someone opens this route (not literally prints it) with the
+              app's dark toggle on. #dc2626/#15803d/#2563eb below are the
+              exact literal values --danger/--positive/--accent resolve to in
+              light mode (Tailwind's red-600/green-700/blue-600). */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+            <span
+              className={`inline-flex items-baseline rounded-full px-4 py-1.5 font-mono tabular-nums text-4xl font-semibold text-white ${
+                budget.isOverBudget ? 'bg-red-600' : 'bg-green-700'
+              }`}
+            >
+              {formatMoney(
+                Math.abs(budget.remainingMinor),
+                budget.baseCurrency,
+              )}
+            </span>
+            <span className="text-sm text-zinc-600">
+              {budget.isOverBudget ? 'over budget' : 'remaining'}
+            </span>
+          </div>
+
+          <p
+            className={
+              budget.isOverBudget
+                ? 'text-red-600 text-sm'
+                : 'text-zinc-700 text-sm'
+            }
+          >
             {budgetBannerText(
               budget.spentMinor,
               budget.budgetMinor,
               budget.baseCurrency,
             )}
           </p>
-          {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-amber-700">
-              {budget.unconvertedItems.map((item) => (
-                <li key={item.id}>
-                  {item.label}:{' '}
-                  <span className="font-mono tabular-nums">
-                    {formatMoney(item.originalMinor, item.originalCurrency)}
-                  </span>{' '}
-                  — Showing original amount — conversion rate unavailable.
-                </li>
-              ))}
-            </ul>
-          )}
+
           {Object.keys(budget.byCategory).length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-zinc-600">
-              {Object.entries(budget.byCategory).map(([category, minor]) => (
-                <li key={category} className="flex justify-between">
-                  <span>{category}</span>
-                  <span className="font-mono tabular-nums">
-                    {formatMoney(minor, budget.baseCurrency)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <BudgetCategoryShareBarStatic
+              byCategory={budget.byCategory}
+              spentMinor={budget.spentMinor}
+              currency={budget.baseCurrency}
+            />
+          )}
+          {budget.unconvertedItems.length > 0 && (
+            <div className="mt-4 rounded-lg bg-amber-700 p-3">
+              <ul className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-white">
+                {budget.unconvertedItems.map((item) => (
+                  <li key={item.id} className="contents">
+                    <span>
+                      {item.label} — showing original amount, conversion rate
+                      unavailable.
+                    </span>
+                    <span className="font-mono tabular-nums text-right">
+                      {formatMoney(item.originalMinor, item.originalCurrency)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {expenses.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-zinc-600">
+            <ul className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-zinc-600">
               {expenses.map((expense) => (
-                <li key={expense.id} className="flex justify-between">
+                <li key={expense.id} className="contents">
                   <span>
                     {expense.label} ({expense.category})
                   </span>
-                  <span className="font-mono tabular-nums">
+                  <span className="font-mono tabular-nums text-right">
                     {formatMoney(expense.costMinor, expense.costCurrency)}
                   </span>
                 </li>

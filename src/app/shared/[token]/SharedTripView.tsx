@@ -9,7 +9,10 @@ import type {
   listSharedExpenses,
 } from '@/server/sharing';
 import { ThemeToggle } from '@/app/ThemeToggle';
-import { budgetBannerText } from '@/app/trips/[id]/BudgetPanel';
+import {
+  budgetBannerText,
+  CategoryShareBar,
+} from '@/app/trips/[id]/BudgetPanel';
 import { duplicateSharedTripAction } from './actions';
 import { Card } from '@/components/Card';
 
@@ -78,11 +81,34 @@ export function SharedTripView({
           <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-2">
             Budget
           </h2>
+
+          {/* Same departure-board treatment as BudgetPanel.tsx — this view
+              is unauthenticated and read-only, but "read-only" doesn't mean
+              a plainer visual language: the shared view gets the same
+              tokens (they're already dark-aware here, unlike print). */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+            <span
+              className={`inline-flex items-baseline rounded-full px-4 py-1.5 font-mono tabular-nums text-4xl font-semibold ${
+                budget.isOverBudget
+                  ? 'bg-danger text-danger-fg'
+                  : 'bg-positive text-positive-fg'
+              }`}
+            >
+              {formatMoney(
+                Math.abs(budget.remainingMinor),
+                budget.baseCurrency,
+              )}
+            </span>
+            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+              {budget.isOverBudget ? 'over budget' : 'remaining'}
+            </span>
+          </div>
+
           <p
             className={
               budget.isOverBudget
-                ? 'text-danger'
-                : 'text-zinc-700 dark:text-zinc-300'
+                ? 'text-danger text-sm'
+                : 'text-zinc-700 dark:text-zinc-300 text-sm'
             }
           >
             {budgetBannerText(
@@ -91,27 +117,41 @@ export function SharedTripView({
               budget.baseCurrency,
             )}
           </p>
-          {budget.unconvertedItems.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-warning">
-              {budget.unconvertedItems.map((item) => (
-                <li key={item.id}>
-                  {item.label}:{' '}
-                  <span className="font-mono tabular-nums">
-                    {formatMoney(item.originalMinor, item.originalCurrency)}
-                  </span>{' '}
-                  — Showing original amount — conversion rate unavailable.
-                </li>
-              ))}
-            </ul>
+
+          {Object.keys(budget.byCategory).length > 0 && (
+            <CategoryShareBar
+              byCategory={budget.byCategory}
+              spentMinor={budget.spentMinor}
+              currency={budget.baseCurrency}
+            />
           )}
+
+          {budget.unconvertedItems.length > 0 && (
+            <div className="mt-4 rounded-lg bg-warning p-3">
+              <ul className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-warning-fg">
+                {budget.unconvertedItems.map((item) => (
+                  <li key={item.id} className="contents">
+                    <span>
+                      {item.label} — showing original amount, conversion rate
+                      unavailable.
+                    </span>
+                    <span className="font-mono tabular-nums text-right">
+                      {formatMoney(item.originalMinor, item.originalCurrency)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {expenses.length > 0 && (
-            <ul className="mt-4 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <ul className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
               {expenses.map((expense) => (
-                <li key={expense.id} className="flex justify-between">
+                <li key={expense.id} className="contents">
                   <span>
                     {expense.label} ({expense.category})
                   </span>
-                  <span className="font-mono tabular-nums">
+                  <span className="font-mono tabular-nums text-right">
                     {formatMoney(expense.costMinor, expense.costCurrency)}
                   </span>
                 </li>
