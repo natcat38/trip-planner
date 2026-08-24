@@ -129,3 +129,87 @@ summary {
     transition: none;
   }
 }
+
+/* Print (ADR-0019 task C7). Applies to any page actually sent to a printer
+ * or a print-preview dialog — not just /trips/[id]/print, since a user can
+ * always hit Ctrl+P on any route directly.
+ *
+ * Token-pinning decision: print/page.tsx keeps the literal bg-white/
+ * text-black classes C4 chose (see task-C4-report.md's "print's fixed-color
+ * constraint") rather than switching back to var(--accent) etc. — those
+ * literals protect the page while it is being *viewed* on screen
+ * (media: screen) with the app's .dark class active, which is the window
+ * this @media print block cannot reach (media only flips to "print" once
+ * printing actually starts). What this block DOES add is a safety net for
+ * every other route in the app, which use the semantic tokens directly: the
+ * :root/.dark override below pins those tokens to their light values for
+ * the print media type specifically, so a dark-mode user who prints a page
+ * other than the dedicated export view (or who somehow triggers printing
+ * on /trips/[id]/print itself) still gets ink-on-paper rather than a
+ * near-black background. Two independent guarantees, not a replacement for
+ * one another.
+ */
+@media print {
+  @page {
+    margin: 18mm 16mm;
+
+    @top-left {
+      content: string(trip-name);
+      font-size: 9pt;
+      color: #52525b;
+    }
+    @bottom-right {
+      content: 'Page ' counter(page) ' of ' counter(pages);
+      font-size: 9pt;
+      color: #52525b;
+    }
+  }
+
+  /* Scales every rem-based Tailwind text utility down together (10.5pt ≈
+   * 14px, vs. the 16px screen default), rather than only the elements that
+   * happen to inherit body's own font-size unstyled. */
+  html {
+    font-size: 10.5pt;
+  }
+
+  :root,
+  .dark {
+    --surface: #ffffff;
+    --surface-fg: #000000;
+    --surface-raised: #ffffff;
+    --surface-raised-fg: #000000;
+    --border: rgb(0 0 0 / 0.15);
+    --accent: #2563eb;
+    --accent-fg: #ffffff;
+    --warning: #b45309;
+    --warning-fg: #ffffff;
+    --warning-strong: #92400e;
+    --positive: #15803d;
+    --positive-fg: #ffffff;
+    --danger: #dc2626;
+    --danger-fg: #ffffff;
+    --background: #ffffff;
+    --foreground: #000000;
+    color-scheme: light;
+  }
+
+  /* Opt-in hook for the running header above: put this on the element
+   * carrying the trip's name (print/page.tsx's <h1>). Chromium engines
+   * without Paged Media / string-set support just ignore both this and the
+   * @top-left rule above — the page still prints correctly, only without
+   * the running header, so this degrades safely rather than breaking
+   * anything. */
+  .print-running-title {
+    string-set: trip-name content();
+  }
+
+  /* Browsers default "background graphics" to off in the print dialog, which
+   * would silently drop any element whose STATUS is communicated purely by
+   * its fill colour (the over/under-budget pill, the unconverted-items
+   * alert, the category-share bar). Opt those in explicitly rather than
+   * relying on the user finding the checkbox. */
+  .print-color-exact {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

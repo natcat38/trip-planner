@@ -53,7 +53,7 @@ function BudgetCategoryShareBarStatic({
           than announced twice. */}
       <div
         aria-hidden="true"
-        className="flex h-3 w-full overflow-hidden rounded-full border border-black/[.08]"
+        className="print-color-exact flex h-3 w-full overflow-hidden rounded-full border border-black/[.08]"
       >
         {shares.map((s) => (
           <div
@@ -74,7 +74,7 @@ function BudgetCategoryShareBarStatic({
             <span className="flex items-center gap-2 truncate">
               <span
                 aria-hidden="true"
-                className="h-2 w-2 shrink-0 rounded-full border border-black/[.08]"
+                className="print-color-exact h-2 w-2 shrink-0 rounded-full border border-black/[.08]"
                 style={{
                   backgroundColor: `color-mix(in srgb, #2563eb ${Math.round(
                     OPACITIES[s.index % OPACITIES.length] * 100,
@@ -142,7 +142,9 @@ export default async function TripPrintPage({
           <ExportButton />
         </div>
 
-        <h1 className="text-4xl font-semibold text-black mb-1">{trip.name}</h1>
+        <h1 className="print-running-title text-4xl font-semibold text-black mb-1">
+          {trip.name}
+        </h1>
         <p className="text-sm text-zinc-600 mb-8">
           {trip.destinations.join(', ')} ·{' '}
           <span className="font-mono tabular-nums">
@@ -150,7 +152,7 @@ export default async function TripPrintPage({
           </span>
         </p>
 
-        <section className="mb-10 border border-black/[.08] rounded-lg p-5 break-inside-avoid">
+        <section className="mb-10 border-t border-b border-black/[.15] py-5 break-inside-avoid">
           <h2 className="text-lg font-medium text-black mb-2">Budget</h2>
 
           {/* Same departure-board treatment as BudgetPanel.tsx (big
@@ -165,7 +167,7 @@ export default async function TripPrintPage({
               light mode (Tailwind's red-600/green-700/blue-600). */}
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
             <span
-              className={`inline-flex items-baseline rounded-full px-4 py-1.5 font-mono tabular-nums text-4xl font-semibold text-white ${
+              className={`print-color-exact inline-flex items-baseline rounded-full px-4 py-1.5 font-mono tabular-nums text-4xl font-semibold text-white ${
                 budget.isOverBudget ? 'bg-red-600' : 'bg-green-700'
               }`}
             >
@@ -201,7 +203,7 @@ export default async function TripPrintPage({
             />
           )}
           {budget.unconvertedItems.length > 0 && (
-            <div className="mt-4 rounded-lg bg-amber-700 p-3">
+            <div className="print-color-exact mt-4 rounded-lg bg-amber-700 p-3">
               <ul className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-white">
                 {budget.unconvertedItems.map((item) => (
                   <li key={item.id} className="contents">
@@ -236,16 +238,13 @@ export default async function TripPrintPage({
         <div className="flex flex-col gap-8">
           {days.map((day) => (
             <section key={day.id} className="break-inside-avoid">
-              <h2 className="text-lg font-medium text-black mb-3 font-mono tabular-nums">
+              <h2 className="print:break-after-avoid text-lg font-medium text-black mb-3 border-b border-black/[.15] pb-1 font-mono tabular-nums">
                 {formatDay(day.date)}
               </h2>
               {day.activities.length > 0 ? (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col divide-y divide-black/[.15]">
                   {day.activities.map((activity) => (
-                    <li
-                      key={activity.id}
-                      className="border border-black/[.08] rounded-lg p-4"
-                    >
+                    <li key={activity.id} className="py-3 first:pt-0">
                       <p className="font-medium text-black">
                         {activity.title}{' '}
                         <span className="font-normal text-zinc-500">
