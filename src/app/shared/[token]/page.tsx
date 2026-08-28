@@ -32,8 +32,24 @@ async function isSignedIn(): Promise<boolean> {
   }
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  return { robots: { index: false, follow: false } };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  if (!token) {
+    return { robots: { index: false, follow: false } };
+  }
+  try {
+    const { trip } = await getSharedTrip(token);
+    return { title: trip.name, robots: { index: false, follow: false } };
+  } catch (err) {
+    if (err instanceof InvalidShareLinkError) {
+      return { robots: { index: false, follow: false } };
+    }
+    throw err;
+  }
 }
 
 // Shared by both the empty-token guard and the InvalidShareLinkError catch

@@ -8,7 +8,8 @@ deployed to **Vercel + Neon** via a gated GitHub Actions pipeline (ADR-0001, ADR
 
 This bundle is the agent- and reviewer-readable knowledge map. The code-level breakdown lives
 in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); product scope in
-[`docs/Trip_Planner_Product_Scope.md`](../docs/Trip_Planner_Product_Scope.md).
+[`docs/Trip_Planner_Product_Scope.md`](../docs/Trip_Planner_Product_Scope.md); the full ADR
+index is at [`docs/adr/README.md`](../docs/adr/README.md).
 
 ## Domain
 
@@ -28,7 +29,7 @@ in [`docs/Trip_Planner_Tech_Scope.md`](../docs/Trip_Planner_Tech_Scope.md); prod
 - [BYOK AI](/integrations/byok-ai.md) — user-supplied Groq/OpenRouter key, encrypted at rest, grounded use only.
 - [Weather](/integrations/weather.md) — keyless Open-Meteo forecast, degrading to last year's actuals.
 
-## Infra
+## Infra (deferred — not built)
 
 > ⚠️ Deferred to post-ship (2026-07-23): Phase 1 deploys on Vercel + Neon — see `docs/adr/0001`.
 

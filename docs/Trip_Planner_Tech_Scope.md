@@ -8,6 +8,9 @@
 > Actions-gated deploys; Tasks 8–9 defer to a post-ship showcase. See `docs/adr/0001` &
 > `docs/adr/0002`. Schema adds optimistic locking (`adr/0003`); FX + OAuth providers fixed
 > (`adr/0004`).
+>
+> ⚠️ **Naming drift:** this doc's `middleware.ts` references (below) predate Next 16, which
+> renamed the file `src/proxy.ts` (`export const proxy`, not `middleware`). See `AGENTS.md`.
 
 ---
 

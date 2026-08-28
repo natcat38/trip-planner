@@ -43,13 +43,35 @@ export async function POST(request: Request) {
   }
   const fields = body as Record<string, unknown>;
 
+  // Explicit typeof checks instead of String(fields.x ?? ''): a wrong-shaped
+  // field (e.g. `tripId: {…}`) used to silently coerce to "[object Object]"
+  // and only surface downstream as a vague 404/422. Reject it here instead,
+  // per field, with a message that says which one.
+  for (const field of ['tripId', 'name', 'url'] as const) {
+    if (typeof fields[field] !== 'string') {
+      return NextResponse.json(
+        { error: `"${field}" must be a string.` },
+        { status: 400 },
+      );
+    }
+  }
+  for (const field of ['category', 'notes'] as const) {
+    if (fields[field] != null && typeof fields[field] !== 'string') {
+      return NextResponse.json(
+        { error: `"${field}" must be a string.` },
+        { status: 400 },
+      );
+    }
+  }
+
   try {
     const place = await savePlaceFromPage(identity.userId, identity.email, {
-      tripId: String(fields.tripId ?? ''),
-      name: String(fields.name ?? ''),
-      url: String(fields.url ?? ''),
-      category: fields.category == null ? undefined : String(fields.category),
-      notes: fields.notes == null ? undefined : String(fields.notes),
+      tripId: fields.tripId as string,
+      name: fields.name as string,
+      url: fields.url as string,
+      category:
+        fields.category == null ? undefined : (fields.category as string),
+      notes: fields.notes == null ? undefined : (fields.notes as string),
     });
     return NextResponse.json({ place: { id: place.id, name: place.name } });
   } catch (err) {

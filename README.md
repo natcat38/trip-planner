@@ -1,5 +1,7 @@
 # Trip Planner
 
+[![CI](https://github.com/natcat38/trip-planner/actions/workflows/ci.yml/badge.svg)](https://github.com/natcat38/trip-planner/actions/workflows/ci.yml)
+
 A multi-user trip planner for longer, multi-city trips (Japan and Europe were the driving
 use cases): a day-by-day itinerary, a budget that handles spending in several currencies at
 once, a map that stays in sync with the plan, and a grounded research layer so planning a day
@@ -24,6 +26,25 @@ is a real (auth-free) landing page rather than the framework starter, so it's wo
 signed out.
 
 To see the rest, run it locally — see [Running it](#running-it) below.
+
+(The same trip URL and share token are hardcoded in `package.json`'s `test:e2e:prod` script —
+update both together if the demo trip is ever reseeded or the token rotated.)
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser client"]
+    Extension["Browser extension<br/>(MV3, token auth)"]
+    Vercel["Next.js app<br/>on Vercel"]
+    Neon["Neon Postgres"]
+    Actions["GitHub Actions<br/>(gated deploy, ADR-0002)"]
+
+    Browser -->|HTTPS| Vercel
+    Extension -->|"Bearer token<br/>/api/extension/*"| Vercel
+    Vercel -->|Prisma| Neon
+    Actions -->|"CI green -> deploy"| Vercel
+```
 
 ## What works today
 
@@ -79,7 +100,8 @@ To see the rest, run it locally — see [Running it](#running-it) below.
 
 ## Decisions worth reading
 
-The reasoning lives in [`docs/adr/`](docs/adr/). The ones that shaped the code most:
+The reasoning lives in [`docs/adr/`](docs/adr/) — see [`docs/adr/README.md`](docs/adr/README.md)
+for the full index of all 19. The ones that shaped the code most:
 
 - **[ADR-0001](docs/adr/0001-deploy-vercel-neon-defer-aws.md) — Vercel + Neon, AWS deferred.**
   The original scope assumed ECS Fargate + RDS at ~$40–70/month. Against a $0/month
