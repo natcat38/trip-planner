@@ -4,6 +4,9 @@ Multi-user Japan/Europe trip planner: itinerary + multi-currency budget + maps,
 plus trip sharing (public link + collaborators) and print-to-PDF export.
 Read `docs/Trip_Planner_Tech_Scope.md` (§2 core logic), `docs/adr/` (decisions),
 and `knowledge/index.md` (glossary) before implementing anything.
+Read `memory/MEMORY.md` at session start — it is the agent memory for this repo
+(standalone, in-repo, no `~/.claude` required); new memories go in `memory/`, not
+in any tool-specific folder.
 The scope docs' AWS deployment is superseded for Phase 1 — see docs/adr/0001.
 New decisions → docs/adr/.
 
