@@ -16,8 +16,8 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/api/extension/places` | 1 | Saves a place to a trip from any webpage, on behalf of the browser extension (Phase 3 M7, ADR-0017). |
 | `src/app/api/extension/trips` | 1 | Lists the caller's trips for the browser extension's trip picker (Phase 3 M7, ADR-0017). |
 | `src/app/offline` | 1 | The fallback the service worker serves when the network is gone and the requested page was never visited online. |
-| `src/app/settings` | 5 | Server Actions for the Settings route (Phase 3 M3, ADR-0011): save/replace the user's own Groq/OpenRouter API key, remove it, choose a model, or retry fetching the model list after a transient provider failure. |
-| `src/app/shared/[token]` | 3 | The public share-link route: a fully anonymous, session-less read-only view of a trip's itinerary and budget, reached only by its `shareToken`. |
+| `src/app/settings` | 6 | Server Actions for the Settings route (Phase 3 M3, ADR-0011): save/replace the user's own Groq/OpenRouter API key, remove it, choose a model, or retry fetching the model list after a transient provider failure. |
+| `src/app/shared/[token]` | 4 | The public share-link route: a fully anonymous, session-less read-only view of a trip's itinerary and budget, reached only by its `shareToken`. |
 | `src/app/trips` | 5 | The trips list route: the signed-in user's trips overview and create/edit entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself. |
 | `src/app/trips/[id]` | 13 | Renders between two consecutive activities on a day (ItineraryDays.tsx), only when both have coordinates. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
@@ -36,4 +36,4 @@ block — an orientation gap, not an omission by the generator.
 | `e2e` | 1 | Canonical e2e sign-in: create a real User + Session row and hand the browser the authjs session cookie. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-25 source directories, 102 files, 0 without a declared purpose.
+25 source directories, 104 files, 0 without a declared purpose.

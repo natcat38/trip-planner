@@ -5,7 +5,10 @@
  * title row, budget card, day cards — same skeleton pattern as
  * trips/[id]/loading.tsx. No AppHeader: this route has no auth gate at all
  * (see page.tsx's file header comment).
- * @packageDocumentation
+ *
+ * Deliberately carries no package-documentation tag: FILE-MAP.md takes a
+ * directory's purpose from the first file declaring one, and this filename
+ * sorts ahead of page.tsx — the route's description belongs there, not here.
  */
 
 import { Card } from '@/components/Card';
