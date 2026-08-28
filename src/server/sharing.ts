@@ -85,8 +85,14 @@ export async function revokeShareLink(
   );
 }
 
+// Basic shape check only ("something@something.tld") — for immediate typo
+// feedback, not security. Collaborator matching (ADR-0006) requires exact
+// equality with a real signed-in account's email, so a garbage invite that
+// slipped past this would simply never match anyone.
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function validateEmail(email: string) {
-  if (!email.includes('@')) {
+  if (!EMAIL_SHAPE.test(email)) {
     throw new ValidationError('Enter a valid email address.');
   }
 }

@@ -3,6 +3,9 @@
 > **Audience:** product/portfolio readers (and the recruiter who lands on the repo). Plain language, no code.
 > **Status:** scoped, pre-build. Project #3 — the **full-stack + infrastructure showpiece**.
 > **Target ship:** Phase 1 by **early August 2026**.
+>
+> ⚠️ **Update:** Phases 1–4 have since shipped — see the main [README](../README.md) for
+> current status. This document is kept as-is as the original scoping record.
 
 ---
 

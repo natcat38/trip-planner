@@ -17,4 +17,5 @@ Update or delete stale files instead of duplicating them.
 - [Branch before writing](feedback_branch_before_writing.md) — always `git checkout -b` before any Write/Edit, even docs; caught two near-misses committing to main directly.
 - [Run repo-wide checks mid-execution](feedback_repo_wide_checks_during_multitask_execution.md) — prettier/file-map drift only shows up at the end otherwise; check every 3-4 tasks during subagent-driven-development.
 - [Verify plan assumptions before approval](feedback_verify_plan_assumptions_before_approval.md) — dispatch subagents to falsify a plan's facts before ExitPlanMode; caught 6 bad assumptions incl. a public /settings route.
+- [No loading.tsx on /settings](project_settings_loading_breaks_token_flow.md) — a route-level skeleton there stalls the extension-token action past 20s and fails extension-api e2e; error.tsx is fine.
 - [Opus skill subagents stall](feedback_opus_skill_subagents_stall.md) — heavy design skills trip the 600s watchdog; prompt "work incrementally", resume stalls via SendMessage.

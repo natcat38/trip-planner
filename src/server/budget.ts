@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { convertMinor } from '../lib/fx';
 import { db } from '../lib/db';
 import { requireTripAccess } from './auth-scope';
@@ -43,8 +44,12 @@ interface BudgetLineItem {
 
 // Extracted from getBudgetSummary so the public share-link path (sharing.ts,
 // token-gated instead of session-gated) can reuse the same roll-up math
-// without going through requireTripAccess.
-export async function summarizeBudget(
+// without going through requireTripAccess. cache()-wrapped for the same
+// reason as requireShareToken in sharing.ts: no active caller re-invokes it
+// with the same trip within a request today, but this keeps the two
+// aligned and free going forward rather than a silent trap for the next
+// caller who does.
+export const summarizeBudget = cache(async function summarizeBudget(
   trip: BudgetTrip,
 ): Promise<BudgetSummary> {
   const [activities, expenses] = await Promise.all([
@@ -143,7 +148,7 @@ export async function summarizeBudget(
     byDay,
     unconvertedItems,
   };
-}
+});
 
 export async function getBudgetSummary(tripId: string): Promise<BudgetSummary> {
   const trip = await requireTripAccess(tripId);

@@ -10,6 +10,10 @@ loaded as-is.
 3. In the app, go to **Settings → Browser extension** and generate a token.
 4. Click the extension's icon, paste the token, and Connect.
 
+The popup itself has no automated test — it's manually verified (see
+`docs/adr/0017-browser-extension-token-auth.md`); the server-side surface it
+calls is covered by `e2e/extension-api.spec.ts`.
+
 ## How it works
 
 The popup reads the active tab's title and any selected text, then POSTs to
