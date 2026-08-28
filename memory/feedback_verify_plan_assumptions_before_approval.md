@@ -36,7 +36,7 @@ provider terms and pricing. Prompt them to report VERIFIED / WRONG per claim wit
 say plainly which claims matter most. Then rewrite the plan around what survives, and keep the
 falsified assumptions **in** the document so a later session does not re-propose them. See
 [[feedback-subagent-plan-execution]] for the execution half of this, and
-[[project-phase1-complete-phase2-next]] for where Phase 3 sits.
+[[project-phase-status]] for where Phase 3 sits.
 
 Corollary: never write third-party API shapes from training memory. Gemini's REST surface had
 moved to `/v1beta/interactions` with `response_format`, and Wikivoyage's `prop=extracts` was not

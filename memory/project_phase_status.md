@@ -1,12 +1,24 @@
 ---
-name: project-phase1-complete-phase2-next
-description: "Phases 1-4 all merged and live (Phase 4 = M8-M10 open-items closure, UI compliance, design elevation). 2026-08-24 full repo-review branch/PR #42: 13 verified correctness fixes, design tokens, README to Phase 4 reality, screenshots."
+name: project-phase-status
+description: "Append-only phase log. Phases 1-4 all merged and live (Phase 4 = M8-M10 open-items closure, UI compliance, design elevation). 2026-08-24 full repo-review branch/PR #42: 13 verified correctness fixes, design tokens, README to Phase 4 reality, screenshots."
 metadata: 
   node_type: memory
   type: project
   originSessionId: 9d02ddb6-0755-4373-abc9-7b2fb429b5cc
   modified: 2026-08-24T13:00:04.897Z
 ---
+
+## Current state (2026-08-28)
+
+Phases 1-4 are all merged and live in production. Post-#42 follow-ups are done too:
+stale planning docs deleted and cleanup consolidated (#44), activity geocoding bias
+fixed and ux-smoke share assertion hardened (#45), README live-demo link and prod
+smoke over the shared view (#46). Nothing is mid-flight.
+
+Everything below is an append-only log, oldest first — read it only when you need
+the *why* behind a past decision. The newest entries are at the bottom.
+
+## Log
 
 As of 2026-07-29, Phase 1 of the trip planner is done, merged to `main`, and **live in
 production** — this supersedes the earlier "not live yet" state of this memory.

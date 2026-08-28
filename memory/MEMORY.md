@@ -12,7 +12,7 @@ Update or delete stale files instead of duplicating them.
 
 - [2026-08 repo-review record](project_repo_review_2026-08.md) — replaces the repo's deleted reviews/ folder; fixes shipped, pass conclusions, flake root cause, standing decisions.
 - [Use subagents for plan execution](feedback_subagent_plan_execution.md) — subagent-driven-development for plan execution; operating rules live in the global CLAUDE.md "Subagents & Token Economy" section.
-- [Trip-planner phase status](project_phase1_complete_phase2_next.md) — Phases 1-4 ALL merged and live (Phase 3 M1-M7 incl. PWA/attachments/extension; Phase 4 M8-M10 + repo-review PR #42); read before proposing follow-up work.
+- [Trip-planner phase status](project_phase_status.md) — Phases 1-4 all merged and live, nothing mid-flight; top of the file is the current state, the rest is an append-only log of past decisions. Read before proposing follow-up work.
 - [Prisma CJS for Playwright](feedback_prisma_cjs_for_playwright.md) — Prisma 7's ESM-default generated client breaks Playwright's CJS test transform; use moduleFormat = "cjs" (ask first, repo-wide blast radius).
 - [Branch before writing](feedback_branch_before_writing.md) — always `git checkout -b` before any Write/Edit, even docs; caught two near-misses committing to main directly.
 - [Run repo-wide checks mid-execution](feedback_repo_wide_checks_during_multitask_execution.md) — prettier/file-map drift only shows up at the end otherwise; check every 3-4 tasks during subagent-driven-development.
