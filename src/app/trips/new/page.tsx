@@ -3,8 +3,13 @@
  * `createTripAction`, the entry point for starting a new Trip aggregate.
  * @packageDocumentation
  */
+import type { Metadata } from 'next';
 import { createTripAction } from '../actions';
 import { TripForm } from '../TripForm';
+
+export const metadata: Metadata = {
+  title: 'Create a trip · Trip Planner',
+};
 
 export default function NewTripPage() {
   return (

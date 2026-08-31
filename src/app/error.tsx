@@ -35,7 +35,13 @@ export default function GlobalError({
           Something went wrong
         </h1>
         <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
-          {error.message || 'An unexpected error occurred.'}
+          An unexpected error occurred. Please try again.
+          {error.digest && (
+            <>
+              <br />
+              <span className="text-xs">Reference: {error.digest}</span>
+            </>
+          )}
         </p>
         <div className="flex gap-4">
           <button

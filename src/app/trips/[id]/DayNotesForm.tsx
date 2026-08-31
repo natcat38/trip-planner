@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
+import { SubmitButton } from '@/components/SubmitButton';
 import { updateDayNotesAction, type DayNotesFormState } from './actions';
 
 // A <details>-disclosed textarea, saved on submit — same shape as
@@ -17,10 +18,14 @@ export function DayNotesForm({
   updatedAt: string;
   notes: string | null;
 }) {
-  const [state, formAction, isPending] = useActionState<
-    DayNotesFormState,
-    FormData
-  >(updateDayNotesAction.bind(null, tripId, dayId, updatedAt), {});
+  const [state, formAction] = useActionState<DayNotesFormState, FormData>(
+    updateDayNotesAction.bind(null, tripId, dayId, updatedAt),
+    {},
+  );
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
 
   return (
     <details className="mt-4 rounded-lg border border-dashed border-border p-4">
@@ -29,7 +34,7 @@ export function DayNotesForm({
       </summary>
       <form action={formAction} className="mt-4 flex flex-col gap-3">
         {state.error && (
-          <p className="text-sm text-danger" role="alert">
+          <p className="text-sm text-danger" role="alert" tabIndex={-1} ref={errorRef}>
             {state.error}
           </p>
         )}
@@ -44,13 +49,12 @@ export function DayNotesForm({
             className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
-        <button
-          type="submit"
-          disabled={isPending}
+        <SubmitButton
+          pendingLabel="Saving…"
           className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
-          {isPending ? 'Saving…' : 'Save notes'}
-        </button>
+          Save notes
+        </SubmitButton>
       </form>
     </details>
   );

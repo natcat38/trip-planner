@@ -4,6 +4,7 @@
  * rejected per the optimistic-locking rule (ADR-0003).
  * @packageDocumentation
  */
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
 import {
@@ -11,9 +12,23 @@ import {
   ForbiddenOrNotFoundError,
   requireTripAccess,
 } from '@/server/auth-scope';
-import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { deleteTripAction, updateTripAction } from '../../actions';
 import { TripForm } from '../../TripForm';
+import { DeleteTripSection } from './DeleteTripSection';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const trip = await requireTripAccess(id);
+    return { title: `Edit ${trip.name} · Trip Planner` };
+  } catch {
+    return {};
+  }
+}
 
 function toDateInputValue(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -70,15 +85,7 @@ export default async function EditTripPage({
           }}
         />
         {isOwner && (
-          <form action={boundDelete} className="mt-8">
-            <ConfirmSubmitButton
-              confirm="Delete this trip and all its days, activities, expenses and attachments? This cannot be undone."
-              pendingLabel="Deleting…"
-              className="text-sm text-danger underline"
-            >
-              Delete trip
-            </ConfirmSubmitButton>
-          </form>
+          <DeleteTripSection tripName={trip.name} action={boundDelete} />
         )}
       </main>
     </div>

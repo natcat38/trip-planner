@@ -8,7 +8,8 @@
  * and `getKeyStatus()` never returns one (only `maskedKey`).
  */
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { Select } from '@/components/Select';
 import { SubmitButton } from '@/components/SubmitButton';
 import type { KeyStatus } from '@/server/aiSettings';
@@ -54,15 +55,19 @@ export function AiKeyPanel({
 }
 
 function ApiKeyForm() {
-  const [state, formAction, isPending] = useActionState<KeyFormState, FormData>(
+  const [state, formAction] = useActionState<KeyFormState, FormData>(
     saveApiKeyAction,
     {},
   );
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {state.error && (
-        <p className="text-sm text-danger" role="alert">
+        <p className="text-sm text-danger" role="alert" tabIndex={-1} ref={errorRef}>
           {state.error}
         </p>
       )}
@@ -115,13 +120,12 @@ function ApiKeyForm() {
         </p>
       </div>
 
-      <button
-        type="submit"
-        disabled={isPending}
+      <SubmitButton
+        pendingLabel="Saving…"
         className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
-        {isPending ? 'Saving…' : 'Save key'}
-      </button>
+        Save key
+      </SubmitButton>
     </form>
   );
 }
@@ -133,12 +137,16 @@ function StoredKeyPanel({
   status: KeyStatus;
   models: Models;
 }) {
-  const [modelState, modelAction, modelPending] = useActionState<
-    ModelFormState,
-    FormData
-  >(setModelAction, {});
+  const [modelState, modelAction] = useActionState<ModelFormState, FormData>(
+    setModelAction,
+    {},
+  );
   const [selected, setSelected] = useState(status.model ?? '');
   const selectedIsFree = models?.find((m) => m.id === selected)?.free ?? false;
+  const modelErrorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (modelState.error) modelErrorRef.current?.focus();
+  }, [modelState.error]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -171,7 +179,12 @@ function StoredKeyPanel({
       ) : (
         <form action={modelAction} className="flex flex-col gap-3">
           {modelState.error && (
-            <p className="text-sm text-danger" role="alert">
+            <p
+              className="text-sm text-danger"
+              role="alert"
+              tabIndex={-1}
+              ref={modelErrorRef}
+            >
               {modelState.error}
             </p>
           )}
@@ -208,27 +221,24 @@ function StoredKeyPanel({
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={modelPending || !selected}
+          <SubmitButton
+            pendingLabel="Saving…"
+            disabled={!selected}
             className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
           >
-            {modelPending ? 'Saving…' : 'Set model'}
-          </button>
+            Set model
+          </SubmitButton>
         </form>
       )}
 
-      <form
-        action={deleteApiKeyAction}
-        onSubmit={(e) => {
-          if (!window.confirm('Remove the stored API key?')) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <button type="submit" className="text-sm text-danger underline">
+      <form action={deleteApiKeyAction}>
+        <ConfirmSubmitButton
+          confirm="Remove the stored API key?"
+          pendingLabel="Removing…"
+          className="text-sm text-danger underline"
+        >
           Remove key
-        </button>
+        </ConfirmSubmitButton>
       </form>
     </div>
   );

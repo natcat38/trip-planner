@@ -52,7 +52,7 @@ function ChecklistRow({
   return (
     <li className="flex flex-col gap-1">
       <div className="flex items-center gap-3">
-        <label className="flex flex-1 cursor-pointer items-center gap-3">
+        <label className="flex flex-1 min-w-0 cursor-pointer items-center gap-3">
           <input
             type="checkbox"
             checked={item.done}
@@ -73,7 +73,7 @@ function ChecklistRow({
             className="h-5 w-5 shrink-0 accent-black dark:accent-white"
           />
           <span
-            className={`text-sm ${
+            className={`min-w-0 truncate text-sm ${
               item.done
                 ? 'text-zinc-500 line-through dark:text-zinc-400'
                 : 'text-foreground'

@@ -186,11 +186,16 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
 
       <div className="mt-6">
         <h3 className="text-15 font-medium text-foreground mb-2">Expenses</h3>
+        {expenses.length === 0 && (
+          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+            No expenses yet — add the first one below.
+          </p>
+        )}
         {expenses.length > 0 && (
           <ul className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 gap-y-2 mb-4 text-sm">
             {expenses.map((expense) => (
               <li key={expense.id} className="contents">
-                <span>
+                <span className="min-w-0 truncate">
                   {expense.label} ({expense.category})
                 </span>
                 <span className="font-mono tabular-nums text-right">

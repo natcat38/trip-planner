@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { ConfirmSubmitButton } from '@/components/ConfirmSubmitButton';
 import { Select } from '@/components/Select';
 import { SubmitButton } from '@/components/SubmitButton';
@@ -39,10 +39,7 @@ export function PlaceRow({
   place: Place;
   days: Days;
 }) {
-  const [state, formAction, isPending] = useActionState<
-    PlaceFormState,
-    FormData
-  >(
+  const [state, formAction] = useActionState<PlaceFormState, FormData>(
     updatePlaceAction.bind(
       null,
       tripId,
@@ -51,6 +48,10 @@ export function PlaceRow({
     ),
     {},
   );
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
 
   return (
     <li className="rounded-lg border border-border p-4">
@@ -114,7 +115,12 @@ export function PlaceRow({
           </summary>
           <form action={formAction} className="mt-3 flex flex-col gap-3">
             {state.error && (
-              <p className="text-sm text-danger" role="alert">
+              <p
+                className="text-sm text-danger"
+                role="alert"
+                tabIndex={-1}
+                ref={errorRef}
+              >
                 {state.error}
               </p>
             )}
@@ -170,7 +176,7 @@ export function PlaceRow({
                   maxLength={3}
                   spellCheck={false}
                   autoCapitalize="characters"
-                  placeholder="Currency"
+                  placeholder="e.g. JPY"
                   defaultValue={place.costCurrency ?? ''}
                   className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
                 />
@@ -179,13 +185,12 @@ export function PlaceRow({
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               This is a price you noted yourself, not a computed average.
             </p>
-            <button
-              type="submit"
-              disabled={isPending}
+            <SubmitButton
+              pendingLabel="Saving…"
               className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
             >
-              {isPending ? 'Saving…' : 'Save changes'}
-            </button>
+              Save changes
+            </SubmitButton>
           </form>
         </details>
 

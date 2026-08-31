@@ -5,6 +5,7 @@
  * their own id alone.
  * @packageDocumentation
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -24,6 +25,20 @@ import { Attachments } from './Attachments';
 import { Checklist } from './Checklist';
 import { ItineraryDays } from './ItineraryDays';
 import { SharingPanel } from './SharingPanel';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const trip = await requireTripAccess(id);
+    return { title: `${trip.name} · Trip Planner` };
+  } catch {
+    return {};
+  }
+}
 
 export default async function TripItineraryPage({
   params,

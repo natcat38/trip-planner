@@ -36,6 +36,18 @@ const PIN_COLOR_PALETTE = [
   '#9333ea', // purple
 ] as const;
 
+// Human names for the swatch aria-labels (#13) — a hex value read aloud by a
+// screen reader ("pound d c two six two six") is meaningless; the palette is
+// fixed (see above), so a lookup is safe and exhaustive.
+const PIN_COLOR_NAMES: Record<(typeof PIN_COLOR_PALETTE)[number], string> = {
+  '#dc2626': 'red',
+  '#f97316': 'orange',
+  '#eab308': 'yellow',
+  '#16a34a': 'green',
+  '#2563eb': 'blue',
+  '#9333ea': 'purple',
+};
+
 // Deliberately NOT consolidated into src/lib/format.ts and deliberately
 // hardcoded to 'en-US' rather than `undefined`: this is a 'use client'
 // component, so Next.js renders it once on the server (for the initial
@@ -206,7 +218,7 @@ function WeatherAttribution({
         target="_blank"
         rel="noopener noreferrer"
       >
-        Open-Meteo
+        Open-Meteo<span className="sr-only"> (opens in new tab)</span>
       </a>{' '}
       (CC BY 4.0)
     </p>
@@ -333,22 +345,27 @@ export function ItineraryDays({
                       return (
                         <Fragment key={activity.id}>
                           <li
+                            aria-current={
+                              activity.id === selectedActivityId
+                                ? 'true'
+                                : undefined
+                            }
                             className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
                               activity.id === selectedActivityId
                                 ? 'border-accent'
                                 : 'border-border'
                             }`}
                           >
-                            <div className="flex-1 flex flex-col gap-2">
+                            <div className="flex-1 min-w-0 flex flex-col gap-2">
                               <button
                                 type="button"
                                 onClick={() =>
                                   setSelectedActivityId(activity.id)
                                 }
-                                className="text-left"
+                                className="text-left min-w-0"
                                 disabled={activity.lat == null}
                               >
-                                <p className="font-medium text-foreground">
+                                <p className="font-medium text-foreground truncate">
                                   {activity.title}{' '}
                                   <span className="font-normal text-zinc-500 dark:text-zinc-400">
                                     ({activity.category})
@@ -421,7 +438,7 @@ export function ItineraryDays({
                                     aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
                                     className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
                                       votes[activity.id]?.mine
-                                        ? 'border-accent text-accent dark:border-accent dark:text-accent'
+                                        ? 'border-accent bg-accent text-accent-fg dark:border-accent dark:bg-accent dark:text-accent-fg'
                                         : 'border-border text-zinc-500 dark:text-zinc-400'
                                     }`}
                                   >
@@ -431,7 +448,7 @@ export function ItineraryDays({
                                 </form>
 
                                 <details className="relative">
-                                  <summary className="cursor-pointer list-none">
+                                  <summary className="flex cursor-pointer list-none items-center gap-1">
                                     <span
                                       aria-hidden
                                       className="inline-block h-6 w-6 rounded-full border border-border align-middle"
@@ -443,6 +460,7 @@ export function ItineraryDays({
                                           activity.pinColor ?? 'var(--accent)',
                                       }}
                                     />
+                                    <ChevronIcon direction="down" />
                                     <span className="sr-only">Pin colour</span>
                                   </summary>
                                   <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-surface-raised p-2 shadow-sm">
@@ -458,7 +476,7 @@ export function ItineraryDays({
                                         )}
                                       >
                                         <SubmitButton
-                                          aria-label={`Set pin colour ${color}`}
+                                          aria-label={`Set pin colour ${PIN_COLOR_NAMES[color]}`}
                                           className={`h-6 w-6 rounded-full border ${
                                             activity.pinColor === color
                                               ? 'border-accent'
@@ -531,12 +549,17 @@ export function ItineraryDays({
                               >
                                 Edit
                               </Link>
+                              {/* #6: a visible divider plus extra left margin
+                                  separates Delete from Edit/Move so a mis-tap
+                                  on mobile can't land on the destructive
+                                  action. */}
                               <form
                                 action={deleteActivityAction.bind(
                                   null,
                                   tripId,
                                   activity.id,
                                 )}
+                                className="ml-2 border-l border-border pl-3"
                               >
                                 <ConfirmSubmitButton
                                   confirm="Delete this activity?"

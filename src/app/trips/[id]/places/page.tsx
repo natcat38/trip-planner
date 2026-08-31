@@ -8,6 +8,7 @@
  * @packageDocumentation
  */
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -215,6 +216,20 @@ async function GuidePanelAsync({
       hasApiKey={hasApiKey}
     />
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const trip = await requireTripAccess(id);
+    return { title: `Places — ${trip.name} · Trip Planner` };
+  } catch {
+    return {};
+  }
 }
 
 export default async function PlacesPage({

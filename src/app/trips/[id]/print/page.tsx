@@ -5,6 +5,7 @@
  * @packageDocumentation
  */
 import { Fragment } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
 import { formatDay, formatDateRange } from '@/lib/format';
@@ -94,6 +95,20 @@ function BudgetCategoryShareBarStatic({
       </ul>
     </div>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const trip = await requireTripAccess(id);
+    return { title: `Print — ${trip.name} · Trip Planner` };
+  } catch {
+    return {};
+  }
 }
 
 export default async function TripPrintPage({

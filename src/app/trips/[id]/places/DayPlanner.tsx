@@ -15,9 +15,10 @@
  * @packageDocumentation
  */
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { Select } from '@/components/Select';
 import { Card } from '@/components/Card';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { DayPlanCandidate } from '@/server/dayPlan';
 import type { ensureDaysForTrip } from '@/server/itinerary';
 import {
@@ -59,6 +60,10 @@ export function DayPlanner({
     DayPlanFormState,
     FormData
   >(generateDayPlanAction.bind(null, tripId), INITIAL_STATE);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
 
   return (
     <Card as="section" className="mt-10">
@@ -114,13 +119,12 @@ export function DayPlanner({
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={isPending}
+        <SubmitButton
+          pendingLabel="Planning…"
           className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
-          {isPending ? 'Planning…' : 'Plan a day'}
-        </button>
+          Plan a day
+        </SubmitButton>
       </form>
 
       {/* Mounted unconditionally so the live region exists before its
@@ -128,8 +132,15 @@ export function DayPlanner({
           nothing on its first appearance. */}
       <div aria-live="polite" aria-busy={isPending}>
         {state.error && (
-          <p className="mt-4 text-sm text-danger" role="alert">
-            {state.error} Save more places in the tray below and try again.
+          <p
+            className="mt-4 text-sm text-danger"
+            role="alert"
+            tabIndex={-1}
+            ref={errorRef}
+          >
+            {state.error}
+            {/place/i.test(state.error) &&
+              ' Save more places in the tray below and try again.'}
           </p>
         )}
 
@@ -156,7 +167,11 @@ export function DayPlanner({
             {days.length === 0 ? (
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 This trip has no days yet, so a candidate can&apos;t be added to
-                the itinerary.
+                the itinerary. Set the trip&apos;s dates in{' '}
+                <a href={`/trips/${tripId}/edit`} className="underline">
+                  Edit trip
+                </a>{' '}
+                to create days.
               </p>
             ) : (
               state.candidates.map((candidate, index) => (
@@ -186,10 +201,14 @@ function CandidateCard({
   candidate: DayPlanCandidate;
   days: Days;
 }) {
-  const [state, formAction, isPending] = useActionState<
-    AcceptDayPlanFormState,
-    FormData
-  >(acceptDayPlanAction.bind(null, tripId), ACCEPT_INITIAL_STATE);
+  const [state, formAction] = useActionState<AcceptDayPlanFormState, FormData>(
+    acceptDayPlanAction.bind(null, tripId),
+    ACCEPT_INITIAL_STATE,
+  );
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
 
   return (
     <div className="rounded border border-border p-4">
@@ -206,7 +225,7 @@ function CandidateCard({
       </ol>
 
       {state.error && (
-        <p className="mt-2 text-sm text-danger" role="alert">
+        <p className="mt-2 text-sm text-danger" role="alert" tabIndex={-1} ref={errorRef}>
           {state.error}
         </p>
       )}
@@ -227,13 +246,12 @@ function CandidateCard({
             label: formatDayOption(day.date),
           }))}
         />
-        <button
-          type="submit"
-          disabled={isPending}
+        <SubmitButton
+          pendingLabel="Adding…"
           className="rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
-          {isPending ? 'Adding…' : 'Add this day'}
-        </button>
+          Add this day
+        </SubmitButton>
       </form>
     </div>
   );

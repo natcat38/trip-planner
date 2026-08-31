@@ -89,6 +89,9 @@ export function Map({
             }),
       });
       mapRef.current = map;
+      // #21: zoom/rotation controls so keyboard/mouse users aren't limited to
+      // pinch/scroll gestures to navigate the map.
+      map.addControl(new mapboxgl.NavigationControl());
 
       for (const pin of pins) {
         // A real <button>, not a <div>: keyboard-reachable and announced by

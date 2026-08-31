@@ -4,12 +4,30 @@
  * ActivityForm, including its optional minor-units cost/currency fields.
  * @packageDocumentation
  */
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
-import { ForbiddenOrNotFoundError } from '@/server/auth-scope';
+import {
+  ForbiddenOrNotFoundError,
+  requireTripAccess,
+} from '@/server/auth-scope';
 import { requireActivity } from '@/server/itinerary';
 import { updateActivityAction } from '../../../actions';
 import { ActivityForm } from '../../../ActivityForm';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string; activityId: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const trip = await requireTripAccess(id);
+    return { title: `Edit activity — ${trip.name} · Trip Planner` };
+  } catch {
+    return {};
+  }
+}
 
 export default async function EditActivityPage({
   params,
