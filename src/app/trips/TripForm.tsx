@@ -54,7 +54,12 @@ export function TripForm({
       className="flex flex-col gap-4 max-w-md"
     >
       {state.error && (
-        <p className="text-sm text-danger" role="alert" tabIndex={-1} ref={errorRef}>
+        <p
+          className="text-sm text-danger"
+          role="alert"
+          tabIndex={-1}
+          ref={errorRef}
+        >
           {state.error}
         </p>
       )}

@@ -225,7 +225,12 @@ function CandidateCard({
       </ol>
 
       {state.error && (
-        <p className="mt-2 text-sm text-danger" role="alert" tabIndex={-1} ref={errorRef}>
+        <p
+          className="mt-2 text-sm text-danger"
+          role="alert"
+          tabIndex={-1}
+          ref={errorRef}
+        >
           {state.error}
         </p>
       )}
