@@ -23,7 +23,7 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/attachments/[attachmentId]` | 1 | Downloads one trip attachment. |
 | `src/app/trips/[id]/calendar.ics` | 1 | The .ics calendar export for one trip: every activity across all of the trip's days as an RFC 5545 VEVENT, downloadable/subscribable into any calendar app. |
-| `src/app/trips/[id]/edit` | 1 | The trip edit/delete route: loads a trip via `requireTripAccess`, then binds its `updatedAt` into the update action so a stale-write attempt is rejected per the optimistic-locking rule (ADR-0003). |
+| `src/app/trips/[id]/edit` | 2 | The trip edit/delete route: loads a trip via `requireTripAccess`, then binds its `updatedAt` into the update action so a stale-write attempt is rejected per the optimistic-locking rule (ADR-0003). |
 | `src/app/trips/[id]/places` | 6 | "Plan a day" (Phase 3 M4, ADR-0012): a short structured questionnaire — focus + pace, deliberately not a free-text/chat box (handoff §8) — that turns the saved-places tray into 2-3 candidate day plans. |
 | `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
@@ -36,4 +36,4 @@ block — an orientation gap, not an omission by the generator.
 | `e2e` | 1 | Canonical e2e sign-in: create a real User + Session row and hand the browser the authjs session cookie. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-25 source directories, 104 files, 0 without a declared purpose.
+25 source directories, 105 files, 0 without a declared purpose.

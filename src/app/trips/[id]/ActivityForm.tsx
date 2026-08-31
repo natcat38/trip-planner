@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { Select } from '@/components/Select';
+import { SubmitButton } from '@/components/SubmitButton';
 import { CATEGORIES } from '@/lib/categories';
 import type { ActivityFormState } from './actions';
 
@@ -39,12 +40,32 @@ export function ActivityForm({
   defaults?: ActivityFormDefaults;
   submitLabel: string;
 }) {
-  const [state, formAction, isPending] = useActionState(action, {});
+  const [state, formAction] = useActionState(action, {});
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form
+      action={formAction}
+      onChange={() => setDirty(true)}
+      className="flex flex-col gap-3"
+    >
       {state.error && (
-        <p className="text-sm text-danger" role="alert">
+        <p
+          className="text-sm text-danger"
+          role="alert"
+          tabIndex={-1}
+          ref={errorRef}
+        >
           {state.error}
         </p>
       )}
@@ -125,7 +146,7 @@ export function ActivityForm({
             maxLength={3}
             spellCheck={false}
             autoCapitalize="characters"
-            placeholder="Currency"
+            placeholder="e.g. JPY"
             defaultValue={defaults.costCurrency}
             className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
           />
@@ -143,13 +164,12 @@ export function ActivityForm({
         />
       </label>
 
-      <button
-        type="submit"
-        disabled={isPending}
+      <SubmitButton
+        pendingLabel="Saving…"
         className="self-start rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
-        {isPending ? 'Saving…' : submitLabel}
-      </button>
+        {submitLabel}
+      </SubmitButton>
     </form>
   );
 }

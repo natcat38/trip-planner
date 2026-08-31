@@ -12,7 +12,8 @@
  * @packageDocumentation
  */
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
+import { SubmitButton } from '@/components/SubmitButton';
 import { summarizeGuideAction, type GuideSummaryFormState } from './actions';
 
 const INITIAL_STATE: GuideSummaryFormState = {};
@@ -22,17 +23,20 @@ export function GuideSummary({ tripId }: { tripId: string }) {
     GuideSummaryFormState,
     FormData
   >(summarizeGuideAction.bind(null, tripId), INITIAL_STATE);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
 
   return (
     <div className="mt-4 border-t border-dashed border-border pt-4">
       <form action={formAction}>
-        <button
-          type="submit"
-          disabled={isPending}
+        <SubmitButton
+          pendingLabel="Summarizing…"
           className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
         >
-          {isPending ? 'Summarizing…' : 'Summarize this guide'}
-        </button>
+          Summarize this guide
+        </SubmitButton>
       </form>
 
       {/* Mounted unconditionally so the live region exists before its
@@ -40,7 +44,12 @@ export function GuideSummary({ tripId }: { tripId: string }) {
           nothing on its first appearance. */}
       <div aria-live="polite" aria-busy={isPending}>
         {state.error && (
-          <p className="mt-2 text-sm text-danger" role="alert">
+          <p
+            className="mt-2 text-sm text-danger"
+            role="alert"
+            tabIndex={-1}
+            ref={errorRef}
+          >
             {state.error}
           </p>
         )}

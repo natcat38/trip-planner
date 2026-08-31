@@ -3,6 +3,7 @@
  * entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself.
  * @packageDocumentation
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
@@ -45,6 +46,10 @@ function departureStatus(
   };
 }
 
+export const metadata: Metadata = {
+  title: 'Your trips · Trip Planner',
+};
+
 export default async function TripsPage() {
   const [trips, invites] = await Promise.all([
     listTrips(),
@@ -63,7 +68,7 @@ export default async function TripsPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Your trips</h1>
-          <div className="flex items-center gap-4">
+          <nav aria-label="Trips actions" className="flex items-center gap-4">
             <Link
               href="/settings"
               className="text-sm text-zinc-600 dark:text-zinc-400 underline"
@@ -76,7 +81,7 @@ export default async function TripsPage() {
             >
               Create trip
             </Link>
-          </div>
+          </nav>
         </div>
 
         {trips.length === 0 ? (
@@ -106,7 +111,7 @@ export default async function TripsPage() {
                     className="block flex-1 p-5 min-w-0"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <h2 className="text-lg font-medium text-foreground">
+                      <h2 className="min-w-0 truncate text-lg font-medium text-foreground">
                         {trip.name}
                       </h2>
                       <span

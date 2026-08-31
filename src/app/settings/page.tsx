@@ -7,12 +7,17 @@
  * ahead of this route existing), so this page is never reached signed out.
  * @packageDocumentation
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getKeyStatus, listAvailableModels } from '@/server/aiSettings';
 import { getExtensionTokenStatus } from '@/server/extensionToken';
 import { AiKeyPanel } from './AiKeyPanel';
 import { ExtensionTokenPanel } from './ExtensionTokenPanel';
 import { Card } from '@/components/Card';
+
+export const metadata: Metadata = {
+  title: 'Settings · Trip Planner',
+};
 
 export default async function SettingsPage() {
   const status = await getKeyStatus();
@@ -28,12 +33,14 @@ export default async function SettingsPage() {
       >
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Settings</h1>
-          <Link
-            href="/trips"
-            className="text-sm text-zinc-600 dark:text-zinc-400 underline"
-          >
-            Back to trips
-          </Link>
+          <nav aria-label="Settings actions">
+            <Link
+              href="/trips"
+              className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+            >
+              Back to trips
+            </Link>
+          </nav>
         </div>
 
         <Card as="section">

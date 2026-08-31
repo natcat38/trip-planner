@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { SubmitButton } from '@/components/SubmitButton';
 import type { TripFormState } from './actions';
 
 export interface TripFormDefaults {
@@ -33,12 +34,32 @@ export function TripForm({
   defaults?: TripFormDefaults;
   submitLabel: string;
 }) {
-  const [state, formAction, isPending] = useActionState(action, {});
+  const [state, formAction] = useActionState(action, {});
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (state.error) errorRef.current?.focus();
+  }, [state.error]);
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 max-w-md">
+    <form
+      action={formAction}
+      onChange={() => setDirty(true)}
+      className="flex flex-col gap-4 max-w-md"
+    >
       {state.error && (
-        <p className="text-sm text-danger" role="alert">
+        <p
+          className="text-sm text-danger"
+          role="alert"
+          tabIndex={-1}
+          ref={errorRef}
+        >
           {state.error}
         </p>
       )}
@@ -125,13 +146,12 @@ export function TripForm({
         </label>
       </div>
 
-      <button
-        type="submit"
-        disabled={isPending}
+      <SubmitButton
+        pendingLabel="Saving…"
         className="mt-2 rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
       >
-        {isPending ? 'Saving…' : submitLabel}
-      </button>
+        {submitLabel}
+      </SubmitButton>
     </form>
   );
 }

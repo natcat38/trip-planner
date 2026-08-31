@@ -34,17 +34,26 @@ function CopyShareUrlButton({ url }: { url: string }) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="shrink-0 rounded-full border border-border px-3 py-1.5 text-sm text-zinc-600 hover:bg-surface-raised dark:text-zinc-400"
-    >
-      {status === 'copied'
-        ? 'Copied'
-        : status === 'error'
-          ? 'Copy failed'
-          : 'Copy'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="shrink-0 rounded-full border border-border px-3 py-1.5 text-sm text-zinc-600 hover:bg-surface-raised dark:text-zinc-400"
+      >
+        {status === 'copied'
+          ? 'Copied'
+          : status === 'error'
+            ? 'Copy failed'
+            : 'Copy'}
+      </button>
+      <span aria-live="polite" className="sr-only">
+        {status === 'copied'
+          ? 'Copied'
+          : status === 'error'
+            ? 'Copy failed'
+            : ''}
+      </span>
+    </>
   );
 }
 
