@@ -17,9 +17,12 @@ import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
 import { requireTripAccessForUser, tripAccessWhere } from './auth-scope';
 import { ValidationError } from './errors';
-
-const MAX_NAME_LENGTH = 200;
-const MAX_NOTES_LENGTH = 2000;
+import {
+  MAX_NAME_LENGTH,
+  MAX_NOTES_LENGTH,
+  requireOptionalText,
+  requireText,
+} from './validation';
 
 export interface ExtensionTripSummary {
   id: string;
@@ -78,12 +81,18 @@ export async function savePlaceFromPage(
   // (CLAUDE.md: a nested resource is never reachable by its own id alone).
   const trip = await requireTripAccessForUser(userId, email, input.tripId);
 
-  const name = input.name?.trim() ?? '';
-  if (!name) throw new ValidationError('Enter a name for this place.');
-  if (name.length > MAX_NAME_LENGTH) {
-    throw new ValidationError('That name is too long.');
-  }
-  const notes = input.notes?.trim().slice(0, MAX_NOTES_LENGTH) || null;
+  const name = requireText(
+    input.name ?? '',
+    'name',
+    MAX_NAME_LENGTH,
+    'Enter a name for this place.',
+  );
+  // Rejected, not silently truncated: this and validateActivityInput's notes
+  // check (src/server/itinerary.ts) are the same trust boundary — a client
+  // that ignores the field's max length gets a 400 back, the same as any
+  // other Server Action, rather than having its input quietly cut down.
+  const notes =
+    requireOptionalText(input.notes, 'note', MAX_NOTES_LENGTH) ?? null;
   const category = isCategory(input.category)
     ? input.category
     : DEFAULT_CATEGORY;

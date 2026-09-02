@@ -5,6 +5,12 @@ import { geocode } from '../lib/geocode';
 import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { optimisticUpdate, ValidationError } from './errors';
+import {
+  MAX_NAME_LENGTH,
+  MAX_NOTES_LENGTH,
+  requireOptionalText,
+  requireText,
+} from './validation';
 
 async function requireDay(tripId: string, dayId: string) {
   const trip = await requireTripAccess(tripId);
@@ -97,7 +103,26 @@ export interface ActivityUpdateInput extends ActivityInput {
   updatedAt: Date;
 }
 
+// Server Actions hand this client-supplied FormData, so title/category have
+// to be checked here rather than trusted from the form's own required
+// attribute — same rationale as validateLabel in ./checklist.ts. notes and
+// placeName are optional (placeName blank skips the geocode above), so those
+// only get a max-length check, not a non-empty one.
 function validateActivityInput(input: ActivityInput) {
+  requireText(
+    input.title,
+    'title',
+    MAX_NAME_LENGTH,
+    'Enter a title for this activity.',
+  );
+  requireText(
+    input.category,
+    'category',
+    MAX_NAME_LENGTH,
+    'Enter a category for this activity.',
+  );
+  requireOptionalText(input.placeName, 'place name', MAX_NAME_LENGTH);
+  requireOptionalText(input.notes, 'note', MAX_NOTES_LENGTH);
   if (input.costAmount == null) return;
   if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
@@ -123,7 +148,7 @@ async function resolveActivityData(
   destination: string | undefined,
   existing?: ExistingPlace,
 ) {
-  const placeName = input.placeName || null;
+  const placeName = input.placeName?.trim() || null;
   let lat = existing?.lat ?? null;
   let lng = existing?.lng ?? null;
 
@@ -147,14 +172,14 @@ async function resolveActivityData(
   }
 
   return {
-    title: input.title,
+    title: input.title.trim(),
     placeName,
     lat,
     lng,
     startTime: input.startTime || null,
     endTime: input.endTime || null,
-    category: input.category,
-    notes: input.notes || null,
+    category: input.category.trim(),
+    notes: input.notes?.trim() || null,
     // validateActivityInput already rejects a costAmount with no/invalid
     // costCurrency, so a present costAmount always has a usable currency here.
     costMinor:

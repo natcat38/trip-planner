@@ -26,9 +26,19 @@ import {
 import {
   InvalidShareLinkError,
   optimisticUpdate,
+  RateLimitError,
   ValidationError,
 } from './errors';
 import { summarizeBudget, type BudgetSummary } from './budget';
+import { checkRateLimit } from './rateLimit';
+
+// Anyone holding a share link can trigger duplicateSharedTrip's 100+-create
+// transaction with no sign-in step, so it is keyed per TOKEN (not per user)
+// — the token is the only identity a caller is required to have. 5/hour is
+// generous for a person actually copying a trip they found, and coarse
+// enough to blunt a script hammering one link.
+const DUPLICATE_LIMIT = 5;
+const DUPLICATE_WINDOW_MS = 60 * 60 * 1000;
 
 export interface CollaboratorSummary {
   id: string;
@@ -246,8 +256,19 @@ export async function listSharedExpenses(token: string): Promise<Expense[]> {
 //   src/server/trips.ts — a copy is a new trip, not a fork of who can see
 //   or share the original.
 export async function duplicateSharedTrip(token: string) {
+  // Identity and token validity are checked BEFORE the rate limit so that an
+  // anonymous caller or a garbage/expired token never consumes the budget or
+  // creates a RateLimitBucket row — only a real signed-in caller against a
+  // real trip can spend from the per-token bucket below.
   const userId = await currentUserId();
   const { trip, days } = await getSharedTrip(token);
+
+  const allowed = await checkRateLimit(
+    `share-duplicate:${token}`,
+    DUPLICATE_LIMIT,
+    DUPLICATE_WINDOW_MS,
+  );
+  if (!allowed) throw new RateLimitError();
 
   // An explicit budget, not Prisma's 5s default: this is one sequential create
   // per place, day, activity and expense, and a two-week trip is easily 100+

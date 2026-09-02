@@ -13,6 +13,11 @@ import { savePlaceFromPage } from '@/server/extensionApi';
 import { identifyByExtensionToken } from '@/server/extensionToken';
 import { ForbiddenOrNotFoundError } from '@/server/auth-scope';
 import { ValidationError } from '@/server/errors';
+import {
+  enforceRateLimit,
+  EXTENSION_RATE_LIMIT,
+  EXTENSION_RATE_WINDOW_MS,
+} from '@/server/rateLimit';
 
 export async function POST(request: Request) {
   const identity = await identifyByExtensionToken(
@@ -24,6 +29,13 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
+
+  const rateLimited = await enforceRateLimit(
+    `extension-places:${identity.userId}`,
+    EXTENSION_RATE_LIMIT,
+    EXTENSION_RATE_WINDOW_MS,
+  );
+  if (rateLimited) return rateLimited;
 
   let body: unknown;
   try {

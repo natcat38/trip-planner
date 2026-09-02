@@ -4,6 +4,7 @@ import { db } from '../lib/db';
 import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { ValidationError } from './errors';
+import { MAX_NAME_LENGTH, requireText } from './validation';
 
 export interface ExpenseInput {
   label: string;
@@ -12,7 +13,22 @@ export interface ExpenseInput {
   costCurrency: string;
 }
 
+// Server Actions hand this client-supplied FormData, so label/category have
+// to be checked here rather than trusted from the form's own required
+// attribute — same rationale as validateLabel in ./checklist.ts.
 function validateExpenseInput(input: ExpenseInput) {
+  requireText(
+    input.label,
+    'label',
+    MAX_NAME_LENGTH,
+    'Enter a label for this expense.',
+  );
+  requireText(
+    input.category,
+    'category',
+    MAX_NAME_LENGTH,
+    'Enter a category for this expense.',
+  );
   if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
   }
@@ -35,8 +51,8 @@ export async function createExpense(tripId: string, input: ExpenseInput) {
   return db.expense.create({
     data: {
       tripId: trip.id,
-      label: input.label,
-      category: input.category,
+      label: input.label.trim(),
+      category: input.category.trim(),
       costMinor: toMinorUnits(input.costAmount, input.costCurrency),
       costCurrency: input.costCurrency,
     },

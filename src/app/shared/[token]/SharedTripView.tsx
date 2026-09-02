@@ -1,7 +1,6 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
-import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
 import { formatDay, formatDateRange } from '@/lib/format';
 import type {
@@ -14,7 +13,7 @@ import {
   budgetBannerText,
   CategoryShareBar,
 } from '@/app/trips/[id]/BudgetPanel';
-import { duplicateSharedTripAction } from './actions';
+import { DuplicateCopyForm } from './DuplicateCopyForm';
 import { Card } from '@/components/Card';
 
 type SharedTripData = Awaited<ReturnType<typeof getSharedTrip>>;
@@ -71,16 +70,7 @@ export function SharedTripView({
           <h1 className="text-4xl font-semibold text-foreground">
             {trip.name}
           </h1>
-          {canSaveCopy && (
-            <form action={duplicateSharedTripAction.bind(null, token)}>
-              <SubmitButton
-                pendingLabel="Saving…"
-                className="shrink-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
-              >
-                Save a copy
-              </SubmitButton>
-            </form>
-          )}
+          {canSaveCopy && <DuplicateCopyForm token={token} />}
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-8">
           {trip.destinations.join(', ')}

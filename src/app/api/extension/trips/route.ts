@@ -11,6 +11,11 @@
 import { NextResponse } from 'next/server';
 import { listTripsForExtension } from '@/server/extensionApi';
 import { identifyByExtensionToken } from '@/server/extensionToken';
+import {
+  enforceRateLimit,
+  EXTENSION_RATE_LIMIT,
+  EXTENSION_RATE_WINDOW_MS,
+} from '@/server/rateLimit';
 
 export async function GET(request: Request) {
   const identity = await identifyByExtensionToken(
@@ -22,6 +27,13 @@ export async function GET(request: Request) {
       { status: 401 },
     );
   }
+
+  const rateLimited = await enforceRateLimit(
+    `extension-trips:${identity.userId}`,
+    EXTENSION_RATE_LIMIT,
+    EXTENSION_RATE_WINDOW_MS,
+  );
+  if (rateLimited) return rateLimited;
 
   const trips = await listTripsForExtension(identity.userId, identity.email);
   return NextResponse.json(
