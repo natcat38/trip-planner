@@ -84,6 +84,84 @@ describe('createExpense', () => {
     expect(db.expense.create).not.toHaveBeenCalled();
   });
 
+  it('trims label and category before persisting', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.expense.create).mockResolvedValue({} as never);
+
+    await createExpense('trip-1', {
+      label: '  Flights  ',
+      category: '  Transport  ',
+      costAmount: 60,
+      costCurrency: 'EUR',
+    });
+
+    expect(db.expense.create).toHaveBeenCalledWith({
+      data: {
+        tripId: 'trip-1',
+        label: 'Flights',
+        category: 'Transport',
+        costMinor: 6000,
+        costCurrency: 'EUR',
+      },
+    });
+  });
+
+  it('rejects a blank label', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    await expect(
+      createExpense('trip-1', {
+        label: '   ',
+        category: 'Transport',
+        costAmount: 60,
+        costCurrency: 'EUR',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.expense.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a label over the max length', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    await expect(
+      createExpense('trip-1', {
+        label: 'a'.repeat(201),
+        category: 'Transport',
+        costAmount: 60,
+        costCurrency: 'EUR',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.expense.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a blank category', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    await expect(
+      createExpense('trip-1', {
+        label: 'Flights',
+        category: '   ',
+        costAmount: 60,
+        costCurrency: 'EUR',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.expense.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a category over the max length', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+
+    await expect(
+      createExpense('trip-1', {
+        label: 'Flights',
+        category: 'a'.repeat(201),
+        costAmount: 60,
+        costCurrency: 'EUR',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.expense.create).not.toHaveBeenCalled();
+  });
+
   it('rejects a malformed currency code', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
 

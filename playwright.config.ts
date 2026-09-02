@@ -8,7 +8,10 @@ const remoteBaseURL = process.env.PLAYWRIGHT_BASE_URL;
 
 export default defineConfig({
   testDir: './e2e',
-  use: { baseURL: remoteBaseURL ?? 'http://localhost:3000' },
+  use: {
+    baseURL: remoteBaseURL ?? 'http://localhost:3000',
+    trace: 'on-first-retry',
+  },
   // Most assertions here wait on a real server-action round-trip — a DB
   // write, a revalidate and a re-render — not on client state. That
   // overruns Playwright's 5s default on CI's two-core runner under parallel

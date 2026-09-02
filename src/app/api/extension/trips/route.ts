@@ -11,6 +11,11 @@
 import { NextResponse } from 'next/server';
 import { listTripsForExtension } from '@/server/extensionApi';
 import { identifyByExtensionToken } from '@/server/extensionToken';
+import { checkRateLimit } from '@/server/rateLimit';
+
+// Keyed by userId, same rationale as the sibling places route's bucket.
+const TRIPS_LIMIT = 30;
+const TRIPS_WINDOW_MS = 60 * 1000;
 
 export async function GET(request: Request) {
   const identity = await identifyByExtensionToken(
@@ -20,6 +25,18 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { error: 'That token is not valid. Generate a new one in Settings.' },
       { status: 401 },
+    );
+  }
+
+  const allowed = await checkRateLimit(
+    `extension-trips:${identity.userId}`,
+    TRIPS_LIMIT,
+    TRIPS_WINDOW_MS,
+  );
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests — try again later.' },
+      { status: 429 },
     );
   }
 

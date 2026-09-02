@@ -436,6 +436,104 @@ describe('createActivity', () => {
     expect(db.activity.create).not.toHaveBeenCalled();
   });
 
+  it('trims title, category, placeName and notes before persisting', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+    vi.mocked(db.activity.aggregate).mockResolvedValue({
+      _max: { sortOrder: null },
+    } as never);
+    vi.mocked(db.activity.create).mockResolvedValue({} as never);
+
+    await createActivity('trip-1', 'day-1', {
+      title: '  Lunch  ',
+      category: '  Food  ',
+      notes: '  bring cash  ',
+      lat: 35.6586,
+      lng: 139.7454,
+      placeName: '  Some Place  ',
+    });
+
+    expect(db.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: 'Lunch',
+          category: 'Food',
+          notes: 'bring cash',
+          placeName: 'Some Place',
+        }),
+      }),
+    );
+  });
+
+  it('rejects a blank title', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+
+    await expect(
+      createActivity('trip-1', 'day-1', { title: '   ', category: 'Food' }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a title over the max length', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+
+    await expect(
+      createActivity('trip-1', 'day-1', {
+        title: 'a'.repeat(201),
+        category: 'Food',
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a blank category', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+
+    await expect(
+      createActivity('trip-1', 'day-1', { title: 'Lunch', category: '   ' }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a category over the max length', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+
+    await expect(
+      createActivity('trip-1', 'day-1', {
+        title: 'Lunch',
+        category: 'a'.repeat(201),
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+  });
+
+  it('allows an empty notes/placeName but rejects one over the max length', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.day.findFirst).mockResolvedValue(day as never);
+
+    await expect(
+      createActivity('trip-1', 'day-1', {
+        title: 'Lunch',
+        category: 'Food',
+        notes: 'a'.repeat(2001),
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+
+    await expect(
+      createActivity('trip-1', 'day-1', {
+        title: 'Lunch',
+        category: 'Food',
+        placeName: 'a'.repeat(201),
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.activity.create).not.toHaveBeenCalled();
+  });
+
   it('rejects a cost amount with no (or an invalid) currency', async () => {
     vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
     vi.mocked(db.day.findFirst).mockResolvedValue(day as never);

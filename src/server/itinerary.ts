@@ -97,7 +97,39 @@ export interface ActivityUpdateInput extends ActivityInput {
   updatedAt: Date;
 }
 
+// Mirrors MAX_NAME_LENGTH/MAX_NOTES_LENGTH in ./extensionApi.ts.
+const MAX_TITLE_LENGTH = 200;
+const MAX_CATEGORY_LENGTH = 200;
+const MAX_PLACE_NAME_LENGTH = 200;
+const MAX_NOTES_LENGTH = 2000;
+
+// Server Actions hand this client-supplied FormData, so title/category have
+// to be checked here rather than trusted from the form's own required
+// attribute — same rationale as validateLabel in ./checklist.ts. notes and
+// placeName are optional (placeName blank skips the geocode above), so those
+// only get a max-length check, not a non-empty one.
 function validateActivityInput(input: ActivityInput) {
+  if (!input.title.trim()) {
+    throw new ValidationError('Enter a title for this activity.');
+  }
+  if (input.title.trim().length > MAX_TITLE_LENGTH) {
+    throw new ValidationError('That title is too long.');
+  }
+  if (!input.category.trim()) {
+    throw new ValidationError('Enter a category for this activity.');
+  }
+  if (input.category.trim().length > MAX_CATEGORY_LENGTH) {
+    throw new ValidationError('That category is too long.');
+  }
+  if (
+    input.placeName &&
+    input.placeName.trim().length > MAX_PLACE_NAME_LENGTH
+  ) {
+    throw new ValidationError('That place name is too long.');
+  }
+  if (input.notes && input.notes.trim().length > MAX_NOTES_LENGTH) {
+    throw new ValidationError('That note is too long.');
+  }
   if (input.costAmount == null) return;
   if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
@@ -123,7 +155,7 @@ async function resolveActivityData(
   destination: string | undefined,
   existing?: ExistingPlace,
 ) {
-  const placeName = input.placeName || null;
+  const placeName = input.placeName?.trim() || null;
   let lat = existing?.lat ?? null;
   let lng = existing?.lng ?? null;
 
@@ -147,14 +179,14 @@ async function resolveActivityData(
   }
 
   return {
-    title: input.title,
+    title: input.title.trim(),
     placeName,
     lat,
     lng,
     startTime: input.startTime || null,
     endTime: input.endTime || null,
-    category: input.category,
-    notes: input.notes || null,
+    category: input.category.trim(),
+    notes: input.notes?.trim() || null,
     // validateActivityInput already rejects a costAmount with no/invalid
     // costCurrency, so a present costAmount always has a usable currency here.
     costMinor:

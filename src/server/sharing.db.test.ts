@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from '../auth';
 import { db } from '../lib/db';
 import { UnauthenticatedError } from './auth-scope';
-import { InvalidShareLinkError } from './errors';
+import { InvalidShareLinkError, RateLimitError } from './errors';
 import {
   acceptInvite,
   declineInvite,
@@ -314,4 +314,24 @@ describe('duplicateSharedTrip against a real database', () => {
         expect(newCollaborators).toHaveLength(0);
       }),
   );
+
+  it('rate-limits duplication per share token', () =>
+    withVisitor(async (visitorId, visitorEmail) => {
+      signInAsOwner();
+      const token = await enableShareLink(tripId, await currentUpdatedAt());
+
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: visitorId, email: visitorEmail },
+      } as never);
+
+      // The suite-wide limit is 5/hour; exhaust it, then confirm the next
+      // call is refused rather than silently allowed through.
+      for (let i = 0; i < 5; i++) {
+        const copy = await duplicateSharedTrip(token);
+        await db.trip.delete({ where: { id: copy.id } });
+      }
+      await expect(duplicateSharedTrip(token)).rejects.toBeInstanceOf(
+        RateLimitError,
+      );
+    }));
 });

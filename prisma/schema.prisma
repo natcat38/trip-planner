@@ -273,3 +273,20 @@ model Attachment {
 
   @@index([tripId])
 }
+
+// Coarse fixed-window rate limiting for the unauthenticated/token-only
+// boundary (duplicateSharedTrip, /api/extension/*). $0/month constraint
+// (ADR-0001) rules out Redis or any other paid service, and an in-memory
+// counter would not survive Vercel's per-invocation serverless instances —
+// so the window has to live somewhere every instance can see it, which here
+// is this table. `key` encodes both the caller and the action (e.g.
+// "share-duplicate:<token>" or "extension:<userId>") so different actions
+// never share a bucket. One row per key: checkRateLimit atomically resets
+// count when a new window has started, rather than tracking a sliding log
+// of every request — fixed-window is bursty at the window boundary, but
+// that imprecision is fine for a coarse abuse guard, not a billing meter.
+model RateLimitBucket {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+}

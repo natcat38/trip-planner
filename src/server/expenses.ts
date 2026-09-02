@@ -12,7 +12,27 @@ export interface ExpenseInput {
   costCurrency: string;
 }
 
+// Mirrors MAX_NAME_LENGTH in ./extensionApi.ts — same rationale, a different
+// field name (label/category rather than a place name).
+const MAX_LABEL_LENGTH = 200;
+const MAX_CATEGORY_LENGTH = 200;
+
+// Server Actions hand this client-supplied FormData, so label/category have
+// to be checked here rather than trusted from the form's own required
+// attribute — same rationale as validateLabel in ./checklist.ts.
 function validateExpenseInput(input: ExpenseInput) {
+  if (!input.label.trim()) {
+    throw new ValidationError('Enter a label for this expense.');
+  }
+  if (input.label.trim().length > MAX_LABEL_LENGTH) {
+    throw new ValidationError('That label is too long.');
+  }
+  if (!input.category.trim()) {
+    throw new ValidationError('Enter a category for this expense.');
+  }
+  if (input.category.trim().length > MAX_CATEGORY_LENGTH) {
+    throw new ValidationError('That category is too long.');
+  }
   if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
   }
@@ -35,8 +55,8 @@ export async function createExpense(tripId: string, input: ExpenseInput) {
   return db.expense.create({
     data: {
       tripId: trip.id,
-      label: input.label,
-      category: input.category,
+      label: input.label.trim(),
+      category: input.category.trim(),
       costMinor: toMinorUnits(input.costAmount, input.costCurrency),
       costCurrency: input.costCurrency,
     },
