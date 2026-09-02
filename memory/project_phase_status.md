@@ -8,11 +8,12 @@ metadata:
   modified: 2026-08-24T13:00:04.897Z
 ---
 
-## Current state (2026-09-02)
+## Current state (2026-08-28)
 
-Phases 1-4 are all merged and live in production, plus all five items from the
-2026-08-28 audit handoff (PR #50, see log). Nothing is mid-flight; the handoff doc
-`docs/handoff-high-value-improvements.md` is deleted (it was local-only/untracked).
+Phases 1-4 are all merged and live in production. Post-#42 follow-ups are done too:
+stale planning docs deleted and cleanup consolidated (#44), activity geocoding bias
+fixed and ux-smoke share assertion hardened (#45), README live-demo link and prod
+smoke over the shared view (#46). Nothing is mid-flight.
 
 Everything below is an append-only log, oldest first — read it only when you need
 the *why* behind a past decision. The newest entries are at the bottom.
@@ -420,40 +421,3 @@ e2e run uses the dev server, not the capped test pools.
 (docs/phase-3-*-handoff.md, docs/superpowers/) — flagged, needs sign-off; set the GitHub About
 block; optional dark-mode screenshot and prod shared-trip demo link in README. Review reports
 live in `reviews/` on that branch.
-**Update (2026-09-02): all five 2026-08-28 audit-handoff items shipped in one PR (#50,
-squashed to `298fe66`, deployed).** Each item was verified by a subagent before
-implementation; all five claims held. What landed:
-- **Rate limiting** on the unauthenticated boundary: Postgres fixed-window counter
-  (`RateLimitBucket` + `src/server/rateLimit.ts`, migration `20260902025419`). 5/hour on
-  `duplicateSharedTrip`, 30/min on `/api/extension/*` via a shared `enforceRateLimit()`.
-  Chosen over in-memory LRU because per-instance state can't bound abuse on serverless;
-  no new service, so no ADR ($0/month intact).
-- **ItineraryDays split**: server component + client islands `ItinerarySelection.tsx`
-  (split selectedId/setter contexts) and `DayTiming.tsx`, with ONE shared `NowProvider`
-  clock for the whole page. Weather `use()`+Suspense streaming preserved.
-- **Validation parity**: new `src/server/validation.ts` (`requireText`/
-  `requireOptionalText`, shared MAX_NAME_LENGTH=200 / MAX_NOTES_LENGTH=2000) replaced
-  five per-file copies across expenses/itinerary/checklist/places/extensionApi.
-- **CI**: `concurrency` cancellation on both workflows with main EXCLUDED
-  (`cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}`) so
-  `prisma migrate deploy` can never be killed mid-run (ADR-0002).
-- **Playwright**: `trace: 'on-first-retry'` + failure artifact upload in CI.
-
-**The /code-review pass on the PR caught two things worth remembering:**
-1. `duplicateSharedTrip` originally spent the rate-limit slot BEFORE `currentUserId()`
-   and token validation — an anonymous caller could exhaust a share token's 5/hour
-   budget with sessionless POSTs (the action endpoint is reachable without auth).
-   **How to apply: rate-limit checks that consume budget go AFTER auth and input
-   validation, or cheap failures drain the legitimate user's allowance.**
-2. `RateLimitBucket` had no cleanup — every distinct key (incl. garbage tokens) left a
-   permanent row against Neon's free-tier storage cap. Fixed with probabilistic (1%)
-   stale-bucket deletion inside `checkRateLimit` (24h max age) — no cron, per ADR-0001.
-Also from that review: rate-limited Save-a-copy now surfaces inline via
-`DuplicateCopyForm` + `withFormErrors` instead of crashing to error.tsx, and the
-extension now REJECTS over-long notes like the web app instead of silently truncating
-(the truncate-vs-reject divergence would have made web edits of extension-saved notes
-fail with an error the user never caused).
-
-CI hiccup on the PR: the `gen-file-map.mjs --check` drift gate failed for the new files
-— regenerating FILE-MAP.md is part of any PR that adds files (see
-[[feedback_repo_wide_checks_during_multitask_execution]]).
