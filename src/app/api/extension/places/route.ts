@@ -13,14 +13,11 @@ import { savePlaceFromPage } from '@/server/extensionApi';
 import { identifyByExtensionToken } from '@/server/extensionToken';
 import { ForbiddenOrNotFoundError } from '@/server/auth-scope';
 import { ValidationError } from '@/server/errors';
-import { checkRateLimit } from '@/server/rateLimit';
-
-// Keyed by userId (one active token per user, per extensionToken.ts), not by
-// the raw token — a live geocode per call makes this route the more
-// expensive of the two extension endpoints, so its own bucket, tighter than
-// a plain trip list would need.
-const PLACES_LIMIT = 30;
-const PLACES_WINDOW_MS = 60 * 1000;
+import {
+  enforceRateLimit,
+  EXTENSION_RATE_LIMIT,
+  EXTENSION_RATE_WINDOW_MS,
+} from '@/server/rateLimit';
 
 export async function POST(request: Request) {
   const identity = await identifyByExtensionToken(
@@ -33,17 +30,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const allowed = await checkRateLimit(
+  const rateLimited = await enforceRateLimit(
     `extension-places:${identity.userId}`,
-    PLACES_LIMIT,
-    PLACES_WINDOW_MS,
+    EXTENSION_RATE_LIMIT,
+    EXTENSION_RATE_WINDOW_MS,
   );
-  if (!allowed) {
-    return NextResponse.json(
-      { error: 'Too many requests — try again later.' },
-      { status: 429 },
-    );
-  }
+  if (rateLimited) return rateLimited;
 
   let body: unknown;
   try {

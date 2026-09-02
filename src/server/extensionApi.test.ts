@@ -251,17 +251,18 @@ describe('savePlaceFromPage', () => {
     expect(call.update.notes).toBe('Great cake');
   });
 
-  it('truncates absurdly long notes instead of storing them whole', async () => {
-    await savePlaceFromPage(
-      'user-1',
-      undefined,
-      input({ notes: 'x'.repeat(9000) }),
-    );
-
-    const call = vi.mocked(db.place.upsert).mock.calls[0][0] as {
-      create: { notes: string };
-    };
-    expect(call.create.notes.length).toBeLessThanOrEqual(2000);
+  it('rejects absurdly long notes instead of truncating them', async () => {
+    // Trust-boundary parity with validateActivityInput in
+    // src/server/itinerary.ts, which rejects rather than silently cuts down
+    // an over-long note.
+    await expect(
+      savePlaceFromPage(
+        'user-1',
+        undefined,
+        input({ notes: 'x'.repeat(9000) }),
+      ),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(db.place.upsert).not.toHaveBeenCalled();
   });
 
   it('rejects an absurdly long name', async () => {

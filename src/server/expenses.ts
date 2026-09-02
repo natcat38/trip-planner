@@ -4,6 +4,7 @@ import { db } from '../lib/db';
 import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { ValidationError } from './errors';
+import { MAX_NAME_LENGTH, requireText } from './validation';
 
 export interface ExpenseInput {
   label: string;
@@ -12,27 +13,22 @@ export interface ExpenseInput {
   costCurrency: string;
 }
 
-// Mirrors MAX_NAME_LENGTH in ./extensionApi.ts — same rationale, a different
-// field name (label/category rather than a place name).
-const MAX_LABEL_LENGTH = 200;
-const MAX_CATEGORY_LENGTH = 200;
-
 // Server Actions hand this client-supplied FormData, so label/category have
 // to be checked here rather than trusted from the form's own required
 // attribute — same rationale as validateLabel in ./checklist.ts.
 function validateExpenseInput(input: ExpenseInput) {
-  if (!input.label.trim()) {
-    throw new ValidationError('Enter a label for this expense.');
-  }
-  if (input.label.trim().length > MAX_LABEL_LENGTH) {
-    throw new ValidationError('That label is too long.');
-  }
-  if (!input.category.trim()) {
-    throw new ValidationError('Enter a category for this expense.');
-  }
-  if (input.category.trim().length > MAX_CATEGORY_LENGTH) {
-    throw new ValidationError('That category is too long.');
-  }
+  requireText(
+    input.label,
+    'label',
+    MAX_NAME_LENGTH,
+    'Enter a label for this expense.',
+  );
+  requireText(
+    input.category,
+    'category',
+    MAX_NAME_LENGTH,
+    'Enter a category for this expense.',
+  );
   if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
   }

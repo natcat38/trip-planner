@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { auth } from '../auth';
 import { db } from '../lib/db';
-import { StaleWriteError, ValidationError } from './errors';
+import { RateLimitError, StaleWriteError, ValidationError } from './errors';
 import { tripAccessWhere } from './trip-access-where';
 
 export class UnauthenticatedError extends Error {
@@ -120,6 +120,7 @@ export function withFormErrors<
     | typeof ValidationError
     | typeof StaleWriteError
     | typeof ForbiddenOrNotFoundError
+    | typeof RateLimitError
   )[] = [ValidationError, StaleWriteError, ForbiddenOrNotFoundError],
 ): (...args: Args) => Promise<State> {
   return async (...args: Args) => {

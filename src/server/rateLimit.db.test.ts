@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { db } from '../lib/db';
-import { checkRateLimit } from './rateLimit';
+import { checkRateLimit, cleanupStaleBuckets } from './rateLimit';
 
 // Real Postgres, no mocks: the whole point of this helper is the atomic
 // upsert against a real row, which a mocked db can't exercise.
@@ -51,5 +51,32 @@ describe('checkRateLimit', () => {
     expect(await checkRateLimit(key, 1, 1)).toBe(true);
     await new Promise((resolve) => setTimeout(resolve, 5));
     expect(await checkRateLimit(key, 1, 1)).toBe(true);
+  });
+});
+
+describe('cleanupStaleBuckets', () => {
+  it('deletes only buckets older than the given max age', async () => {
+    const staleKey = uniqueKey();
+    const freshKey = uniqueKey();
+    await db.rateLimitBucket.create({
+      data: {
+        key: staleKey,
+        windowStart: new Date(Date.now() - 60_000),
+        count: 1,
+      },
+    });
+    await db.rateLimitBucket.create({
+      data: { key: freshKey, windowStart: new Date(), count: 1 },
+    });
+
+    const deleted = await cleanupStaleBuckets(30_000);
+
+    expect(deleted).toBeGreaterThanOrEqual(1);
+    expect(
+      await db.rateLimitBucket.findUnique({ where: { key: staleKey } }),
+    ).toBeNull();
+    expect(
+      await db.rateLimitBucket.findUnique({ where: { key: freshKey } }),
+    ).not.toBeNull();
   });
 });

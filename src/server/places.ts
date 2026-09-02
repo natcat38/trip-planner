@@ -18,6 +18,7 @@ import { searchPlaces as searchOsmPlaces } from '../lib/research/overpass';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { optimisticUpdate, ValidationError } from './errors';
 import { createActivity } from './itinerary';
+import { MAX_NAME_LENGTH, requireText } from './validation';
 
 export async function requirePlace(tripId: string, placeId: string) {
   const trip = await requireTripAccess(tripId);
@@ -70,7 +71,7 @@ export interface PlaceUpdateInput extends PlaceFields {
 // a titleless Activity with no pin (blank placeName skips the coordinate
 // passthrough in ./itinerary.ts).
 function validatePlaceName(name: string) {
-  if (!name.trim()) throw new ValidationError('Enter a name for the place.');
+  requireText(name, 'name', MAX_NAME_LENGTH, 'Enter a name for the place.');
 }
 
 function validatePlaceCost(input: {

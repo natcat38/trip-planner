@@ -256,15 +256,19 @@ export async function listSharedExpenses(token: string): Promise<Expense[]> {
 //   src/server/trips.ts — a copy is a new trip, not a fork of who can see
 //   or share the original.
 export async function duplicateSharedTrip(token: string) {
+  // Identity and token validity are checked BEFORE the rate limit so that an
+  // anonymous caller or a garbage/expired token never consumes the budget or
+  // creates a RateLimitBucket row — only a real signed-in caller against a
+  // real trip can spend from the per-token bucket below.
+  const userId = await currentUserId();
+  const { trip, days } = await getSharedTrip(token);
+
   const allowed = await checkRateLimit(
     `share-duplicate:${token}`,
     DUPLICATE_LIMIT,
     DUPLICATE_WINDOW_MS,
   );
   if (!allowed) throw new RateLimitError();
-
-  const userId = await currentUserId();
-  const { trip, days } = await getSharedTrip(token);
 
   // An explicit budget, not Prisma's 5s default: this is one sequential create
   // per place, day, activity and expense, and a two-week trip is easily 100+

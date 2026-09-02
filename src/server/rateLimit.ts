@@ -16,7 +16,31 @@
  * @packageDocumentation
  */
 
+import { NextResponse } from 'next/server';
 import { db } from '../lib/db';
+import { RateLimitError } from './errors';
+
+// No key ever expires on its own (a fixed window is only ever inserted or
+// bumped, never deleted), so buckets for one-off keys — a revoked share
+// token, an old extension user id — accumulate forever. There's no cron
+// (ADR-0001: $0/month, no always-on infra), so cleanup instead rides along
+// on checkRateLimit itself.
+// ponytail: a random 1-in-100 chance per call, not "every Nth call" or a
+// separate scheduled sweep — no counter to keep in sync, no extra table, no
+// infra. A bucket older than a day is stale under every current window
+// (the longest is 1 hour), so 24h is a generous, simple cutoff.
+const CLEANUP_PROBABILITY = 0.01;
+const STALE_BUCKET_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+export async function cleanupStaleBuckets(
+  maxAgeMs: number = STALE_BUCKET_MAX_AGE_MS,
+): Promise<number> {
+  const cutoff = new Date(Date.now() - maxAgeMs);
+  const { count } = await db.rateLimitBucket.deleteMany({
+    where: { windowStart: { lt: cutoff } },
+  });
+  return count;
+}
 
 // One statement: INSERT .. ON CONFLICT DO UPDATE takes a row-level lock on
 // the conflicting key for the duration of the statement, so two concurrent
@@ -27,6 +51,10 @@ export async function checkRateLimit(
   limit: number,
   windowMs: number,
 ): Promise<boolean> {
+  if (Math.random() < CLEANUP_PROBABILITY) {
+    await cleanupStaleBuckets();
+  }
+
   const now = Date.now();
   const windowStart = new Date(now - (now % windowMs));
   const rows = await db.$queryRaw<{ count: number }[]>`
@@ -42,4 +70,28 @@ export async function checkRateLimit(
     RETURNING count;
   `;
   return rows[0].count <= limit;
+}
+
+// Shared policy for both browser-extension routes: keyed by userId (one
+// active token per user, per extensionToken.ts), 30 requests/minute each in
+// their own bucket (prefixed per route below) so one endpoint being hammered
+// doesn't spend the other's budget.
+export const EXTENSION_RATE_LIMIT = 30;
+export const EXTENSION_RATE_WINDOW_MS = 60 * 1000;
+
+// Shared 429 response for the two bearer-token extension routes (dedupes the
+// duplicated block that used to live in both route.ts files).
+export async function enforceRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number,
+): Promise<NextResponse | null> {
+  const allowed = await checkRateLimit(key, limit, windowMs);
+  if (allowed) return null;
+  return NextResponse.json(
+    { error: new RateLimitError().message },
+    {
+      status: 429,
+    },
+  );
 }

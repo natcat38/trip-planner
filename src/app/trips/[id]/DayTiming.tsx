@@ -11,6 +11,11 @@
  * via context to the small badge leaves below, so the day's title, cost
  * subtotals, and activity rows stay server-rendered and only the badges
  * themselves are client components.
+ *
+ * The clock itself (`now`) is shared across every day via a single
+ * NowProvider wrapping the whole day list — one setInterval for an N-day
+ * trip instead of N, and every day agrees on "now" at the same instant
+ * (no disagreeing "Today"/"Next" at minute boundaries).
  */
 
 import {
@@ -28,7 +33,9 @@ import { isToday, nextActivityId, type RailActivity } from '@/lib/dayRail';
 // later, post-hydration state update, the same pattern used for any
 // clock-driven UI. Refreshed every minute, which matches the HH:MM
 // granularity dayRail.ts compares; no per-second ticking.
-function useNow(): Date | null {
+const NowContext = createContext<Date | null>(null);
+
+export function NowProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -38,7 +45,7 @@ function useNow(): Date | null {
     return () => clearInterval(id);
   }, []);
 
-  return now;
+  return <NowContext.Provider value={now}>{children}</NowContext.Provider>;
 }
 
 const DayTimingContext = createContext<{
@@ -55,7 +62,7 @@ export function DayTimingProvider({
   activities: RailActivity[];
   children: ReactNode;
 }) {
-  const now = useNow();
+  const now = useContext(NowContext);
   const isTodayFlag = now != null && isToday(date, now);
   const nextId =
     isTodayFlag && now != null ? nextActivityId(activities, now) : null;

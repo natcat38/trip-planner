@@ -4,40 +4,51 @@
  * The only interaction that crosses between the day rail and the Map (Map
  * pin <-> activity row selection, ADR-0019 §2) — split out of
  * ItineraryDays.tsx so the rest of that component (forms, icons, palette,
- * formatting) can render on the server. `selectedActivityId` lives in one
- * Context provider wrapping both the Map and the day rail; SelectedMap and
- * ActivitySelectButton/ActivityRowFrame are thin client leaves that read or
- * set it, taking server-rendered markup as `children` so none of that
- * markup's own code ships to the client.
+ * formatting) can render on the server. `selectedActivityId` lives in two
+ * Context providers wrapping both the Map and the day rail: one for the
+ * changing id (read by SelectedMap and ActivityRowFrame), one for the
+ * referentially-stable setter (read by ActivitySelectButton, which never
+ * needs the id) — so a selection change doesn't re-render every
+ * ActivitySelectButton in the rail, only the rows whose selected state
+ * actually changed. SelectedMap and ActivitySelectButton/ActivityRowFrame
+ * are thin client leaves that read or set it, taking server-rendered
+ * markup as `children` so none of that markup's own code ships to the
+ * client.
  */
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Map, type MapPin } from '@/components/Map';
 
-const SelectionContext = createContext<{
-  selectedId: string | null;
-  select: (id: string) => void;
-} | null>(null);
+const SelectedIdContext = createContext<string | null>(null);
+const SelectContext = createContext<((id: string) => void) | null>(null);
 
 export function SelectionProvider({ children }: { children: ReactNode }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   return (
-    <SelectionContext.Provider value={{ selectedId, select: setSelectedId }}>
-      {children}
-    </SelectionContext.Provider>
+    <SelectContext.Provider value={setSelectedId}>
+      <SelectedIdContext.Provider value={selectedId}>
+        {children}
+      </SelectedIdContext.Provider>
+    </SelectContext.Provider>
   );
 }
 
-function useSelection() {
-  const ctx = useContext(SelectionContext);
+function useSelectedId() {
+  const ctx = useContext(SelectedIdContext);
+  return ctx;
+}
+
+function useSelect() {
+  const ctx = useContext(SelectContext);
   if (!ctx) {
-    throw new Error('useSelection must be used within a SelectionProvider');
+    throw new Error('useSelect must be used within a SelectionProvider');
   }
   return ctx;
 }
 
 export function SelectedMap({ pins }: { pins: MapPin[] }) {
-  const { selectedId, select } = useSelection();
+  const selectedId = useSelectedId();
+  const select = useSelect();
   return <Map pins={pins} selectedId={selectedId} onSelectPin={select} />;
 }
 
@@ -53,7 +64,7 @@ export function ActivitySelectButton({
   disabled: boolean;
   children: ReactNode;
 }) {
-  const { select } = useSelection();
+  const select = useSelect();
   return (
     <button
       type="button"
@@ -76,7 +87,7 @@ export function ActivityRowFrame({
   activityId: string;
   children: ReactNode;
 }) {
-  const { selectedId } = useSelection();
+  const selectedId = useSelectedId();
   const isSelected = activityId === selectedId;
   return (
     <li

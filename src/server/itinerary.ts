@@ -5,6 +5,12 @@ import { geocode } from '../lib/geocode';
 import { isValidCurrencyCode, toMinorUnits } from '../lib/money';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { optimisticUpdate, ValidationError } from './errors';
+import {
+  MAX_NAME_LENGTH,
+  MAX_NOTES_LENGTH,
+  requireOptionalText,
+  requireText,
+} from './validation';
 
 async function requireDay(tripId: string, dayId: string) {
   const trip = await requireTripAccess(tripId);
@@ -97,39 +103,26 @@ export interface ActivityUpdateInput extends ActivityInput {
   updatedAt: Date;
 }
 
-// Mirrors MAX_NAME_LENGTH/MAX_NOTES_LENGTH in ./extensionApi.ts.
-const MAX_TITLE_LENGTH = 200;
-const MAX_CATEGORY_LENGTH = 200;
-const MAX_PLACE_NAME_LENGTH = 200;
-const MAX_NOTES_LENGTH = 2000;
-
 // Server Actions hand this client-supplied FormData, so title/category have
 // to be checked here rather than trusted from the form's own required
 // attribute — same rationale as validateLabel in ./checklist.ts. notes and
 // placeName are optional (placeName blank skips the geocode above), so those
 // only get a max-length check, not a non-empty one.
 function validateActivityInput(input: ActivityInput) {
-  if (!input.title.trim()) {
-    throw new ValidationError('Enter a title for this activity.');
-  }
-  if (input.title.trim().length > MAX_TITLE_LENGTH) {
-    throw new ValidationError('That title is too long.');
-  }
-  if (!input.category.trim()) {
-    throw new ValidationError('Enter a category for this activity.');
-  }
-  if (input.category.trim().length > MAX_CATEGORY_LENGTH) {
-    throw new ValidationError('That category is too long.');
-  }
-  if (
-    input.placeName &&
-    input.placeName.trim().length > MAX_PLACE_NAME_LENGTH
-  ) {
-    throw new ValidationError('That place name is too long.');
-  }
-  if (input.notes && input.notes.trim().length > MAX_NOTES_LENGTH) {
-    throw new ValidationError('That note is too long.');
-  }
+  requireText(
+    input.title,
+    'title',
+    MAX_NAME_LENGTH,
+    'Enter a title for this activity.',
+  );
+  requireText(
+    input.category,
+    'category',
+    MAX_NAME_LENGTH,
+    'Enter a category for this activity.',
+  );
+  requireOptionalText(input.placeName, 'place name', MAX_NAME_LENGTH);
+  requireOptionalText(input.notes, 'note', MAX_NOTES_LENGTH);
   if (input.costAmount == null) return;
   if (!(input.costAmount >= 0)) {
     throw new ValidationError('Enter an amount of 0 or more.');
