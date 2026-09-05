@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { convertMinor } from '../lib/fx';
 import { db } from '../lib/db';
 import { requireTripAccess } from './auth-scope';
-import { getBudgetSummary, rollUp } from './budget';
+import { getBudgetSummary } from './budget';
+import { rollUp } from '../lib/budgetRollup';
 
 vi.mock('./auth-scope', () => ({ requireTripAccess: vi.fn() }));
 vi.mock('../lib/db', () => ({
