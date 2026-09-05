@@ -1,7 +1,7 @@
 # Roadmap — trip-planner
 
 **Current stage: Ship**
-**Next up:** decide the open items from the 2026-09-05 pass (loading skeletons on trips list/new/edit, fate of `docs/ui-ux-audit*.md`, major-version upgrade spike), then a final `/repo-review` before the next feature spec.
+**Next up:** merge PR #52, run the major-version upgrade spike from `docs/handoff-major-upgrade-spike.md`, then a final `/repo-review` before the next feature spec.
 
 Lifecycle: Define → Plan → Build → Verify → Review → Ship.
 Agents: read this file at session start, state the current stage and next unchecked item before any other work, and update this file (checkboxes + Current stage + Next up) before ending. Product and design decisions belong to the user — elicit them with questions, never decide for them.
@@ -35,7 +35,7 @@ Exit: CI green. Skills: tdd, ponytail.
 ## 4 · Verify — does the real thing work
 
 - [x] End-to-end on prod: `npm run test:e2e:prod` smoke + Playwright suites.
-- [x] UI states / 375px / focus — 2026-08-28 audit (`docs/ui-ux-audit.md`, PR #49).
+- [x] UI states / 375px / focus — 2026-08-28 audit (PR #49, record in `memory/project_ui_ux_audit_2026-08.md`).
 
 Exit: no known broken flows. Skills: run, webapp-testing, diagnose.
 

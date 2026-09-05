@@ -18,11 +18,13 @@ the session scratchpad, not the repo). Result: the codebase was already clean â€
 (extension place upsert has no ADR-0003 check; documented as a deliberate exception since the
 popup never reads the row), 4 token-convergence swaps, pure `rollUp` extracted from
 `summarizeBudget`, `validation.test.ts` added, minor/patch dep bumps, FILE-MAP generator now
-prefers entry files. Open for the user: add `loading.tsx` to trips list/new/edit routes (see
-[[project-settings-loading-breaks-token-flow]] before doing so), fold `docs/ui-ux-audit*.md`
-into memory or annotate, major-version upgrade spike (TS 7, ESLint 10, Vitest 5, Next 16.3,
-Prisma 8), `@packageDocumentation` blocks for `src/server` and `src/lib` that describe the
-whole directory. Next: a final `/repo-review` for Ship, then the next feature spec.
+prefers entry files. Follow-ups done in the same PR: `src/app/trips/loading.tsx` (covers list + new; `trips/[id]/loading.tsx`
+already covered edit routes), ui-ux-audit docs folded into [[project-ui-ux-audit-2026-08]] and
+deleted, `docs/handoff-major-upgrade-spike.md` written for the major-version spike (TS 7, ESLint 10,
+Vitest 5, Next 16.3, Prisma 8, Node 22 first). One CI break caught and fixed: sync export in a
+`'use server'` file â€” see [[feedback-use-server-exports-must-be-async]]. Waived: `@packageDocumentation`
+blocks describing `src/server`/`src/lib` as directories (cosmetic, FILE-MAP header explains the source).
+Next: a final `/repo-review` for Ship, then the next feature spec.
 
 Phases 1-4 are all merged and live in production (ADRs 0001-0019 in `docs/adr/`), plus all five
 items from the 2026-08-28 audit handoff (PR #50). Nothing is mid-flight. All Phase-3 planning

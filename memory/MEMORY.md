@@ -12,6 +12,7 @@ Update or delete stale files instead of duplicating them.
 
 - [Trip-planner phase status](project_phase_status.md) — Phases 1-4 merged and live, ROADMAP.md now tracks lifecycle stage; this is the dated decision/pitfall timeline + ADR pointers behind it.
 - [2026-08 repo-review record](project_repo_review_2026-08.md) — 2026-08-24/25 `/repo-review`: fixes shipped (PR #42/#43), pass conclusions, PG_POOL_MAX flake root cause, prod demo trip, browser-automation gotchas.
+- [2026-08 UI/UX audit record](project_ui_ux_audit_2026-08.md) — 30-finding a11y/WIG/UX audit, adversarially verified, fixed in PR #49; banner-only form errors (no aria-invalid/aria-describedby) left open by design — read this before touching form validation UX or `--muted-fg` contrast.
 - [No loading.tsx on /settings](project_settings_loading_breaks_token_flow.md) — a route-level skeleton there stalls the extension-token action past 20s and fails extension-api e2e; error.tsx is fine.
 - [Use subagents for plan execution](feedback_subagent_plan_execution.md) — subagent-driven-development for plan execution; operating rules live in the global CLAUDE.md "Subagents & Token Economy" section.
 - [Verify plan assumptions before approval](feedback_verify_plan_assumptions_before_approval.md) — dispatch subagents to falsify a plan's facts before ExitPlanMode; caught 6 bad assumptions incl. a public /settings route.
@@ -24,3 +25,4 @@ Update or delete stale files instead of duplicating them.
 - [Upsert create/update payload divergence](feedback_upsert_create_update_payload_divergence.md) — reusing one payload for both create and update silently erases fields the caller defaults to empty on the other path.
 - [Stacked PR squash-merge recovery](feedback_stacked_pr_squash_merge_recovery.md) — squash-merging a base PR auto-closes anything stacked on it; recover with `git rebase --onto` + a new PR, the old one can't reopen.
 - [Opus skill subagents stall](feedback_opus_skill_subagents_stall.md) — heavy design skills trip the 600s watchdog; prompt "work incrementally", resume stalls via SendMessage.
+- [use-server exports must be async](feedback_use_server_exports_must_be_async.md) — a sync export in a 'use server' file passes tsc/vitest but fails `next build`; run `npx next build` before pushing src/server changes.

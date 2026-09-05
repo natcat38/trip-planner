@@ -18,7 +18,7 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/offline` | 1 | The fallback the service worker serves when the network is gone and the requested page was never visited online. |
 | `src/app/settings` | 6 | The Settings route (Phase 3 M3, ADR-0011): the signed-in user's own BYOK AI key — Groq or OpenRouter, pasted in and stored encrypted server-side (src/server/aiSettings.ts). |
 | `src/app/shared/[token]` | 5 | The public share-link route: a fully anonymous, session-less read-only view of a trip's itinerary and budget, reached only by its `shareToken`. |
-| `src/app/trips` | 5 | The trips list route: the signed-in user's trips overview and create/edit entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself. |
+| `src/app/trips` | 6 | The trips list route: the signed-in user's trips overview and create/edit entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself. |
 | `src/app/trips/[id]` | 15 | The single-trip route: itinerary days/activities and the multi-currency budget roll-up for one trip, every page here reached only via `requireTripAccess(tripId)` so a trip's nested resources can't be accessed by their own id alone. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/attachments/[attachmentId]` | 1 | Downloads one trip attachment. |
@@ -36,4 +36,4 @@ block — an orientation gap, not an omission by the generator.
 | `e2e` | 1 | Canonical e2e sign-in: create a real User + Session row and hand the browser the authjs session cookie. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-25 source directories, 111 files, 0 without a declared purpose.
+25 source directories, 112 files, 0 without a declared purpose.
