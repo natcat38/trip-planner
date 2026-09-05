@@ -137,6 +137,11 @@ export async function savePlaceFromPage(
   // the popup's notes box starts empty every time, so writing it
   // unconditionally means re-saving a page silently erases research typed into
   // the app. Nothing in the extension flow would ever hint that had happened.
+  //
+  // ADR-0003 exception, deliberate: the popup never read this row, so it has no
+  // `updatedAt` to send — this is a fresh submission, not a stale form. Name,
+  // coords and category are therefore last-write-wins here; `notes` is the only
+  // field an in-app edit can lose, and it is protected above.
   const { notes: _omitted, ...alwaysUpdated } = data;
   return db.place.upsert({
     where: {

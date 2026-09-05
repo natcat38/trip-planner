@@ -99,7 +99,7 @@ export default function RootLayout({
             press from anywhere in the document. */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-2 dark:focus:bg-zinc-900"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-surface-raised focus:p-2"
         >
           Skip to content
         </a>

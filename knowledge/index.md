@@ -31,7 +31,7 @@ index is at [`docs/adr/README.md`](../docs/adr/README.md).
 
 ## Infra (deferred — not built)
 
-> ⚠️ Deferred to post-ship (2026-07-23): Phase 1 deploys on Vercel + Neon — see `docs/adr/0001`.
+> ⚠️ Deferred to post-ship — status unchanged through Phase 4 (2026-09); the app deploys on Vercel + Neon — see `docs/adr/0001`.
 
 - [ECS Fargate](/infra/ecs-fargate.md) — containerised runtime behind an ALB, RDS Postgres.
 - [Terraform & CI/CD](/infra/terraform.md) — IaC + GitHub OIDC deploy with gated migrations.

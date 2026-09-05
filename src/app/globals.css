@@ -65,7 +65,7 @@
 
   /* Documents the existing text-zinc-600/dark:text-zinc-400 muted-text
    * pairing already used across the app for secondary copy (#30). Measured
-   * per docs/ui-ux-audit-verification.md: 4.56:1 here (zinc-600 over
+   * per memory/project_ui_ux_audit_2026-08.md: 4.56:1 here (zinc-600 over
    * --surface, light), ~7.8:1 in dark below — both clear WCAG 1.4.3 AA with
    * margin. Not a redesign: same literals, now named so the guarantee is
    * explicit instead of implicit in a repeated class pair. */
@@ -127,7 +127,7 @@
   color-scheme: dark;
 
   /* Measured: ~7.8:1 over --surface / --surface-raised (zinc-400 on
-   * near-black, per docs/ui-ux-audit-verification.md). */
+   * near-black, per memory/project_ui_ux_audit_2026-08.md). */
   --muted-fg: #a1a1aa; /* zinc-400 */
 }
 

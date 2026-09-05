@@ -149,7 +149,9 @@ Two rules the code holds to throughout:
   token. The share route is the only one with no session at all, so it strips `userId` and
   `shareToken` from its payload rather than trusting callers not to leak them. The browser
   extension's API routes (`/api/extension/*`) are a second no-session surface, authenticated
-  instead by a per-user bearer token (ADR-0017).
+  instead by a per-user bearer token (ADR-0017). Both no-session write paths are rate-limited
+  by a Postgres counter in `src/server/rateLimit.ts` (share-link duplication 5/hour per token,
+  extension API 30/minute per user) with self-cleaning stale buckets.
 
 ## Stack
 
