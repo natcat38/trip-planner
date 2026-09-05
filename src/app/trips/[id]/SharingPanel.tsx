@@ -95,7 +95,7 @@ export function SharingPanel({
                 value={shareUrl ?? ''}
                 spellCheck={false}
                 onFocus={(event) => event.currentTarget.select()}
-                className="w-full min-w-0 rounded border border-border-strong bg-white px-3 py-2 text-sm text-foreground dark:bg-zinc-900"
+                className="w-full min-w-0 rounded border border-border-strong bg-surface-raised px-3 py-2 text-sm text-foreground"
               />
               <CopyShareUrlButton url={shareUrl ?? ''} />
             </div>

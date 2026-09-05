@@ -54,9 +54,15 @@ function isTestFile(name) {
  * module rather than the next symbol.
  */
 function tsDoc(dirPath, files) {
+  // Entry-point files (route/page/layout/index) describe the directory as a
+  // whole; any other file's block describes just that file. Try entries first
+  // so a route tree isn't summarised by whichever component sorts first.
+  const isEntry = (f) => /^(index|page|layout|route)\.[cm]?tsx?$/.test(f);
   const candidates = files
     .filter((f) => SOURCE_SUFFIXES.some((s) => f.endsWith(s)) && !isTestFile(f))
-    .sort();
+    .sort(
+      (a, b) => Number(isEntry(b)) - Number(isEntry(a)) || a.localeCompare(b),
+    );
   for (const f of candidates) {
     const src = readFileSync(join(dirPath, f), 'utf8');
     // Not anchored to file start: a leading "use client"/"use server"

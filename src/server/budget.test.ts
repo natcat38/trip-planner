@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { convertMinor } from '../lib/fx';
 import { db } from '../lib/db';
 import { requireTripAccess } from './auth-scope';
-import { getBudgetSummary } from './budget';
+import { getBudgetSummary, rollUp } from './budget';
 
 vi.mock('./auth-scope', () => ({ requireTripAccess: vi.fn() }));
 vi.mock('../lib/db', () => ({
@@ -117,5 +117,83 @@ describe('getBudgetSummary', () => {
         originalCurrency: 'GBP',
       },
     ]);
+  });
+});
+
+describe('rollUp', () => {
+  it('converts each item using its currency rate and sums into spentMinor', () => {
+    const result = rollUp(
+      [
+        {
+          id: 'a1',
+          label: 'Lunch',
+          category: 'Food',
+          amountMinor: 1000,
+          currency: 'EUR',
+          date: '2026-09-01',
+        },
+        {
+          id: 'e1',
+          label: 'Flights',
+          category: 'Transport',
+          amountMinor: 500,
+          currency: 'JPY',
+        },
+      ],
+      new Map([
+        ['EUR', 2],
+        ['JPY', 1],
+      ]),
+    );
+
+    expect(result.spentMinor).toBe(2500);
+    expect(result.byCategory).toEqual({ Food: 2000, Transport: 500 });
+    expect(result.byDay).toEqual({ '2026-09-01': 2000 });
+    expect(result.unconvertedItems).toEqual([]);
+  });
+
+  it('routes items with a null rate to unconvertedItems and excludes them from totals', () => {
+    const result = rollUp(
+      [
+        {
+          id: 'a1',
+          label: 'Souvenir',
+          category: 'Other',
+          amountMinor: 500,
+          currency: 'GBP',
+        },
+      ],
+      new Map([['GBP', null]]),
+    );
+
+    expect(result.spentMinor).toBe(0);
+    expect(result.byCategory).toEqual({});
+    expect(result.unconvertedItems).toEqual([
+      {
+        id: 'a1',
+        label: 'Souvenir',
+        category: 'Other',
+        originalMinor: 500,
+        originalCurrency: 'GBP',
+      },
+    ]);
+  });
+
+  it('only tracks byDay for items carrying a date, and rounds converted amounts', () => {
+    const result = rollUp(
+      [
+        {
+          id: 'e1',
+          label: 'Flights',
+          category: 'Transport',
+          amountMinor: 333,
+          currency: 'USD',
+        },
+      ],
+      new Map([['USD', 1.5]]),
+    );
+
+    expect(result.spentMinor).toBe(500); // Math.round(333 * 1.5) = 500
+    expect(result.byDay).toEqual({});
   });
 });

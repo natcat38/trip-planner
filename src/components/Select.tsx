@@ -2,7 +2,7 @@
 
 /**
  * Thin wrapper over `<select>` that owns the dark-mode background fix and
- * nothing else: an explicit `bg-white … dark:bg-zinc-900` on both the
+ * nothing else: an explicit `bg-surface-raised` on both the
  * `<select>` and every `<option>`. Without it, a transparent select renders
  * an unreadable native option list in dark mode on some platforms — browsers
  * don't inherit the select's background into the option popup. This bug was
@@ -50,14 +50,14 @@ export function Select({
       defaultValue={defaultValue}
       onChange={onChange}
       required={required}
-      className={`rounded border border-border-strong bg-white dark:bg-zinc-900 ${className}`}
+      className={`rounded border border-border-strong bg-surface-raised ${className}`}
     >
       {options.map((option) => (
         <option
           key={option.value}
           value={option.value}
           disabled={option.disabled}
-          className="bg-white dark:bg-zinc-900"
+          className="bg-surface-raised"
         >
           {option.label}
         </option>
