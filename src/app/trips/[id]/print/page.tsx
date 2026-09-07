@@ -294,8 +294,7 @@ export default async function TripPrintPage({
                           )}
                         </div>
                         <span className="font-mono tabular-nums text-sm text-zinc-600 text-right">
-                          {activity.costMinor != null &&
-                          activity.costCurrency
+                          {activity.costMinor != null && activity.costCurrency
                             ? formatMoney(
                                 activity.costMinor,
                                 activity.costCurrency,

@@ -34,10 +34,7 @@ export default async function SettingsPage() {
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Settings</h1>
           <nav aria-label="Settings actions">
-            <Link
-              href="/trips"
-              className="text-sm text-muted-fg underline"
-            >
+            <Link href="/trips" className="text-sm text-muted-fg underline">
               Back to trips
             </Link>
           </nav>

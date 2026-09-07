@@ -220,8 +220,7 @@ export function SharedTripView({
                           )}
                         </div>
                         <span className="font-mono tabular-nums text-sm text-muted-fg text-right">
-                          {activity.costMinor != null &&
-                          activity.costCurrency
+                          {activity.costMinor != null && activity.costCurrency
                             ? formatMoney(
                                 activity.costMinor,
                                 activity.costCurrency,

@@ -69,10 +69,7 @@ export default async function TripsPage() {
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Your trips</h1>
           <nav aria-label="Trips actions" className="flex items-center gap-4">
-            <Link
-              href="/settings"
-              className="text-sm text-muted-fg underline"
-            >
+            <Link href="/settings" className="text-sm text-muted-fg underline">
               Settings
             </Link>
             <Link

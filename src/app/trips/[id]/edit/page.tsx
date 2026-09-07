@@ -69,9 +69,7 @@ export default async function EditTripPage({
         className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
       >
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-4xl font-semibold text-foreground">
-            Edit trip
-          </h1>
+          <h1 className="text-4xl font-semibold text-foreground">Edit trip</h1>
           <Link
             href={`/trips/${trip.id}`}
             className="text-sm text-muted-fg underline"

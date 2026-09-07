@@ -139,9 +139,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
         >
           {formatMoney(figureMinor, summary.baseCurrency)}
         </span>
-        <span className="text-sm text-muted-fg">
-          {figureLabel}
-        </span>
+        <span className="text-sm text-muted-fg">{figureLabel}</span>
       </div>
 
       <p
