@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { signOut } from '@/auth';
 import { ThemeToggle } from '@/app/ThemeToggle';
 import { currentUserIdentity } from '@/server/auth-scope';
@@ -19,9 +20,17 @@ export async function AppHeader() {
     // hides its own controls the same way.
     <header className="w-full border-b border-border print:hidden">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
-        <span className="min-w-0 truncate text-sm text-zinc-600 dark:text-zinc-400">
-          {email}
-        </span>
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            href="/trips"
+            className="shrink-0 text-sm font-medium text-foreground underline"
+          >
+            Trip Planner
+          </Link>
+          <span className="min-w-0 truncate text-sm text-muted-fg">
+            {email}
+          </span>
+        </div>
         <div className="flex shrink-0 items-center gap-3">
           <ThemeToggle />
           <SignOutButton action={doSignOut} />

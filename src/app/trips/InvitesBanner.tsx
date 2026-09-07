@@ -28,7 +28,7 @@ export function InvitesBanner({ invites }: { invites: PendingInvite[] }) {
             <form action={declineInviteAction.bind(null, invite.tripId)}>
               <SubmitButton
                 pendingLabel="Declining…"
-                className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                className="text-sm text-muted-fg underline"
               >
                 Decline
               </SubmitButton>

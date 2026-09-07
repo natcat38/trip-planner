@@ -88,7 +88,7 @@ export function CategoryShareBar({
           />
         ))}
       </div>
-      <ul className="mt-2 grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <ul className="mt-2 grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1 text-sm text-muted-fg">
         {shares.map((s) => (
           <li key={s.category} className="contents">
             <span className="flex items-center gap-2 truncate">
@@ -139,9 +139,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
         >
           {formatMoney(figureMinor, summary.baseCurrency)}
         </span>
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
-          {figureLabel}
-        </span>
+        <span className="text-sm text-muted-fg">{figureLabel}</span>
       </div>
 
       <p
@@ -187,7 +185,7 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
       <div className="mt-6">
         <h3 className="text-15 font-medium text-foreground mb-2">Expenses</h3>
         {expenses.length === 0 && (
-          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mb-4 text-sm text-muted-fg">
             No expenses yet — add the first one below.
           </p>
         )}

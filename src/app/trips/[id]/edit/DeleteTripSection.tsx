@@ -19,7 +19,7 @@ export function DeleteTripSection({
   return (
     <section className="mt-12 border-t border-danger/30 pt-6">
       <h2 className="text-sm font-semibold text-danger mb-2">Danger zone</h2>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">
+      <p id="delete-trip-help" className="text-sm text-muted-fg mb-3">
         Deleting this trip removes all its days, activities, expenses and
         attachments. This cannot be undone. Type the trip name (
         <span className="font-medium">{tripName}</span>) to confirm.
@@ -32,6 +32,7 @@ export function DeleteTripSection({
             onChange={(e) => setTyped(e.target.value)}
             autoComplete="off"
             placeholder={tripName}
+            aria-describedby="delete-trip-help"
             className="rounded border border-border-strong px-3 py-2 text-sm bg-transparent"
           />
         </label>
@@ -44,6 +45,18 @@ export function DeleteTripSection({
           Delete trip
         </ConfirmSubmitButton>
       </form>
+      {/* Mounted unconditionally so the live region exists before its text
+          changes — a screen reader only announces updates to a region it
+          already knows about. Gives non-sighted users the same "why is the
+          button disabled" feedback sighted users get from watching it grey
+          out (a11y-review.md §8). */}
+      <p className="sr-only" aria-live="polite">
+        {typed === ''
+          ? ''
+          : typed === tripName
+            ? 'You can now delete this trip.'
+            : 'Type the trip name exactly to enable delete.'}
+      </p>
     </section>
   );
 }

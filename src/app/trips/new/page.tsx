@@ -4,6 +4,7 @@
  * @packageDocumentation
  */
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { createTripAction } from '../actions';
 import { TripForm } from '../TripForm';
 
@@ -19,9 +20,14 @@ export default function NewTripPage() {
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
       >
-        <h1 className="text-4xl font-semibold text-foreground mb-8">
-          Create a trip
-        </h1>
+        <div className="flex items-baseline justify-between mb-8">
+          <h1 className="text-4xl font-semibold text-foreground">
+            Create a trip
+          </h1>
+          <Link href="/trips" className="text-sm text-muted-fg underline">
+            Cancel
+          </Link>
+        </div>
         <TripForm action={createTripAction} submitLabel="Create trip" />
       </main>
     </div>

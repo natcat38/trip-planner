@@ -5,6 +5,7 @@
  * @packageDocumentation
  */
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
 import {
@@ -67,9 +68,15 @@ export default async function EditTripPage({
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
       >
-        <h1 className="text-4xl font-semibold text-foreground mb-8">
-          Edit trip
-        </h1>
+        <div className="flex items-baseline justify-between mb-8">
+          <h1 className="text-4xl font-semibold text-foreground">Edit trip</h1>
+          <Link
+            href={`/trips/${trip.id}`}
+            className="text-sm text-muted-fg underline"
+          >
+            Back to trip
+          </Link>
+        </div>
         <TripForm
           action={boundUpdate}
           submitLabel="Save changes"

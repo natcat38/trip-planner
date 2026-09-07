@@ -22,6 +22,7 @@
  */
 
 import { useActionState } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
 import {
   appleMapsTransitUrl,
   googleMapsTransitUrl,
@@ -57,23 +58,21 @@ export function TransitLeg({
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-sm">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-zinc-500 dark:text-zinc-400">Getting there</span>
-        <a
+        <span className="text-muted-fg">Getting there</span>
+        <ExternalLink
           href={googleMapsTransitUrl(from, to, toLabel)}
-          target="_blank"
           rel="noopener noreferrer"
           className="text-foreground underline"
         >
           Google Maps
-        </a>
-        <a
+        </ExternalLink>
+        <ExternalLink
           href={appleMapsTransitUrl(from, to, toLabel)}
-          target="_blank"
           rel="noopener noreferrer"
           className="text-foreground underline"
         >
           Apple Maps
-        </a>
+        </ExternalLink>
         <form action={formAction}>
           <button
             type="submit"
@@ -123,7 +122,7 @@ export function TransitLeg({
                         {minutes(journey.durationSeconds)} · {journey.transfers}{' '}
                         {journey.transfers === 1 ? 'transfer' : 'transfers'}
                       </summary>
-                      <ul className="mt-2 flex flex-col gap-1 text-zinc-600 dark:text-zinc-400">
+                      <ul className="mt-2 flex flex-col gap-1 text-muted-fg">
                         {journey.legs.map((leg, j) => (
                           <li key={j}>
                             {leg.mode}: {leg.from} → {leg.to} (
@@ -144,25 +143,23 @@ export function TransitLeg({
             )}
 
             {state.journeys !== null && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-muted-fg">
                 Transit data via{' '}
-                <a
+                <ExternalLink
                   href="https://transitous.org/sources/"
-                  target="_blank"
                   rel="noopener noreferrer"
                   className="underline"
                 >
                   Transitous
-                </a>{' '}
+                </ExternalLink>{' '}
                 and{' '}
-                <a
+                <ExternalLink
                   href="https://www.openstreetmap.org/copyright"
-                  target="_blank"
                   rel="noopener noreferrer"
                   className="underline"
                 >
                   OpenStreetMap
-                </a>
+                </ExternalLink>
                 .
               </p>
             )}

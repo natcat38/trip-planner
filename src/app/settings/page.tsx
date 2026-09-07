@@ -34,10 +34,7 @@ export default async function SettingsPage() {
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Settings</h1>
           <nav aria-label="Settings actions">
-            <Link
-              href="/trips"
-              className="text-sm text-zinc-600 dark:text-zinc-400 underline"
-            >
+            <Link href="/trips" className="text-sm text-muted-fg underline">
               Back to trips
             </Link>
           </nav>
@@ -45,7 +42,7 @@ export default async function SettingsPage() {
 
         <Card as="section">
           <h2 className="text-lg font-medium text-foreground mb-4">AI key</h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+          <p className="text-sm text-muted-fg mb-4">
             Bring your own Groq or OpenRouter key to enable AI-assisted trip
             guide summaries. The app never holds a shared key — this one is
             yours alone, encrypted at rest, and never sent back to your browser
@@ -58,7 +55,7 @@ export default async function SettingsPage() {
           <h2 className="text-lg font-medium text-foreground mb-4">
             Browser extension
           </h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+          <p className="text-sm text-muted-fg mb-4">
             Save a place to a trip from any webpage. Generate a token here and
             paste it into the extension once — it authenticates the extension
             without giving it your session, and you can revoke it at any time

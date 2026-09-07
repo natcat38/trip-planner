@@ -66,7 +66,7 @@ export function ExtensionTokenPanel({
             </p>
           </div>
         ) : (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-muted-fg">
             {status.present
               ? `A token is active${status.createdAt ? `, created ${formatDate(status.createdAt)}` : ''}. Generating a new one replaces it.`
               : 'No token yet.'}

@@ -29,7 +29,7 @@ export default function OfflinePage() {
         <h1 className="text-xl font-semibold text-foreground">
           You&rsquo;re offline
         </h1>
-        <p className="max-w-sm text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-sm text-sm text-muted-fg">
           This page hasn&rsquo;t been opened on this device yet, so
           there&rsquo;s no saved copy to show. Trips you&rsquo;ve already viewed
           are still available.

@@ -7,6 +7,7 @@
  */
 import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
+import { ExternalLink } from '@/components/ExternalLink';
 
 const FEATURES = [
   {
@@ -44,7 +45,7 @@ export default function Home() {
         <h1 className="text-4xl font-semibold tracking-tight text-foreground">
           Trip Planner
         </h1>
-        <p className="mt-4 max-w-xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+        <p className="mt-4 max-w-xl text-lg leading-8 text-muted-fg">
           Plan a multi-city trip end to end: a day-by-day itinerary, a
           multi-currency budget that actually adds up, and the research you need
           in the same place.
@@ -66,41 +67,32 @@ export default function Home() {
           {FEATURES.map((feature) => (
             <div key={feature.title}>
               <dt className="font-medium text-foreground">{feature.title}</dt>
-              <dd className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+              <dd className="mt-1 text-sm leading-6 text-muted-fg">
                 {feature.body}
               </dd>
             </div>
           ))}
         </dl>
 
-        <p className="mt-16 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mt-16 text-xs text-muted-fg">
           Place data from{' '}
-          <a
+          <ExternalLink
             href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noreferrer"
             className="underline"
           >
             OpenStreetMap
-          </a>
+          </ExternalLink>
           , destination guides from{' '}
-          <a
-            href="https://en.wikivoyage.org"
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
-          >
+          <ExternalLink href="https://en.wikivoyage.org" className="underline">
             Wikivoyage
-          </a>
+          </ExternalLink>
           , transit routing from{' '}
-          <a
+          <ExternalLink
             href="https://transitous.org/sources/"
-            target="_blank"
-            rel="noreferrer"
             className="underline"
           >
             Transitous
-          </a>
+          </ExternalLink>
           .
         </p>
       </main>

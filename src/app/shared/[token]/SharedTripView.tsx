@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import Link from 'next/link';
 import { Map } from '@/components/Map';
 import { formatMoney } from '@/lib/money';
@@ -72,7 +71,7 @@ export function SharedTripView({
           </h1>
           {canSaveCopy && <DuplicateCopyForm token={token} />}
         </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-8">
+        <p className="text-sm text-muted-fg mb-8">
           {trip.destinations.join(', ')}
           {trip.destinations.length > 0 && ' · '}
           <span className="font-mono tabular-nums">
@@ -102,7 +101,7 @@ export function SharedTripView({
                 budget.baseCurrency,
               )}
             </span>
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <span className="text-sm text-muted-fg">
               {budget.isOverBudget ? 'over budget' : 'remaining'}
             </span>
           </div>
@@ -148,7 +147,7 @@ export function SharedTripView({
           )}
 
           {expenses.length > 0 && (
-            <ul className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <ul className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-muted-fg">
               {expenses.map((expense) => (
                 <li key={expense.id} className="contents">
                   <span>
@@ -170,60 +169,72 @@ export function SharedTripView({
 
           {days.map((day) => (
             <section key={day.id}>
-              <h2 className="text-lg font-medium text-foreground mb-3 font-mono tabular-nums">
+              {/* now/next highlighting (ItineraryDays.tsx's NowProvider/
+                  TodayBadge/NextBadge) is scoped to the authenticated view
+                  only, pending ADR-0019 open question 3 — a visitor on a
+                  read-only share link sees no "now"/"next" badges. */}
+              <h2 className="text-lg font-medium text-foreground mb-3 border-b border-border pb-2 font-mono tabular-nums">
                 {formatDay(day.date)}
               </h2>
-              {day.activities.length > 0 && (
-                <ul className="flex flex-col gap-2">
+              {day.activities.length > 0 ? (
+                <ul className="flex flex-col gap-2 mt-3">
                   {day.activities.map((activity) => (
                     <li
                       key={activity.id}
-                      className="rounded-lg border border-border p-4"
+                      // Card.tsx only renders 'div' | 'section' — an <li>
+                      // can't compose it without nesting a block element
+                      // that isn't valid inside a <ul>, so this className is
+                      // Card's own literal (rounded-lg border border-border
+                      // bg-surface-raised) copied rather than shared, kept
+                      // in sync by hand. See fix-report-itinerary.md.
+                      className="rounded-lg border border-border bg-surface-raised p-4"
                     >
-                      <p className="font-medium text-foreground">
-                        {activity.title}{' '}
-                        <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                          ({activity.category})
+                      {/* Departure-board columns (ADR-0019 §4,
+                          design-critique.md finding #1): time in its own
+                          tabular-numeral column, title/category/place/notes
+                          in the middle, cost right-aligned — matches
+                          BudgetPanel.tsx's grid-cols-[1fr_auto_auto]
+                          pattern. */}
+                      <div className="grid grid-cols-[auto_1fr_auto] gap-x-3">
+                        <span className="font-mono tabular-nums text-sm text-muted-fg">
+                          {activity.startTime && activity.endTime
+                            ? `${activity.startTime}–${activity.endTime}`
+                            : (activity.startTime ?? '')}
                         </span>
-                      </p>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {[
-                          activity.startTime && activity.endTime ? (
-                            <span key="time" className="font-mono tabular-nums">
-                              {activity.startTime}–{activity.endTime}
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">
+                            {activity.title}{' '}
+                            <span className="font-normal text-zinc-500 dark:text-zinc-400">
+                              ({activity.category})
                             </span>
-                          ) : activity.startTime ? (
-                            <span key="time" className="font-mono tabular-nums">
-                              {activity.startTime}
-                            </span>
-                          ) : null,
-                          activity.placeName,
-                          activity.costMinor != null &&
-                          activity.costCurrency ? (
-                            <span key="cost" className="font-mono tabular-nums">
-                              {formatMoney(
+                          </p>
+                          {activity.placeName && (
+                            <p className="text-sm text-muted-fg">
+                              {activity.placeName}
+                            </p>
+                          )}
+                          {activity.notes && (
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                              {activity.notes}
+                            </p>
+                          )}
+                        </div>
+                        <span className="font-mono tabular-nums text-sm text-muted-fg text-right">
+                          {activity.costMinor != null && activity.costCurrency
+                            ? formatMoney(
                                 activity.costMinor,
                                 activity.costCurrency,
-                              )}
-                            </span>
-                          ) : null,
-                        ]
-                          .filter(Boolean)
-                          .map((seg, i) => (
-                            <Fragment key={i}>
-                              {i > 0 && ' · '}
-                              {seg}
-                            </Fragment>
-                          ))}
-                      </p>
-                      {activity.notes && (
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                          {activity.notes}
-                        </p>
-                      )}
+                              )
+                            : ''}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-3">
+                  No activities planned.
+                </p>
               )}
             </section>
           ))}

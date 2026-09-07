@@ -5,6 +5,7 @@
  * @packageDocumentation
  */
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { minorUnitExponent } from '@/lib/money';
 import {
@@ -60,9 +61,17 @@ export default async function EditActivityPage({
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
       >
-        <h1 className="text-4xl font-semibold text-foreground mb-8">
-          Edit activity
-        </h1>
+        <div className="flex items-baseline justify-between mb-8">
+          <h1 className="text-4xl font-semibold text-foreground">
+            Edit activity
+          </h1>
+          <Link
+            href={`/trips/${tripId}`}
+            className="text-sm text-muted-fg underline"
+          >
+            Back to itinerary
+          </Link>
+        </div>
         <ActivityForm
           action={boundUpdate}
           submitLabel="Save changes"

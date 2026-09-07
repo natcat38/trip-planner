@@ -59,7 +59,7 @@ export function GuideSummary({ tripId }: { tripId: string }) {
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               AI-reformatted from the Wikivoyage text above
             </p>
-            <p className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="whitespace-pre-wrap text-sm text-muted-fg">
               {state.text}
             </p>
           </div>
