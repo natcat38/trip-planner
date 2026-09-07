@@ -35,6 +35,18 @@ removal, per the user's preference not to have agents hunting information in the
 Below is a dated timeline, oldest first, kept short — read [[project-repo-review-2026-08]] for
 the 2026-08-24/25 repo-review in full, and an ADR for the reasoning behind any decision.
 
+## 2026-09-07 — Design + a11y sweep (PR #53, merged)
+
+Parallel design-critique + WCAG-AA audits over all 11 pages (2 Sonnet finders, 2 Sonnet fixers,
+reports in session scratchpad). Landed: ADR-0019 §4 columnar time/cost grid in all three itinerary
+renderers (was never built), shared-view catch-up (day rule, empty-day text), read-only Map pins
+no longer dead focusable buttons, `ExternalLink` component (sr-only new-tab cue), back/cancel
+links on dead-end pages + AppHeader home link, delete-confirm aria-describedby/live status,
+currency hints, `text-muted-fg` token adoption (53 raw zinc pairs). Deliberately skipped, still
+open: now/next on print/shared (ADR-0019 open question 3) and 44px touch targets (WCAG 2.5.5 is
+AAA). Pitfall: fixer agents ran lint but not `format:check` or `gen-file-map --check` — two CI
+round-trips; run the full `quality` job's commands locally before pushing.
+
 ## Timeline
 
 **2026-07-29 — Phase 1 live** (Milestones 0-7: scaffold, schema, auth, trips, itinerary, budget,
