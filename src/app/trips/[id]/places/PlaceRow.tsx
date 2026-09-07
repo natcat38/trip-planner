@@ -63,7 +63,7 @@ export function PlaceRow({
               ({place.category})
             </span>
           </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-muted-fg">
             {[
               place.cuisine,
               place.openingHours,
@@ -110,7 +110,7 @@ export function PlaceRow({
 
       <div className="mt-3 flex items-start gap-4">
         <details className="flex-1">
-          <summary className="cursor-pointer text-sm text-zinc-600 dark:text-zinc-400 underline">
+          <summary className="cursor-pointer text-sm text-muted-fg underline">
             Edit
           </summary>
           <form action={formAction} className="mt-3 flex flex-col gap-3">
@@ -178,8 +178,15 @@ export function PlaceRow({
                   autoCapitalize="characters"
                   placeholder="e.g. JPY"
                   defaultValue={place.costCurrency ?? ''}
+                  aria-describedby={`costCurrency-hint-${place.id}`}
                   className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
                 />
+                <span
+                  id={`costCurrency-hint-${place.id}`}
+                  className="text-xs text-muted-fg"
+                >
+                  3-letter code, e.g. JPY
+                </span>
               </label>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">

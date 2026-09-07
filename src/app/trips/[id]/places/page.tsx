@@ -31,6 +31,7 @@ import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
 import { PlaceRow } from './PlaceRow';
 import { Card } from '@/components/Card';
+import { ExternalLink } from '@/components/ExternalLink';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
 // retries (see knowledge/integrations/research-sources.md).
@@ -59,7 +60,7 @@ function GuidePanel({
         <h2 className="text-lg font-medium text-foreground mb-2">
           Destination guide
         </h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-fg">
           This trip has no destination set, so there&apos;s no guide to show.
         </p>
       </Card>
@@ -79,14 +80,12 @@ function GuidePanel({
           Limited guide data for {destination}. Use place search below instead.
         </p>
         {guide?.url && (
-          <a
+          <ExternalLink
             href={guide.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-block text-sm text-zinc-600 dark:text-zinc-400 underline"
+            className="mt-2 inline-block text-sm text-muted-fg underline"
           >
             See the full guide on Wikivoyage
-          </a>
+          </ExternalLink>
         )}
       </Card>
     );
@@ -121,7 +120,7 @@ function GuidePanel({
       )}
 
       {availableSections.length === 0 ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-fg">
           No guide sections found for {destination}.
         </p>
       ) : (
@@ -134,7 +133,7 @@ function GuidePanel({
               <summary className="cursor-pointer text-sm font-medium text-foreground">
                 {label}
               </summary>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="mt-2 whitespace-pre-wrap text-sm text-muted-fg">
                 {guide.sections[key]}
               </p>
             </details>
@@ -146,7 +145,7 @@ function GuidePanel({
         (hasApiKey ? (
           <GuideSummary tripId={tripId} />
         ) : (
-          <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="mt-4 text-xs text-muted-fg">
             <Link href="/settings" className="underline">
               Add an API key
             </Link>{' '}
@@ -154,26 +153,22 @@ function GuidePanel({
           </p>
         ))}
 
-      <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="mt-4 text-xs text-muted-fg">
         Any prices above are sample prices quoted from the guide text, not a
         computed average. Guide content from{' '}
-        <a
+        <ExternalLink
           href={guide.url || 'https://en.wikivoyage.org'}
-          target="_blank"
-          rel="noreferrer"
           className="underline"
         >
           Wikivoyage
-        </a>
+        </ExternalLink>
         , available under{' '}
-        <a
+        <ExternalLink
           href="https://creativecommons.org/licenses/by-sa/4.0/"
-          target="_blank"
-          rel="noreferrer"
           className="underline"
         >
           CC BY-SA
-        </a>
+        </ExternalLink>
         .
       </p>
     </Card>
@@ -306,7 +301,7 @@ export default async function PlacesPage({
           </h1>
           <Link
             href={`/trips/${trip.id}`}
-            className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+            className="text-sm text-muted-fg underline"
           >
             Back to itinerary
           </Link>
@@ -326,7 +321,7 @@ export default async function PlacesPage({
           </h2>
 
           {center == null ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-fg">
               {destination
                 ? `We couldn't locate "${destination}" to search nearby places.`
                 : "This trip has no destination set, so places can't be searched."}
@@ -378,7 +373,7 @@ export default async function PlacesPage({
               </Form>
 
               {searchResults.length === 0 ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-sm text-muted-fg">
                   {q || category
                     ? 'No results — try a different search or category.'
                     : 'Search nearby places to see results here.'}
@@ -386,97 +381,94 @@ export default async function PlacesPage({
               ) : (
                 <ul className="flex flex-col gap-2">
                   {searchResults.map((place) => (
-                    <li
-                      key={place.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border border-border p-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate">
-                          {place.name}{' '}
-                          <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                            ({place.category})
-                          </span>
-                        </p>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                          {[place.cuisine, place.openingHours, place.phone]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </p>
-                        {place.website && (
-                          <a
-                            href={place.website}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-sm text-zinc-600 dark:text-zinc-400 underline"
-                          >
-                            Website
-                          </a>
-                        )}
-                      </div>
-                      <form
-                        action={saveOsmPlaceAction.bind(null, tripId)}
-                        className="shrink-0"
-                      >
-                        <input type="hidden" name="sourceId" value={place.id} />
-                        <input type="hidden" name="name" value={place.name} />
-                        <input type="hidden" name="lat" value={place.lat} />
-                        <input type="hidden" name="lng" value={place.lng} />
-                        <input
-                          type="hidden"
-                          name="category"
-                          value={place.category}
-                        />
-                        <input
-                          type="hidden"
-                          name="cuisine"
-                          value={place.cuisine ?? ''}
-                        />
-                        <input
-                          type="hidden"
-                          name="openingHours"
-                          value={place.openingHours ?? ''}
-                        />
-                        <input
-                          type="hidden"
-                          name="website"
-                          value={place.website ?? ''}
-                        />
-                        <input
-                          type="hidden"
-                          name="phone"
-                          value={place.phone ?? ''}
-                        />
-                        <button
-                          type="submit"
-                          className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
+                    <li key={place.id}>
+                      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-4">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">
+                            {place.name}{' '}
+                            <span className="font-normal text-muted-fg">
+                              ({place.category})
+                            </span>
+                          </p>
+                          <p className="text-sm text-muted-fg">
+                            {[place.cuisine, place.openingHours, place.phone]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                          {place.website && (
+                            <ExternalLink
+                              href={place.website}
+                              className="text-sm text-muted-fg underline"
+                            >
+                              Website
+                            </ExternalLink>
+                          )}
+                        </div>
+                        <form
+                          action={saveOsmPlaceAction.bind(null, tripId)}
+                          className="shrink-0"
                         >
-                          Save
-                        </button>
-                      </form>
+                          <input
+                            type="hidden"
+                            name="sourceId"
+                            value={place.id}
+                          />
+                          <input type="hidden" name="name" value={place.name} />
+                          <input type="hidden" name="lat" value={place.lat} />
+                          <input type="hidden" name="lng" value={place.lng} />
+                          <input
+                            type="hidden"
+                            name="category"
+                            value={place.category}
+                          />
+                          <input
+                            type="hidden"
+                            name="cuisine"
+                            value={place.cuisine ?? ''}
+                          />
+                          <input
+                            type="hidden"
+                            name="openingHours"
+                            value={place.openingHours ?? ''}
+                          />
+                          <input
+                            type="hidden"
+                            name="website"
+                            value={place.website ?? ''}
+                          />
+                          <input
+                            type="hidden"
+                            name="phone"
+                            value={place.phone ?? ''}
+                          />
+                          <button
+                            type="submit"
+                            className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
+                          >
+                            Save
+                          </button>
+                        </form>
+                      </Card>
                     </li>
                   ))}
                 </ul>
               )}
 
-              <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="mt-4 text-xs text-muted-fg">
                 Place data ©{' '}
-                <a
+                <ExternalLink
                   href="https://www.openstreetmap.org/copyright"
-                  target="_blank"
-                  rel="noreferrer"
                   className="underline"
                 >
                   OpenStreetMap
-                </a>{' '}
+                </ExternalLink>{' '}
                 contributors, available under the{' '}
-                <a
+                <ExternalLink
                   href="https://opendatacommons.org/licenses/odbl/"
-                  target="_blank"
-                  rel="noreferrer"
                   className="underline"
                 >
                   Open Database License
-                </a>
+                </ExternalLink>
                 .
               </p>
             </>
@@ -491,7 +483,7 @@ export default async function PlacesPage({
           <Map pins={pins} />
 
           {savedPlaces.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-4 text-sm text-muted-fg">
               No saved places yet — search above and save the ones you like.
             </p>
           ) : (

@@ -78,7 +78,7 @@ function InvalidShareLink() {
         <h1 className="text-4xl font-semibold text-foreground">
           Link not found
         </h1>
-        <p className="text-zinc-600 dark:text-zinc-400">
+        <p className="text-muted-fg">
           This link is no longer valid.
         </p>
         <Link

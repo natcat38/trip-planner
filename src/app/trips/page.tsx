@@ -71,7 +71,7 @@ export default async function TripsPage() {
           <nav aria-label="Trips actions" className="flex items-center gap-4">
             <Link
               href="/settings"
-              className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+              className="text-sm text-muted-fg underline"
             >
               Settings
             </Link>
@@ -86,12 +86,12 @@ export default async function TripsPage() {
 
         {trips.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-12 text-center">
-            <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+            <p className="text-muted-fg mb-4">
               You haven&apos;t planned any trips yet.
             </p>
             <Link
               href="/trips/new"
-              className="font-medium text-zinc-950 dark:text-zinc-50 underline"
+              className="font-medium text-foreground underline"
             >
               Create your first trip
             </Link>
@@ -124,7 +124,7 @@ export default async function TripsPage() {
                         {status.label}
                       </span>
                     </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                    <p className="text-sm text-muted-fg mt-1">
                       {trip.destinations.join(', ')}
                       {trip.destinations.length > 0 && ' · '}
                       <span className="font-mono tabular-nums">
@@ -134,7 +134,7 @@ export default async function TripsPage() {
                       <span className="font-mono tabular-nums">{dayCount}</span>{' '}
                       {dayCount === 1 ? 'day' : 'days'}
                     </p>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                    <p className="text-sm text-muted-fg mt-1">
                       <span className="font-mono tabular-nums">
                         {formatMoney(trip.budgetMinor, trip.baseCurrency)}
                       </span>{' '}
@@ -147,7 +147,7 @@ export default async function TripsPage() {
                   >
                     <SubmitButton
                       pendingLabel="Duplicating…"
-                      className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                      className="text-sm text-muted-fg underline"
                     >
                       Duplicate
                     </SubmitButton>

@@ -103,9 +103,21 @@ export function Map({
         // position/opacity — it doesn't impose a size), so the 24px button
         // being centered puts the 16px dot's center on the same coordinate
         // the 16px div used to occupy.
-        const el = document.createElement('button');
-        el.type = 'button';
-        el.setAttribute('aria-label', pin.title);
+        // When no onSelectPin is supplied (read-only callers, e.g. the
+        // public share page), this is not an actionable control — render a
+        // plain non-interactive <span> instead of a <button> so keyboard/
+        // screen-reader users don't tab to a focusable "button" that does
+        // nothing on activation (a11y-review.md finding #4, HIGH).
+        const interactive = Boolean(onSelectPinRef.current);
+        const el = document.createElement(interactive ? 'button' : 'span');
+        if (interactive) {
+          (el as HTMLButtonElement).type = 'button';
+          el.setAttribute('aria-label', pin.title);
+        } else {
+          el.setAttribute('role', 'img');
+          el.setAttribute('aria-label', pin.title);
+          el.setAttribute('tabindex', '-1');
+        }
         el.style.display = 'flex';
         el.style.alignItems = 'center';
         el.style.justifyContent = 'center';
@@ -114,7 +126,7 @@ export function Map({
         el.style.padding = '0';
         el.style.border = 'none';
         el.style.background = 'transparent';
-        el.style.cursor = 'pointer';
+        el.style.cursor = interactive ? 'pointer' : 'default';
 
         const dot = document.createElement('span');
         dot.setAttribute('aria-hidden', 'true');
@@ -127,7 +139,9 @@ export function Map({
           pin.id === selectedId ? SELECTED_PIN_COLOR : (pin.color ?? PIN_COLOR);
         el.appendChild(dot);
 
-        el.addEventListener('click', () => onSelectPinRef.current?.(pin.id));
+        if (interactive) {
+          el.addEventListener('click', () => onSelectPinRef.current?.(pin.id));
+        }
 
         const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([pin.lng, pin.lat])

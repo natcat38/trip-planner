@@ -173,7 +173,7 @@ function DayWeatherLine({
       className={`text-sm mb-3 ${
         dayWeather.kind === 'historical'
           ? 'italic text-zinc-500 dark:text-zinc-400'
-          : 'text-zinc-600 dark:text-zinc-400'
+          : 'text-muted-fg'
       }`}
     >
       {formatWeatherLine(dayWeather)}
@@ -268,12 +268,17 @@ export function ItineraryDays({
                   >
                     <section className="relative pl-8">
                       <TodayDot />
+                      {/* now/next (NowProvider/DayTimingProvider/TodayBadge/
+                          NextBadge above) is scoped to this authenticated
+                          view only, pending ADR-0019 open question 3 — print
+                          and the public share view intentionally don't get
+                          the badges (design-critique.md finding #3). */}
                       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-2 mb-1">
                         <h2 className="text-lg font-medium text-foreground font-mono tabular-nums">
                           {formatDay(day.date)}
                           <TodayBadge />
                         </h2>
-                        <div className="flex items-center gap-3 text-xs font-mono tabular-nums text-zinc-500 dark:text-zinc-400">
+                        <div className="flex items-center gap-3 text-xs font-mono tabular-nums text-muted-fg">
                           <span>
                             {day.activities.length}{' '}
                             {day.activities.length === 1
@@ -317,59 +322,51 @@ export function ItineraryDays({
                                       activityId={activity.id}
                                       disabled={activity.lat == null}
                                     >
-                                      <p className="font-medium text-foreground truncate">
-                                        {activity.title}{' '}
-                                        <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                                          ({activity.category})
+                                      {/* Departure-board columns (ADR-0019
+                                          §4, design-critique.md finding #1):
+                                          time in its own tabular-numeral
+                                          column, title/category/place/notes
+                                          in the middle, cost right-aligned —
+                                          matches BudgetPanel.tsx's
+                                          grid-cols-[1fr_auto_auto] pattern. */}
+                                      <div className="grid grid-cols-[auto_1fr_auto] gap-x-3">
+                                        <span className="font-mono tabular-nums text-sm text-muted-fg">
+                                          {activity.startTime &&
+                                          activity.endTime
+                                            ? `${activity.startTime}–${activity.endTime}`
+                                            : (activity.startTime ?? '')}
                                         </span>
-                                        <NextBadge activityId={activity.id} />
-                                      </p>
-                                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                        {[
-                                          activity.startTime &&
-                                          activity.endTime ? (
-                                            <span
-                                              key="time"
-                                              className="font-mono tabular-nums"
-                                            >
-                                              {activity.startTime}–
-                                              {activity.endTime}
+                                        <div className="min-w-0">
+                                          <p className="font-medium text-foreground truncate">
+                                            {activity.title}{' '}
+                                            <span className="font-normal text-muted-fg">
+                                              ({activity.category})
                                             </span>
-                                          ) : activity.startTime ? (
-                                            <span
-                                              key="time"
-                                              className="font-mono tabular-nums"
-                                            >
-                                              {activity.startTime}
-                                            </span>
-                                          ) : null,
-                                          activity.placeName,
-                                          activity.costMinor != null &&
-                                          activity.costCurrency ? (
-                                            <span
-                                              key="cost"
-                                              className="font-mono tabular-nums"
-                                            >
-                                              {formatMoney(
+                                            <NextBadge
+                                              activityId={activity.id}
+                                            />
+                                          </p>
+                                          {activity.placeName && (
+                                            <p className="text-sm text-muted-fg">
+                                              {activity.placeName}
+                                            </p>
+                                          )}
+                                          {activity.notes && (
+                                            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                                              {activity.notes}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <span className="font-mono tabular-nums text-sm text-muted-fg text-right">
+                                          {activity.costMinor != null &&
+                                          activity.costCurrency
+                                            ? formatMoney(
                                                 activity.costMinor,
                                                 activity.costCurrency,
-                                              )}
-                                            </span>
-                                          ) : null,
-                                        ]
-                                          .filter(Boolean)
-                                          .map((seg, i) => (
-                                            <Fragment key={i}>
-                                              {i > 0 && ' · '}
-                                              {seg}
-                                            </Fragment>
-                                          ))}
-                                      </p>
-                                      {activity.notes && (
-                                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                                          {activity.notes}
-                                        </p>
-                                      )}
+                                              )
+                                            : ''}
+                                        </span>
+                                      </div>
                                     </ActivitySelectButton>
 
                                     <div className="flex items-center gap-3">
@@ -472,7 +469,7 @@ export function ItineraryDays({
                                     >
                                       <SubmitButton
                                         disabled={index === 0}
-                                        aria-label="Move up"
+                                        aria-label={`Move ${activity.title} up`}
                                         pendingLabel="…"
                                         className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                                       >
@@ -491,7 +488,7 @@ export function ItineraryDays({
                                         disabled={
                                           index === day.activities.length - 1
                                         }
-                                        aria-label="Move down"
+                                        aria-label={`Move ${activity.title} down`}
                                         pendingLabel="…"
                                         className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                                       >
@@ -500,7 +497,7 @@ export function ItineraryDays({
                                     </form>
                                     <Link
                                       href={`/trips/${tripId}/activities/${activity.id}/edit`}
-                                      className="text-sm text-zinc-600 dark:text-zinc-400 underline"
+                                      className="text-sm text-muted-fg underline"
                                     >
                                       Edit
                                     </Link>

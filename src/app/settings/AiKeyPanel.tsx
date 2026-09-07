@@ -94,7 +94,7 @@ function ApiKeyForm() {
         />
       </div>
 
-      <div className="flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="flex flex-col gap-2 text-sm text-muted-fg">
         <p>
           <strong className="text-foreground">Groq</strong> is the default
           provider — its terms don&apos;t permit training on your prompts,
@@ -155,7 +155,7 @@ function StoredKeyPanel({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-sm text-muted-fg">
         <span className="font-medium text-foreground">
           {status.provider === 'groq' ? 'Groq' : 'OpenRouter'}
         </span>{' '}

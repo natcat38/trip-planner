@@ -72,8 +72,12 @@ export function ExpenseForm({
           spellCheck={false}
           autoCapitalize="characters"
           placeholder="e.g. JPY"
+          aria-describedby="costCurrency-hint"
           className="w-24 rounded border border-border-strong px-3 py-2 text-sm uppercase bg-transparent"
         />
+        <span id="costCurrency-hint" className="text-xs text-muted-fg">
+          3-letter code, e.g. JPY
+        </span>
       </label>
       <SubmitButton
         pendingLabel="Adding…"

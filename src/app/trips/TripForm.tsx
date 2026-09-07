@@ -126,8 +126,12 @@ export function TripForm({
             spellCheck={false}
             autoCapitalize="characters"
             defaultValue={defaults.baseCurrency}
+            aria-describedby="baseCurrency-hint"
             className="rounded border border-border-strong px-3 py-2 uppercase bg-transparent"
           />
+          <span id="baseCurrency-hint" className="text-xs text-muted-fg">
+            3-letter code, e.g. JPY
+          </span>
         </label>
         <label className="flex flex-col gap-1 flex-1">
           <span className="text-sm font-medium text-foreground">

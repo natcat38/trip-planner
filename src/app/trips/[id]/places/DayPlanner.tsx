@@ -68,7 +68,7 @@ export function DayPlanner({
   return (
     <Card as="section" className="mt-10">
       <h2 className="text-lg font-medium text-foreground mb-1">Plan a day</h2>
-      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mb-4 text-sm text-muted-fg">
         Answer two questions and get 2-3 candidate day plans built from your
         saved places below.
       </p>
@@ -82,7 +82,7 @@ export function DayPlanner({
             {FOCUS_OPTIONS.map((option) => (
               <label
                 key={option}
-                className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400"
+                className="flex items-center gap-2 text-sm text-muted-fg"
               >
                 <input type="checkbox" name="focus" value={option} />
                 {option}
@@ -165,7 +165,7 @@ export function DayPlanner({
             )}
 
             {days.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm text-muted-fg">
                 This trip has no days yet, so a candidate can&apos;t be added to
                 the itinerary. Set the trip&apos;s dates in{' '}
                 <a href={`/trips/${tripId}/edit`} className="underline">
@@ -213,7 +213,7 @@ function CandidateCard({
   return (
     <div className="rounded border border-border p-4">
       <p className="font-medium text-foreground">{candidate.label}</p>
-      <ol className="mt-2 flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <ol className="mt-2 flex flex-col gap-1 text-sm text-muted-fg">
         {candidate.places.map((place) => (
           <li key={place.id}>
             {place.name}{' '}

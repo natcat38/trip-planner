@@ -29,7 +29,7 @@ export default function SettingsError({
         <h1 className="text-4xl font-semibold text-foreground">
           Something went wrong
         </h1>
-        <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-md text-sm text-muted-fg">
           An unexpected error occurred. Please try again.
           {error.digest && (
             <>
