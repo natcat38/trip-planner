@@ -26,19 +26,19 @@ breaking the three invariants that have bitten this repo before:
 | eslint | 9.39.5 | 10.10.0 | major |
 | vitest + @vitest/coverage-v8 | 4.1.10 | 5.0.0 | major (4.1.11 patch available first) |
 | prisma / @prisma/client / @prisma/adapter-pg | 7.10.0 | 8.0.0-rc.13 | major, still RC — wait for GA |
-| @types/node | 20.19.43 | 26.x | pinned to the Node 20 engine; bump only with a Node bump |
+| @types/node | 24.x | 26.x | tracks the Node 24 engine; bump only with a Node bump |
 | next-auth | 5.0.0-beta.32 | (4.24 "latest" is older) | intentionally on the v5 beta; check for a newer beta only |
 
-Node is pinned to 20.x (`package.json` engines, `ci.yml`). Node 20 leaves LTS maintenance in
-April 2026 — a Node 22 bump is its own step, first in the order below, because several of
-the majors raise their minimum Node.
+Node is pinned to 24.x since 2026-09-24 (branch `chore/upgrade-node-24`): Vercel disables
+Node 20 for new builds on 2026-10-01, and 24 (Active LTS to 2028-04) was chosen over the
+originally planned 22 (EOL 2027-04) to avoid a second forced bump. Step 1 below is done.
 
 ## Order and per-step recipe
 
 Do them in this order; each is one branch + PR. Stop and report at the first red step.
 
-1. **Node 22** — `engines.node`, both `node-version` lines in `ci.yml`, `Dockerfile.dev`
-   base image, Vercel project Node setting (dashboard, owner-side — note in
+1. **Node 24** (done 2026-09-24) — `engines.node`, both `node-version` lines in `ci.yml`,
+   `okf.yml`, `Dockerfile.dev` base image, Vercel project Node setting (dashboard, owner-side — see
    `docs/deploy-setup.md`). Gate: full local gate + CI green + a Vercel preview build.
 2. **Vitest 5** (+ coverage-v8 5) — read the v5 migration notes via context7 first. Watch
    `vitest.config.ts` coverage thresholds and `vitest.setup.ts` (`PG_POOL_MAX`, dotenv).
