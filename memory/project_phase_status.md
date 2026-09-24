@@ -135,3 +135,11 @@ deployed), each verified by a subagent before implementation:
 verified implemented or explicitly dispositioned (ADR-0018 records the ones that needed a
 decision rather than code); this PR closed the remaining actionable ones. **No known Phase 3/4
 follow-up items are open as of 2026-09-02** beyond what ROADMAP.md's Review stage lists.
+
+**2026-09-24 — Node 20 → 24 (PR #55, `chore/upgrade-node-24`)**, forced by Vercel disabling
+Node 20 builds on 2026-10-01. Five pin sites moved together (engines, @types/node, ci.yml ×2,
+okf.yml, Dockerfile.dev); no application code changed, none was Node-version-sensitive. Went
+straight to 24 rather than the spike handoff's planned 22 (24 is Active LTS to 2028-04, and
+the dev laptop already ran 24.16). Vercel preview build green. The one red CI run was the
+pre-existing attachment-upload flake, see [[project_attachment_upload_e2e_flake]]. Owner-side:
+Vercel dashboard Node.js Version → 24.x (belt-and-braces, `engines.node` wins).
