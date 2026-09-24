@@ -12,7 +12,10 @@ banner. First seen flaky on `main` under Node 20 on 2026-08-31 (CI run 333705534
 the Node 24 upgrade (PR #55, 2026-09-24) one run failed the 2 MB test on all three attempts,
 the identical rerun on the same Node 24.20.0 passed, and the same specs pass every time
 locally on Windows (Node 24.16 and 24.20) and in a Linux `node:24.20-bookworm` container
-with two workers.
+run on their own. Running the FULL suite in that container with two workers reproduced it
+once (2 MB test failed, passed on retry), so it is load-dependent, not runner-specific.
+Sample sizes are small: 2 of 3 Node 24 CI runs showed an attachments flake versus 1 of 8
+Node 20 runs on main, so Node 24 may make it more frequent; unproven.
 
 What the Playwright trace of a stalled attempt shows: the multipart POST got a `200
 text/x-component` with `x-action-revalidated: 1` in ~100 ms, so busboy parsed the body and
