@@ -26,9 +26,13 @@ agent session should do on your behalf).
    it silently canceled the CI-triggered production deploy along with git-push deploys, breaking
    the pipeline in step 4. `git.deploymentEnabled` only gates git-push-triggered builds and
    leaves Deploy Hooks working.
-3. Create a **Deploy Hook** for the production branch (Vercel dashboard → Project Settings →
+3. Project Settings → Build and Deployment → **Node.js Version**: set it to **24.x**.
+   `package.json`'s `engines.node` (`24.x`) overrides this setting whenever the two disagree, so
+   the pin in the repo is what actually decides; the dashboard value only matters if `engines`
+   is ever removed. Keep both on the same major.
+4. Create a **Deploy Hook** for the production branch (Vercel dashboard → Project Settings →
    Git → Deploy Hooks). Copy the resulting URL — this is what Actions calls to trigger a deploy.
-4. In Project Settings → Environment Variables, set every runtime var the app needs (same names
+5. In Project Settings → Environment Variables, set every runtime var the app needs (same names
    as `.env.example`): `DATABASE_URL` (the Neon string from step 1), `AUTH_SECRET`,
    `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, `MAPBOX_TOKEN`,
    `NEXT_PUBLIC_MAPBOX_TOKEN`, `EXCHANGE_RATE_API_KEY`. These are what the deployed app reads at
@@ -41,7 +45,7 @@ Settings → Secrets and variables → Actions → New repository secret:
 
 - `PROD_DATABASE_URL` — same Neon connection string as above (used only by the `deploy` job to
   run `prisma migrate deploy` against production before triggering Vercel).
-- `VERCEL_DEPLOY_HOOK_URL` — the deploy hook URL from step 2.3.
+- `VERCEL_DEPLOY_HOOK_URL` — the deploy hook URL from step 2.4.
 
 ## 4. Verify
 

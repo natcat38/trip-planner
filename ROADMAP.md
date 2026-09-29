@@ -1,7 +1,7 @@
 # Roadmap — trip-planner
 
 **Current stage: Ship**
-**Next up:** merge PR #52, run the major-version upgrade spike from `docs/handoff-major-upgrade-spike.md`, then a final `/repo-review` before the next feature spec.
+**Next up:** merge PR #55 (Node 24, step 1 of the upgrade spike), continue the spike from `docs/handoff-major-upgrade-spike.md` (Vitest 5 next), then a final `/repo-review` before the next feature spec.
 
 Lifecycle: Define → Plan → Build → Verify → Review → Ship.
 Agents: read this file at session start, state the current stage and next unchecked item before any other work, and update this file (checkboxes + Current stage + Next up) before ending. Product and design decisions belong to the user — elicit them with questions, never decide for them.
