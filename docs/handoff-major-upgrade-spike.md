@@ -30,7 +30,7 @@ breaking the three invariants that have bitten this repo before:
 | next-auth | 5.0.0-beta.32 | (4.24 "latest" is older) | intentionally on the v5 beta; check for a newer beta only |
 
 Node is pinned to 24.x since 2026-09-24 (branch `chore/upgrade-node-24`): Vercel disables
-Node 20 for new builds on 2026-10-01, and 24 (Active LTS to 2028-04) was chosen over the
+Node 20 for new builds on 2026-10-01, and 24 (LTS, supported to 2028-04) was chosen over the
 originally planned 22 (EOL 2027-04) to avoid a second forced bump. Step 1 below is done.
 
 ## Order and per-step recipe
