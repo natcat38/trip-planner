@@ -18,7 +18,7 @@ Sample sizes are small: 2 of 3 Node 24 CI runs showed an attachments flake versu
 Node 20 runs on main, so Node 24 may make it more frequent; unproven.
 
 2026-09-30 update: on the #55 doc-fix commit (run 36643630588, attempt 1) the stall hit
-`e2e/select.spec.ts:50` (Add activity form, no upload) on all three retries; attempt 2 of the
+`e2e/select.spec.ts:50` (Add activity form, no upload) on all three attempts; attempt 2 of the
 same commit passed. So it is NOT upload-specific: any `useActionState` action that calls
 `revalidatePath` can stall. Node 24 tally is now 3 of 5 CI attempts versus 1 of 8 on Node 20.
 PR #55 was merged anyway to beat Vercel's 2026-10-01 Node 20 cut-off; issue #56 holds the
@@ -28,8 +28,8 @@ What the Playwright trace of a stalled attempt shows: the multipart POST got a `
 text/x-component` with `x-action-revalidated: 1` in ~100 ms, so busboy parsed the body and
 the action completed, then the chunked RSC re-render stream never finished. Next's
 `pipe-readable.js` awaits the Node `'drain'` event when `res.write()` reports backpressure;
-a `'drain'` that never arrives on a loaded two-core runner fits every observation. Not
-reproduced outside CI, so unproven.
+a `'drain'` that never arrives on a loaded two-core runner fits every observation. Only
+reproduced under load (CI, or the full suite in a local container), so unproven.
 
 **Why:** on 2026-09-24 the evidence pointed to CI load, not the Node version. The
 2026-09-30 data (more forms, higher Node 24 rate) weakens that; treat the version as a suspect.
