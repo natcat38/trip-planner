@@ -142,4 +142,5 @@ okf.yml, Dockerfile.dev); no application code changed, none was Node-version-sen
 straight to 24 rather than the spike handoff's planned 22 (24 is LTS, supported to 2028-04, and
 the dev laptop already ran 24.16). Vercel preview build green. The one red CI run was the
 pre-existing attachment-upload flake, see [[project_attachment_upload_e2e_flake]]. Owner-side:
-Vercel dashboard Node.js Version → 24.x (belt-and-braces, `engines.node` wins).
+Vercel dashboard Node.js Version → 24.x (belt-and-braces, `engines.node` wins); done 2026-09-30,
+production build log confirmed Node 24.

@@ -1,7 +1,7 @@
 # Roadmap — trip-planner
 
 **Current stage: Ship**
-**Next up:** flip the Vercel dashboard Node version to 24.x, then smoke-test action forms on production (issue #56; Node version already ruled out for the CI stall), continue the spike from `docs/handoff-major-upgrade-spike.md` (Vitest 5 next), then a final `/repo-review` before the next feature spec.
+**Next up:** smoke-test action forms on production (issue #56; Node version already ruled out for the CI stall), continue the spike from `docs/handoff-major-upgrade-spike.md` (Vitest 5 next), then a final `/repo-review` before the next feature spec.
 
 Lifecycle: Define → Plan → Build → Verify → Review → Ship.
 Agents: read this file at session start, state the current stage and next unchecked item before any other work, and update this file (checkboxes + Current stage + Next up) before ending. Product and design decisions belong to the user — elicit them with questions, never decide for them.
