@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateRange, formatDay } from './format';
+import { formatDateRange, formatDay, tripLengthDays } from './format';
 
 describe('formatDay', () => {
   it('is pinned to UTC — renders the same calendar day regardless of the runtime TZ', () => {
@@ -64,3 +64,18 @@ describe('formatDateRange', () => {
 // legitimately render different text on the server than in the browser.
 // They now each keep a local formatter with the locale hardcoded to
 // 'en-US' — see src/lib/format.ts's module doc for the full explanation.
+
+describe('tripLengthDays', () => {
+  const d = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+
+  it('counts both ends of the range (inclusive)', () => {
+    expect(tripLengthDays(d('2026-12-01'), d('2026-12-01'))).toBe(1);
+    expect(tripLengthDays(d('2026-12-01'), d('2026-12-02'))).toBe(2);
+    expect(tripLengthDays(d('2026-11-14'), d('2026-11-23'))).toBe(10);
+  });
+
+  it('counts UTC calendar days across a DST change and a year boundary', () => {
+    expect(tripLengthDays(d('2026-03-28'), d('2026-03-30'))).toBe(3);
+    expect(tripLengthDays(d('2026-12-30'), d('2027-01-02'))).toBe(4);
+  });
+});

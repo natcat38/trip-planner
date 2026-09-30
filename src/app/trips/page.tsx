@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SubmitButton } from '@/components/SubmitButton';
 import { formatMoney } from '@/lib/money';
-import { formatDateRange } from '@/lib/format';
+import { formatDateRange, tripLengthDays } from '@/lib/format';
 import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
 import { InvitesBanner } from './InvitesBanner';
@@ -97,7 +97,7 @@ export default async function TripsPage() {
           <ul className="flex flex-col gap-3">
             {trips.map((trip) => {
               const status = departureStatus(trip.startDate, trip.endDate, now);
-              const dayCount = trip._count.days;
+              const dayCount = tripLengthDays(trip.startDate, trip.endDate);
               return (
                 <li
                   key={trip.id}
