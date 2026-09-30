@@ -48,3 +48,13 @@ export function formatDateRange(start: Date, end: Date): string {
   });
   return `${fmt.format(start)} – ${fmt.format(end)}`;
 }
+
+// Inclusive trip length from the trip's own dates (stored as UTC midnight).
+// Not the Day-row count: Day rows are only materialised when a trip page is
+// opened, and never deleted when dates shrink (ADR-0005), so that count reads
+// 0 for a never-opened trip and too high after a date change.
+export function tripLengthDays(start: Date, end: Date): number {
+  const utcDay = (d: Date) =>
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.round((utcDay(end) - utcDay(start)) / 86_400_000) + 1;
+}
