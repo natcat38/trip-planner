@@ -33,10 +33,14 @@ export function Map({
   pins,
   selectedId,
   onSelectPin,
+  heightClass = 'h-80 lg:h-[36rem]',
 }: {
   pins: MapPin[];
   selectedId?: string | null;
   onSelectPin?: (id: string) => void;
+  // Callers that place the map in a smaller slot (the shared view's phone map
+  // panel) pass their own height; every return path below uses it.
+  heightClass?: string;
 }) {
   // Map tiles are deliberately not cached for offline use (ADR-0015): Mapbox
   // sets a 12-hour device TTL and GL JS has no supported offline mode. Without
@@ -193,8 +197,6 @@ export function Map({
   // beyond the old flat h-80 only at lg, where the two-pane trip-detail
   // layout (ItineraryDays.tsx) gives the sticky right-hand pane the room —
   // below lg it's still h-80, unchanged from before this task.
-  const heightClass = 'h-80 lg:h-[36rem]';
-
   if (pins.length === 0) {
     return (
       <div

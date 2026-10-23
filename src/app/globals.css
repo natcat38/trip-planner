@@ -171,6 +171,14 @@ summary {
     border-color 150ms ease;
 }
 
+/* TRIP-UX-2: day sections on the shared view are anchor targets under a sticky
+ * day strip. html already reserves 4rem (scroll-padding-top above); this adds
+ * only what the strip needs beyond that, e.g. when the phone map panel is open
+ * and the strip is taller. SharedTripBody publishes --strip-h. */
+.day-anchor {
+  scroll-margin-top: max(0px, calc(var(--strip-h, 56px) - 4rem + 0.5rem));
+}
+
 /* TRIP-UX-8: iOS Safari zooms the page when a focused field's computed
  * font-size is under 16px, and leaves it zoomed after blur. Form controls
  * carry `text-sm` (14px) for the desktop density, so this one unlayered rule
