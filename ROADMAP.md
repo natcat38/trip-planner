@@ -53,6 +53,7 @@ Exit: findings addressed or explicitly waived. Skills: code-review, simplify, we
 - [x] README rewrite with screenshots (PR #42).
 - [ ] API docs — n/a unless the extension API grows (ADR-0017); revisit at next feature spec.
 - [x] Deployed demo — https://trip-planner-cyan-five.vercel.app
+- [x] UX polish batch 1, mobile and chrome basics (TRIP-UX-4/8/9/12/16) — 2026-10-23, `memory/project_ux_polish_2026-10_mobile_chrome.md`.
 - [ ] Final `/repo-review` clean after the 2026-09 pass.
 
 Exit: /repo-review comes back clean. Skills: repo-review.

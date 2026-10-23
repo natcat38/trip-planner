@@ -329,15 +329,26 @@ export function ItineraryDays({
                                           in the middle, cost right-aligned —
                                           matches BudgetPanel.tsx's
                                           grid-cols-[1fr_auto_auto] pattern. */}
-                                      <div className="grid grid-cols-[auto_1fr_auto] gap-x-3">
-                                        <span className="font-mono tabular-nums text-sm text-muted-fg">
+                                      {/* TRIP-UX-12: below sm the cost drops under the time
+                                          (column 1, row 2) so the title column gets
+                                          the full remaining width; from sm up it is
+                                          the right-hand column again. */}
+                                      <div className="grid grid-cols-[auto_1fr] gap-x-3 sm:grid-cols-[auto_1fr_auto]">
+                                        <span className="col-start-1 row-start-1 font-mono tabular-nums text-sm text-muted-fg">
                                           {activity.startTime &&
                                           activity.endTime
                                             ? `${activity.startTime}–${activity.endTime}`
                                             : (activity.startTime ?? '')}
                                         </span>
-                                        <div className="min-w-0">
-                                          <p className="font-medium text-foreground truncate">
+                                        <div className="col-start-2 row-span-2 row-start-1 min-w-0 sm:row-span-1">
+                                          {/* TRIP-UX-12: two lines instead of one truncated line,
+                                              with the full title on hover, so
+                                              "Kushida Shrine and the Hakata old
+                                              tow..." can be read. */}
+                                          <p
+                                            title={activity.title}
+                                            className="font-medium text-foreground line-clamp-2 break-words"
+                                          >
                                             {activity.title}{' '}
                                             <span className="font-normal text-muted-fg">
                                               ({activity.category})
@@ -357,7 +368,7 @@ export function ItineraryDays({
                                             </p>
                                           )}
                                         </div>
-                                        <span className="font-mono tabular-nums text-sm text-muted-fg text-right">
+                                        <span className="col-start-1 row-start-2 font-mono tabular-nums text-sm text-muted-fg sm:col-start-3 sm:row-start-1 sm:text-right">
                                           {activity.costMinor != null &&
                                           activity.costCurrency
                                             ? formatMoney(
@@ -383,7 +394,7 @@ export function ItineraryDays({
                                             votes[activity.id]?.mine ?? false
                                           }
                                           aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
-                                          className={`flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
+                                          className={`touch-target flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
                                             votes[activity.id]?.mine
                                               ? 'border-accent bg-accent text-accent-fg dark:border-accent dark:bg-accent dark:text-accent-fg'
                                               : 'border-border text-zinc-500 dark:text-zinc-400'
@@ -395,7 +406,7 @@ export function ItineraryDays({
                                       </form>
 
                                       <details className="relative">
-                                        <summary className="flex cursor-pointer list-none items-center gap-1">
+                                        <summary className="touch-target flex cursor-pointer list-none items-center gap-1">
                                           <span
                                             aria-hidden
                                             className="inline-block h-6 w-6 rounded-full border border-border align-middle"
@@ -471,7 +482,7 @@ export function ItineraryDays({
                                         disabled={index === 0}
                                         aria-label={`Move ${activity.title} up`}
                                         pendingLabel="…"
-                                        className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                                        className="touch-target p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                                       >
                                         <ChevronIcon direction="up" />
                                       </SubmitButton>
@@ -490,14 +501,14 @@ export function ItineraryDays({
                                         }
                                         aria-label={`Move ${activity.title} down`}
                                         pendingLabel="…"
-                                        className="p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
+                                        className="touch-target p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
                                       >
                                         <ChevronIcon direction="down" />
                                       </SubmitButton>
                                     </form>
                                     <Link
                                       href={`/trips/${tripId}/activities/${activity.id}/edit`}
-                                      className="text-sm text-muted-fg underline"
+                                      className="touch-target text-sm text-muted-fg underline"
                                     >
                                       Edit
                                     </Link>
@@ -516,7 +527,7 @@ export function ItineraryDays({
                                       <ConfirmSubmitButton
                                         confirm="Delete this activity?"
                                         pendingLabel="Deleting…"
-                                        className="text-sm text-danger underline"
+                                        className="touch-target text-sm text-danger underline"
                                       >
                                         Delete
                                       </ConfirmSubmitButton>

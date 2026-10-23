@@ -27,3 +27,4 @@ Update or delete stale files instead of duplicating them.
 - [Stacked PR squash-merge recovery](feedback_stacked_pr_squash_merge_recovery.md) — squash-merging a base PR auto-closes anything stacked on it; recover with `git rebase --onto` + a new PR, the old one can't reopen.
 - [Opus skill subagents stall](feedback_opus_skill_subagents_stall.md) — heavy design skills trip the 600s watchdog; prompt "work incrementally", resume stalls via SendMessage.
 - [use-server exports must be async](feedback_use_server_exports_must_be_async.md) — a sync export in a 'use server' file passes tsc/vitest but fails `next build`; run `npx next build` before pushing src/server changes.
+- [2026-10 UX polish: mobile and chrome](project_ux_polish_2026-10_mobile_chrome.md) — sticky header + offline-banner offset var, global 16px phone fields, `touch-target` utility, wrapped titles; trip page now 15.4 phone screens until TRIP-UX-10.

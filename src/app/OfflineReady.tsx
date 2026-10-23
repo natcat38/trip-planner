@@ -14,11 +14,32 @@
  * (ADR-0015).
  * @packageDocumentation
  */
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useIsOffline } from '@/lib/useIsOffline';
 
 export function OfflineReady() {
   const offline = useIsOffline();
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  // The authed header (AppHeader) is also sticky at the top. While this
+  // banner is showing, publish its rendered height so the header can sit
+  // below it (`top: var(--offline-banner-h)`) instead of sliding under it.
+  // ResizeObserver, not a one-off measure: the message wraps to a second line
+  // on a narrow phone and the safe-area padding can change on rotation.
+  useEffect(() => {
+    const el = bannerRef.current;
+    if (!offline || !el) return;
+    const root = document.documentElement;
+    const publish = () =>
+      root.style.setProperty('--offline-banner-h', `${el.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--offline-banner-h');
+    };
+  }, [offline]);
 
   useEffect(() => {
     // Registration is best-effort by design. It fails on unsupported browsers,
@@ -34,6 +55,7 @@ export function OfflineReady() {
 
   return (
     <div
+      ref={bannerRef}
       role="status"
       // Always mounted — an unmounted live region announces nothing, so the
       // offline->online transition (this node disappearing) would go

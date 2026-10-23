@@ -9,7 +9,9 @@
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ThemeToggle } from '@/app/ThemeToggle';
 import { getKeyStatus, listAvailableModels } from '@/server/aiSettings';
+import { currentUserIdentity } from '@/server/auth-scope';
 import { getExtensionTokenStatus } from '@/server/extensionToken';
 import { AiKeyPanel } from './AiKeyPanel';
 import { ExtensionTokenPanel } from './ExtensionTokenPanel';
@@ -20,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SettingsPage() {
+  const { email } = await currentUserIdentity();
   const status = await getKeyStatus();
   // Only worth a live provider request once a key actually exists to check.
   const models = status ? await listAvailableModels() : null;
@@ -39,6 +42,15 @@ export default async function SettingsPage() {
             </Link>
           </nav>
         </div>
+
+        {/* TRIP-UX-16: the header hides the email and the theme select below
+            sm (they crowded "Sign out" at 390px), so phones get them here.
+            sm:hidden because the desktop header already carries both. */}
+        <Card as="section" className="mb-8 sm:hidden">
+          <h2 className="text-lg font-medium text-foreground mb-4">Account</h2>
+          <p className="text-sm text-muted-fg mb-4">Signed in as {email}.</p>
+          <ThemeToggle id="theme-preference-settings" />
+        </Card>
 
         <Card as="section">
           <h2 className="text-lg font-medium text-foreground mb-4">AI key</h2>
