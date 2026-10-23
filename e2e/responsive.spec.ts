@@ -169,4 +169,74 @@ test.describe('mobile viewport (375px) has no horizontal scroll', () => {
     );
     expect(scrollWidth).toBeLessThanOrEqual(375);
   });
+
+  // UX-polish batch "mobile and chrome basics" (TRIP-UX-4/8/9/16).
+  test('phone chrome: header stays pinned, controls are 44px, fields are 16px', async ({
+    page,
+    context,
+  }) => {
+    const { user } = await signInAs(db, context, 'responsive-e2e');
+    const trip = await db.trip.create({
+      data: {
+        userId: user.id,
+        name: 'Phone Chrome E2E Trip',
+        destinations: ['Kyoto'],
+        startDate: new Date('2026-09-01'),
+        endDate: new Date('2026-09-03'),
+        baseCurrency: 'JPY',
+        budgetMinor: 500000,
+      },
+    });
+    const day = await db.day.create({
+      data: { tripId: trip.id, date: new Date(Date.UTC(2026, 8, 1)) },
+    });
+    for (let i = 0; i < 12; i++) {
+      await db.activity.create({
+        data: {
+          dayId: day.id,
+          title: `Chrome E2E activity ${i}`,
+          category: 'Sightseeing',
+          sortOrder: i,
+        },
+      });
+    }
+
+    await page.goto(`/trips/${trip.id}`);
+    await expect(page.getByRole('heading', { name: trip.name })).toBeVisible();
+
+    // TRIP-UX-4: still at the top of the viewport after scrolling a long page.
+    await page.evaluate(() =>
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }),
+    );
+    const signOut = page.getByRole('button', { name: 'Sign out' });
+    await expect(signOut).toBeInViewport();
+    const header = await page.locator('header').boundingBox();
+    expect(header?.y).toBe(0);
+    // Compact: no more than 10% of a 812px phone viewport.
+    expect(header?.height).toBeLessThanOrEqual(81);
+
+    // TRIP-UX-9: header and row controls reach 44px.
+    const signOutBox = await signOut.boundingBox();
+    expect(signOutBox?.height).toBeGreaterThanOrEqual(44);
+    const deleteBox = await page
+      .getByRole('button', { name: 'Delete' })
+      .first()
+      .boundingBox();
+    expect(deleteBox?.height).toBeGreaterThanOrEqual(44);
+
+    // TRIP-UX-16: email and theme select leave the header on phones; the
+    // theme control is reachable from Settings instead.
+    await expect(page.locator('header select')).toBeHidden();
+    await expect(page.locator('header').getByText(user.email)).toBeHidden();
+
+    // TRIP-UX-8: 16px on phone so iOS does not zoom on focus.
+    await page.goto('/settings');
+    await expect(page.getByText(`Signed in as ${user.email}`)).toBeVisible();
+    await expect(page.locator('#theme-preference-settings')).toBeVisible();
+    const fontSizes = await page
+      .locator('main input:not([type=hidden]), main select')
+      .evaluateAll((els) => els.map((e) => getComputedStyle(e).fontSize));
+    expect(fontSizes.length).toBeGreaterThan(0);
+    for (const size of fontSizes) expect(size).toBe('16px');
+  });
 });

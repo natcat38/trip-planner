@@ -5,6 +5,8 @@
  * chrome — `AppHeader` for authed routes, and a small header bar on the
  * public `/` and `/shared/[token]` pages that don't get an `AppHeader` — so
  * it's present on every route including those two unauthenticated ones.
+ * Below `sm` the AppHeader copy is hidden (TRIP-UX-16) and the Settings page
+ * renders its own, so phones still reach it.
  * This is a display preference, not account data, so it lives in
  * localStorage rather than Postgres (see `src/lib/theme.ts`).
  *
@@ -82,7 +84,10 @@ function notify(): void {
 
 const getServerSnapshot = (): ThemePreference => 'system';
 
-export function ThemeToggle() {
+// `id` is overridable because the Settings page renders a second copy for
+// phones (the header one is hidden below `sm`, TRIP-UX-16); both are in the
+// DOM at once, and ids must be unique.
+export function ThemeToggle({ id = 'theme-preference' }: { id?: string }) {
   const preference = useSyncExternalStore(
     subscribe,
     readStoredPreference,
@@ -112,11 +117,11 @@ export function ThemeToggle() {
     // print:hidden bar on the public/shared pages that have no AppHeader),
     // rather than the fixed-position corner overlay this used to be.
     <>
-      <label htmlFor="theme-preference" className="sr-only">
+      <label htmlFor={id} className="sr-only">
         Theme
       </label>
       <Select
-        id="theme-preference"
+        id={id}
         value={preference}
         onChange={handleChange}
         className="px-2 py-1 text-sm text-zinc-600 shadow-sm dark:text-zinc-400"

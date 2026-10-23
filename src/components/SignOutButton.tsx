@@ -31,7 +31,7 @@ export function SignOutButton({ action }: { action: () => Promise<void> }) {
   return (
     <button
       type="button"
-      className="text-sm text-zinc-600 underline dark:text-zinc-400"
+      className="touch-target text-sm text-zinc-600 underline dark:text-zinc-400"
       onClick={async () => {
         try {
           await clearOfflineCaches();

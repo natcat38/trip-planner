@@ -108,31 +108,34 @@ export default async function TripItineraryPage({
           <h1 className="text-4xl font-semibold text-foreground">
             {trip.name}
           </h1>
-          <nav aria-label="Trip actions" className="flex flex-wrap gap-4">
-            <Link href="/trips" className="text-sm text-muted-fg underline">
+          <nav aria-label="Trip actions" className="flex flex-wrap gap-x-4">
+            <Link
+              href="/trips"
+              className="touch-target text-sm text-muted-fg underline"
+            >
               Back to trips
             </Link>
             <Link
               href={`/trips/${trip.id}/places`}
-              className="text-sm text-muted-fg underline"
+              className="touch-target text-sm text-muted-fg underline"
             >
               Places
             </Link>
             <Link
               href={`/trips/${trip.id}/print`}
-              className="text-sm text-muted-fg underline"
+              className="touch-target text-sm text-muted-fg underline"
             >
               Export PDF
             </Link>
             <Link
               href={`/trips/${trip.id}/calendar.ics`}
-              className="text-sm text-muted-fg underline"
+              className="touch-target text-sm text-muted-fg underline"
             >
               Add to Calendar
             </Link>
             <Link
               href={`/trips/${trip.id}/edit`}
-              className="text-sm text-muted-fg underline"
+              className="touch-target text-sm text-muted-fg underline"
             >
               Edit trip
             </Link>

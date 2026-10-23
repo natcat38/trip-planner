@@ -131,6 +131,13 @@
   --muted-fg: #a1a1aa; /* zinc-400 */
 }
 
+/* TRIP-UX-4 / S-NAV-2: the authed header is sticky (about 53px on a phone),
+ * so anchor jumps (the skip link's #main) and focus scrolling must leave room
+ * for it, and for the offline banner when that is showing too. */
+html {
+  scroll-padding-top: calc(4rem + var(--offline-banner-h, 0px));
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -162,6 +169,35 @@ summary {
     background-color 150ms ease,
     color 150ms ease,
     border-color 150ms ease;
+}
+
+/* TRIP-UX-8: iOS Safari zooms the page when a focused field's computed
+ * font-size is under 16px, and leaves it zoomed after blur. Form controls
+ * carry `text-sm` (14px) for the desktop density, so this one unlayered rule
+ * (it beats the utilities layer without `!important`) lifts them to 16px on
+ * touch devices and phone-width windows only; desktop keeps 14px. Checkboxes
+ * and radios have no text, so they are skipped. */
+@media (pointer: coarse), (width < 40rem) {
+  input:not([type='checkbox'], [type='radio'], [type='hidden']),
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
+/* TRIP-UX-9: phone tap target. Raises a control's hit area to 44x44 CSS px
+ * (Apple HIG; the WCAG 2.5.8 AA floor is 24) below the `sm` breakpoint and
+ * leaves it at its natural size above, so the desktop density is unchanged.
+ * The visible mark (underlined text, chevron) stays small; the hit area grows
+ * around it. */
+@utility touch-target {
+  @media (width < 40rem) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
