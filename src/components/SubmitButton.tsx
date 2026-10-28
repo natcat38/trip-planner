@@ -1,9 +1,12 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
+import { announce } from '@/lib/announce';
 
 export function SubmitButton({
   children,
   pendingLabel,
+  doneMessage,
   className,
   style,
   name,
@@ -18,6 +21,12 @@ export function SubmitButton({
   // state doesn't need its own label (e.g. the 24px pin-colour swatches,
   // which have no text content at all).
   pendingLabel?: React.ReactNode;
+  // What to tell the user once the submit has finished ("Activity deleted"),
+  // shown by StatusToast and read out politely (TRIP-UX-17). Only for actions
+  // that return nothing on success and throw on failure; a form that reports
+  // errors through useActionState must say nothing here, or a failure would
+  // be acknowledged as a success.
+  doneMessage?: string;
   className?: string;
   // Runtime-computed swatch colour (ItineraryDays.tsx's pin-colour palette) —
   // can't be baked into className since the value isn't known until render.
@@ -50,6 +59,32 @@ export function SubmitButton({
   // can't be disambiguated this way, so they fall back to the old
   // form-wide behaviour.
   const isMine = !name || data?.get(name) === value;
+
+  // "Done" is pending going back to false, or this button vanishing while it
+  // was pending: deleting a row re-renders the list without it, so the
+  // button that started the delete is gone by the time the action ends.
+  const wasPending = useRef(false);
+  const messageRef = useRef(doneMessage);
+  useEffect(() => {
+    messageRef.current = doneMessage;
+  });
+  useEffect(() => {
+    if (pending && isMine) {
+      wasPending.current = true;
+    } else if (wasPending.current) {
+      wasPending.current = false;
+      if (messageRef.current) announce(messageRef.current);
+    }
+  }, [pending, isMine]);
+  useEffect(
+    () => () => {
+      if (wasPending.current && messageRef.current) {
+        announce(messageRef.current);
+      }
+    },
+    [],
+  );
+
   return (
     <button
       type="submit"

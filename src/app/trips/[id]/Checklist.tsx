@@ -86,6 +86,7 @@ function ChecklistRow({
           <ConfirmSubmitButton
             confirm="Delete this checklist item?"
             pendingLabel="Deleting…"
+            doneMessage="Item deleted"
             className="text-sm text-danger underline"
           >
             Delete
@@ -118,7 +119,7 @@ export function Checklist({
   const doneCount = items.filter((item) => item.done).length;
 
   return (
-    <details className="mb-8 rounded-lg border border-border p-4">
+    <details className="rounded-lg border border-border p-4">
       <summary className="cursor-pointer text-sm font-medium text-foreground">
         Checklist{items.length > 0 ? ` (${doneCount}/${items.length})` : ''}
       </summary>

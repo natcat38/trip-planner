@@ -17,12 +17,9 @@ import {
 import { ActivityForm } from './ActivityForm';
 import { DayNotesForm } from './DayNotesForm';
 import { TransitLeg } from './TransitLeg';
-import {
-  ActivityRowFrame,
-  ActivitySelectButton,
-  SelectedMap,
-  SelectionProvider,
-} from './ItinerarySelection';
+import { ActivityRowFrame, ActivitySelectButton } from './ItinerarySelection';
+import { RowMenu } from './RowMenu';
+import { DayControls } from './DayControls';
 import {
   DayTimingProvider,
   NextBadge,
@@ -94,30 +91,6 @@ function ThumbIcon() {
       strokeLinejoin="round"
     >
       <path d="M6.5 9v8H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h2.5Zm0 0 3.24-5.98a1.4 1.4 0 0 1 2.55 1.06L11.3 9h3.44a1.7 1.7 0 0 1 1.67 2.02l-1.08 5.6A1.7 1.7 0 0 1 13.66 18H9a2.5 2.5 0 0 1-2.5-2.5" />
-    </svg>
-  );
-}
-
-function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path
-        d={
-          direction === 'up'
-            ? 'M5 12.5 10 7.5 15 12.5'
-            : 'M5 7.5 10 12.5 15 7.5'
-        }
-      />
     </svg>
   );
 }
@@ -205,6 +178,11 @@ function WeatherAttribution({
   );
 }
 
+// Menu item look, shared by the buttons, links and forms inside a row's
+// "more actions" menu. 44px tall on a phone, 36px from sm.
+const MENU_ITEM =
+  'flex min-h-11 w-full items-center rounded px-3 text-left text-sm text-foreground hover:bg-surface disabled:opacity-40 sm:min-h-9';
+
 export function ItineraryDays({
   tripId,
   days,
@@ -216,389 +194,365 @@ export function ItineraryDays({
   weatherPromise: Promise<Record<string, DayWeather> | null>;
   votes: Record<string, VoteSummary>;
 }) {
-  const pins = days
-    .flatMap((day) => day.activities)
-    .filter((activity) => activity.lat != null && activity.lng != null)
-    .map((activity) => ({
-      id: activity.id,
-      lat: activity.lat!,
-      lng: activity.lng!,
-      title: activity.title,
-      color: activity.pinColor,
-    }));
-
   return (
-    // Two-pane at lg: `order-first`/`order-last` reorder the map without
-    // moving it in the DOM (the itinerary — the day rail — stays document
-    // order-first so the streamed content the Suspense boundaries below
-    // guard is unaffected by this class-only reordering). Below lg it's a
-    // single flex-col column, map above days, unchanged from before this
-    // task. `min-w-0` on the rail keeps a long activity/place name from
-    // forcing the flex item wider than the pane (the same guard B11 added
-    // elsewhere for this reason).
-    //
-    // SelectionProvider is the one client boundary shared by the Map and
-    // the day rail below (selectedActivityId, ADR-0019 §2) — everything
-    // else in this tree is server-rendered.
-    <SelectionProvider>
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-        <div className="order-first lg:order-last lg:sticky lg:top-8 lg:w-[26rem] lg:shrink-0">
-          <SelectedMap pins={pins} />
-        </div>
+    // The day rail: a vertical "station stop" timeline. The connecting line
+    // is one absolutely-positioned element spanning the whole list (not
+    // per-day), so it reads as a continuous route line behind each day's
+    // stop marker. The map beside it, and the selection state the two
+    // share, live in trips/[id]/page.tsx's TripLayout. `min-w-0` keeps a
+    // long activity/place name from forcing the column wider than its pane.
+    <div className="relative min-w-0">
+      <div
+        aria-hidden
+        className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
+      />
+      <div className="flex flex-col gap-8">
+        <NowProvider>
+          {days.map((day) => {
+            const subtotals = daySubtotals(day.activities);
 
-        {/* The day rail: a vertical "station stop" timeline. The connecting
-            line is one absolutely-positioned element spanning the whole list
-            (not per-day), so it reads as a continuous route line behind each
-            day's stop marker. */}
-        <div className="relative min-w-0 flex-1">
-          <div
-            aria-hidden
-            className="absolute left-[7px] top-2 bottom-2 w-px bg-border"
-          />
-          <div className="flex flex-col gap-8">
-            <NowProvider>
-              {days.map((day) => {
-                const subtotals = daySubtotals(day.activities);
-
-                return (
-                  <DayTimingProvider
-                    key={day.id}
-                    date={day.date}
-                    activities={day.activities}
-                  >
-                    <section className="relative pl-8">
-                      <TodayDot />
-                      {/* now/next (NowProvider/DayTimingProvider/TodayBadge/
-                          NextBadge above) is scoped to this authenticated
-                          view only, pending ADR-0019 open question 3 — print
-                          and the public share view intentionally don't get
-                          the badges (design-critique.md finding #3). */}
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-2 mb-1">
-                        <h2 className="text-lg font-medium text-foreground font-mono tabular-nums">
-                          {formatDay(day.date)}
-                          <TodayBadge />
-                        </h2>
-                        <div className="flex items-center gap-3 text-xs font-mono tabular-nums text-muted-fg">
+            return (
+              <DayTimingProvider
+                key={day.id}
+                date={day.date}
+                activities={day.activities}
+              >
+                <section className="relative pl-8">
+                  <TodayDot />
+                  {/* now/next (NowProvider/DayTimingProvider/TodayBadge/
+                      NextBadge above) is scoped to this authenticated view
+                      only, pending ADR-0019 open question 3 — print and the
+                      public share view intentionally don't get the badges
+                      (design-critique.md finding #3). */}
+                  <DayControls
+                    heading={
+                      <h2 className="text-lg font-medium text-foreground font-mono tabular-nums">
+                        {formatDay(day.date)}
+                        <TodayBadge />
+                      </h2>
+                    }
+                    stats={
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs font-mono tabular-nums text-muted-fg">
+                        <span>
+                          {day.activities.length}{' '}
+                          {day.activities.length === 1
+                            ? 'activity'
+                            : 'activities'}
+                        </span>
+                        {subtotals.length > 0 && (
                           <span>
-                            {day.activities.length}{' '}
-                            {day.activities.length === 1
-                              ? 'activity'
-                              : 'activities'}
+                            {subtotals
+                              .map(({ currency, minor }) =>
+                                formatMoney(minor, currency),
+                              )
+                              .join(' + ')}
                           </span>
-                          {subtotals.length > 0 && (
-                            <span>
-                              {subtotals
-                                .map(({ currency, minor }) =>
-                                  formatMoney(minor, currency),
-                                )
-                                .join(' + ')}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
-                      <Suspense fallback={<WeatherLineSkeleton />}>
-                        <DayWeatherLine
-                          weatherPromise={weatherPromise}
-                          dayKey={dateKey(day.date)}
-                        />
-                      </Suspense>
-
-                      {day.activities.length > 0 && (
-                        <ul className="flex flex-col gap-2 mb-4">
-                          {day.activities.map((activity, index) => {
-                            const nextActivity = day.activities[index + 1];
-                            const showTransitLeg =
-                              nextActivity != null &&
-                              activity.lat != null &&
-                              activity.lng != null &&
-                              nextActivity.lat != null &&
-                              nextActivity.lng != null;
-
-                            return (
-                              <Fragment key={activity.id}>
-                                <ActivityRowFrame activityId={activity.id}>
-                                  <div className="flex-1 min-w-0 flex flex-col gap-2">
-                                    <ActivitySelectButton
-                                      activityId={activity.id}
-                                      disabled={activity.lat == null}
-                                    >
-                                      {/* Departure-board columns (ADR-0019
-                                          §4, design-critique.md finding #1):
-                                          time in its own tabular-numeral
-                                          column, title/category/place/notes
-                                          in the middle, cost right-aligned —
-                                          matches BudgetPanel.tsx's
-                                          grid-cols-[1fr_auto_auto] pattern. */}
-                                      {/* TRIP-UX-12: below sm the cost drops under the time
-                                          (column 1, row 2) so the title column gets
-                                          the full remaining width; from sm up it is
-                                          the right-hand column again. */}
-                                      <div className="grid grid-cols-[auto_1fr] gap-x-3 sm:grid-cols-[auto_1fr_auto]">
-                                        <span className="col-start-1 row-start-1 font-mono tabular-nums text-sm text-muted-fg">
-                                          {activity.startTime &&
-                                          activity.endTime
-                                            ? `${activity.startTime}–${activity.endTime}`
-                                            : (activity.startTime ?? '')}
-                                        </span>
-                                        <div className="col-start-2 row-span-2 row-start-1 min-w-0 sm:row-span-1">
-                                          {/* TRIP-UX-12: two lines instead of one truncated line,
-                                              with the full title on hover, so
-                                              "Kushida Shrine and the Hakata old
-                                              tow..." can be read. */}
-                                          <p
-                                            title={activity.title}
-                                            className="font-medium text-foreground line-clamp-2 break-words"
-                                          >
-                                            {activity.title}{' '}
-                                            <span className="font-normal text-muted-fg">
-                                              ({activity.category})
-                                            </span>
-                                            <NextBadge
-                                              activityId={activity.id}
-                                            />
-                                          </p>
-                                          {activity.placeName && (
-                                            <p className="text-sm text-muted-fg">
-                                              {activity.placeName}
-                                            </p>
-                                          )}
-                                          {activity.notes && (
-                                            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                                              {activity.notes}
-                                            </p>
-                                          )}
-                                        </div>
-                                        <span className="col-start-1 row-start-2 font-mono tabular-nums text-sm text-muted-fg sm:col-start-3 sm:row-start-1 sm:text-right">
-                                          {activity.costMinor != null &&
-                                          activity.costCurrency
-                                            ? formatMoney(
-                                                activity.costMinor,
-                                                activity.costCurrency,
-                                              )
-                                            : ''}
-                                        </span>
-                                      </div>
-                                    </ActivitySelectButton>
-
-                                    <div className="flex items-center gap-3">
-                                      <form
-                                        action={toggleVoteAction.bind(
-                                          null,
-                                          tripId,
-                                          activity.id,
-                                        )}
-                                      >
-                                        <SubmitButton
-                                          pendingLabel="Voting…"
-                                          aria-pressed={
-                                            votes[activity.id]?.mine ?? false
-                                          }
-                                          aria-label={`${votes[activity.id]?.count ?? 0} votes${votes[activity.id]?.mine ? ', you voted' : ''} — ${activity.title}`}
-                                          className={`touch-target flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
-                                            votes[activity.id]?.mine
-                                              ? 'border-accent bg-accent text-accent-fg dark:border-accent dark:bg-accent dark:text-accent-fg'
-                                              : 'border-border text-zinc-500 dark:text-zinc-400'
-                                          }`}
-                                        >
-                                          <ThumbIcon />
-                                          {votes[activity.id]?.count ?? 0}
-                                        </SubmitButton>
-                                      </form>
-
-                                      <details className="relative">
-                                        <summary className="touch-target flex cursor-pointer list-none items-center gap-1">
-                                          <span
-                                            aria-hidden
-                                            className="inline-block h-6 w-6 rounded-full border border-border align-middle"
-                                            style={{
-                                              // ADR-0019 §2: the unset-pin fallback
-                                              // converges on the accent token instead
-                                              // of its own #2563eb literal.
-                                              background:
-                                                activity.pinColor ??
-                                                'var(--accent)',
-                                            }}
-                                          />
-                                          <ChevronIcon direction="down" />
-                                          <span className="sr-only">
-                                            Pin colour
-                                          </span>
-                                        </summary>
-                                        <div className="absolute z-10 mt-1 flex items-center gap-2 rounded-lg border border-border bg-surface-raised p-2 shadow-sm">
-                                          {PIN_COLOR_PALETTE.map((color) => (
-                                            <form
-                                              key={color}
-                                              action={setActivityPinColorAction.bind(
-                                                null,
-                                                tripId,
-                                                activity.id,
-                                                color,
-                                                activity.updatedAt.toISOString(),
-                                              )}
-                                            >
-                                              <SubmitButton
-                                                aria-label={`Set pin colour ${PIN_COLOR_NAMES[color]}`}
-                                                className={`h-6 w-6 rounded-full border ${
-                                                  activity.pinColor === color
-                                                    ? 'border-accent'
-                                                    : 'border-border'
-                                                }`}
-                                                style={{ background: color }}
-                                              >
-                                                {null}
-                                              </SubmitButton>
-                                            </form>
-                                          ))}
-                                          <form
-                                            action={setActivityPinColorAction.bind(
-                                              null,
-                                              tripId,
-                                              activity.id,
-                                              null,
-                                              activity.updatedAt.toISOString(),
-                                            )}
-                                          >
-                                            <SubmitButton
-                                              pendingLabel="Clearing…"
-                                              className="text-xs text-zinc-500 underline dark:text-zinc-400"
-                                            >
-                                              Default
-                                            </SubmitButton>
-                                          </form>
-                                        </div>
-                                      </details>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <form
-                                      action={moveActivityAction.bind(
-                                        null,
-                                        tripId,
-                                        activity.id,
-                                        'up',
-                                      )}
-                                    >
-                                      <SubmitButton
-                                        disabled={index === 0}
-                                        aria-label={`Move ${activity.title} up`}
-                                        pendingLabel="…"
-                                        className="touch-target p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
-                                      >
-                                        <ChevronIcon direction="up" />
-                                      </SubmitButton>
-                                    </form>
-                                    <form
-                                      action={moveActivityAction.bind(
-                                        null,
-                                        tripId,
-                                        activity.id,
-                                        'down',
-                                      )}
-                                    >
-                                      <SubmitButton
-                                        disabled={
-                                          index === day.activities.length - 1
-                                        }
-                                        aria-label={`Move ${activity.title} down`}
-                                        pendingLabel="…"
-                                        className="touch-target p-2 text-zinc-500 disabled:opacity-30 dark:text-zinc-400"
-                                      >
-                                        <ChevronIcon direction="down" />
-                                      </SubmitButton>
-                                    </form>
-                                    <Link
-                                      href={`/trips/${tripId}/activities/${activity.id}/edit`}
-                                      className="touch-target text-sm text-muted-fg underline"
-                                    >
-                                      Edit
-                                    </Link>
-                                    {/* #6: a visible divider plus extra left margin
-                                      separates Delete from Edit/Move so a mis-tap
-                                      on mobile can't land on the destructive
-                                      action. */}
-                                    <form
-                                      action={deleteActivityAction.bind(
-                                        null,
-                                        tripId,
-                                        activity.id,
-                                      )}
-                                      className="ml-2 border-l border-border pl-3"
-                                    >
-                                      <ConfirmSubmitButton
-                                        confirm="Delete this activity?"
-                                        pendingLabel="Deleting…"
-                                        className="touch-target text-sm text-danger underline"
-                                      >
-                                        Delete
-                                      </ConfirmSubmitButton>
-                                    </form>
-                                  </div>
-                                </ActivityRowFrame>
-                                {showTransitLeg && (
-                                  // Keyed on BOTH endpoints so reordering or deleting an
-                                  // activity remounts this leg. Without it React keeps the
-                                  // component (the Fragment's key and the position are
-                                  // unchanged) and useActionState holds the journeys
-                                  // fetched for the previous destination — a real route,
-                                  // shown against the wrong leg.
-                                  <TransitLeg
-                                    key={`${activity.id}-${nextActivity.id}`}
-                                    tripId={tripId}
-                                    from={{
-                                      activityId: activity.id,
-                                      lat: activity.lat!,
-                                      lng: activity.lng!,
-                                    }}
-                                    to={{
-                                      activityId: nextActivity.id,
-                                      lat: nextActivity.lat!,
-                                      lng: nextActivity.lng!,
-                                    }}
-                                    toLabel={nextActivity.title}
-                                  />
-                                )}
-                              </Fragment>
-                            );
-                          })}
-                        </ul>
-                      )}
-
-                      <details className="rounded-lg border border-dashed border-border p-4">
-                        <summary className="cursor-pointer text-sm font-medium text-foreground">
-                          Add activity
-                        </summary>
-                        <div className="mt-4">
-                          <ActivityForm
-                            action={addActivityAction.bind(
-                              null,
-                              tripId,
-                              day.id,
-                            )}
-                            submitLabel="Add activity"
-                          />
-                        </div>
-                      </details>
-
+                    }
+                    notes={day.notes}
+                    activityCount={day.activities.length}
+                    addForm={
+                      <ActivityForm
+                        action={addActivityAction.bind(null, tripId, day.id)}
+                        submitLabel="Add activity"
+                      />
+                    }
+                    notesForm={
                       <DayNotesForm
                         tripId={tripId}
                         dayId={day.id}
                         updatedAt={day.updatedAt.toISOString()}
                         notes={day.notes}
                       />
-                    </section>
-                  </DayTimingProvider>
-                );
-              })}
-            </NowProvider>
-          </div>
+                    }
+                  />
+                  <Suspense fallback={<WeatherLineSkeleton />}>
+                    <DayWeatherLine
+                      weatherPromise={weatherPromise}
+                      dayKey={dateKey(day.date)}
+                    />
+                  </Suspense>
 
-          {/* No loading fallback: this line is pure attribution, not content —
-              nothing is lost by it simply appearing once weather resolves. */}
-          <Suspense fallback={null}>
-            <WeatherAttribution weatherPromise={weatherPromise} />
-          </Suspense>
-        </div>
+                  {day.activities.length > 0 && (
+                    <ul className="flex flex-col gap-2">
+                      {day.activities.map((activity, index) => {
+                        const nextActivity = day.activities[index + 1];
+                        const showTransitLeg =
+                          nextActivity != null &&
+                          activity.lat != null &&
+                          activity.lng != null &&
+                          nextActivity.lat != null &&
+                          nextActivity.lng != null;
+                        const votesFor = votes[activity.id];
+
+                        return (
+                          <Fragment key={activity.id}>
+                            <ActivityRowFrame activityId={activity.id}>
+                              <div className="min-w-0 flex-1">
+                                <ActivitySelectButton
+                                  activityId={activity.id}
+                                  disabled={activity.lat == null}
+                                >
+                                  {/* Departure-board columns (ADR-0019
+                                      §4, design-critique.md finding #1):
+                                      time in its own tabular-numeral
+                                      column, title/category/place/notes in
+                                      the middle, cost right-aligned —
+                                      matches BudgetPanel.tsx's
+                                      grid-cols-[1fr_auto_auto] pattern. */}
+                                  {/* TRIP-UX-12: below sm the cost drops under the time
+                                      (column 1, row 2) so the title column gets
+                                      the full remaining width; from sm up it is
+                                      the right-hand column again. */}
+                                  <div className="grid grid-cols-[auto_1fr] gap-x-3 sm:grid-cols-[auto_1fr_auto]">
+                                    <span className="col-start-1 row-start-1 font-mono tabular-nums text-sm text-muted-fg">
+                                      {activity.startTime && activity.endTime
+                                        ? `${activity.startTime}–${activity.endTime}`
+                                        : (activity.startTime ?? '')}
+                                    </span>
+                                    <div className="col-start-2 row-span-2 row-start-1 min-w-0 sm:row-span-1">
+                                      {/* TRIP-UX-12: two lines instead of one truncated line,
+                                          with the full title on hover, so
+                                          "Kushida Shrine and the Hakata old
+                                          tow..." can be read. */}
+                                      <p
+                                        title={activity.title}
+                                        className="font-medium text-foreground line-clamp-2 break-words"
+                                      >
+                                        {/* TRIP-UX-10: the pin colour no longer has a
+                                            swatch control on every row; a dot shows it
+                                            only where one was chosen. */}
+                                        {activity.pinColor && (
+                                          <span
+                                            aria-hidden
+                                            className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full align-middle"
+                                            style={{
+                                              background: activity.pinColor,
+                                            }}
+                                          />
+                                        )}
+                                        {activity.title}{' '}
+                                        <span className="font-normal text-muted-fg">
+                                          ({activity.category})
+                                        </span>
+                                        <NextBadge activityId={activity.id} />
+                                      </p>
+                                      {activity.placeName && (
+                                        <p className="text-sm text-muted-fg">
+                                          {activity.placeName}
+                                        </p>
+                                      )}
+                                      {activity.notes && (
+                                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                                          {activity.notes}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <span className="col-start-1 row-start-2 font-mono tabular-nums text-sm text-muted-fg sm:col-start-3 sm:row-start-1 sm:text-right">
+                                      {activity.costMinor != null &&
+                                      activity.costCurrency
+                                        ? formatMoney(
+                                            activity.costMinor,
+                                            activity.costCurrency,
+                                          )
+                                        : ''}
+                                    </span>
+                                  </div>
+                                </ActivitySelectButton>
+                              </div>
+
+                              {/* TRIP-UX-10: a row used to carry a vote button, a
+                                  swatch picker, two arrows, Edit and Delete (about
+                                  114px, two lines on a phone). Now it carries the
+                                  vote, which is the collaborative signal, and one
+                                  "more actions" button; the rest is inside it. */}
+                              <div className="flex shrink-0 items-center gap-1">
+                                <form
+                                  action={toggleVoteAction.bind(
+                                    null,
+                                    tripId,
+                                    activity.id,
+                                  )}
+                                >
+                                  <SubmitButton
+                                    pendingLabel="Voting…"
+                                    aria-pressed={votesFor?.mine ?? false}
+                                    aria-label={`${votesFor?.count ?? 0} votes${votesFor?.mine ? ', you voted' : ''} — ${activity.title}`}
+                                    className={`touch-target flex items-center gap-1 rounded-full border px-2 py-1.5 text-xs ${
+                                      votesFor?.mine
+                                        ? 'border-accent bg-accent text-accent-fg dark:border-accent dark:bg-accent dark:text-accent-fg'
+                                        : 'border-border text-zinc-500 dark:text-zinc-400'
+                                    }`}
+                                  >
+                                    <ThumbIcon />
+                                    {votesFor?.count ?? 0}
+                                  </SubmitButton>
+                                </form>
+
+                                <RowMenu
+                                  label={`More actions — ${activity.title}`}
+                                >
+                                  <form
+                                    action={moveActivityAction.bind(
+                                      null,
+                                      tripId,
+                                      activity.id,
+                                      'up',
+                                    )}
+                                  >
+                                    <SubmitButton
+                                      disabled={index === 0}
+                                      aria-label={`Move ${activity.title} up`}
+                                      pendingLabel="Moving…"
+                                      doneMessage="Moved up"
+                                      className={MENU_ITEM}
+                                    >
+                                      Move up
+                                    </SubmitButton>
+                                  </form>
+                                  <form
+                                    action={moveActivityAction.bind(
+                                      null,
+                                      tripId,
+                                      activity.id,
+                                      'down',
+                                    )}
+                                  >
+                                    <SubmitButton
+                                      disabled={
+                                        index === day.activities.length - 1
+                                      }
+                                      aria-label={`Move ${activity.title} down`}
+                                      pendingLabel="Moving…"
+                                      doneMessage="Moved down"
+                                      className={MENU_ITEM}
+                                    >
+                                      Move down
+                                    </SubmitButton>
+                                  </form>
+                                  <Link
+                                    href={`/trips/${tripId}/activities/${activity.id}/edit`}
+                                    className={MENU_ITEM}
+                                  >
+                                    Edit
+                                  </Link>
+                                  <div
+                                    role="group"
+                                    aria-label="Pin colour"
+                                    className="px-3 py-2"
+                                  >
+                                    <p
+                                      aria-hidden="true"
+                                      className="mb-1.5 text-xs text-muted-fg"
+                                    >
+                                      Pin colour
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      {PIN_COLOR_PALETTE.map((color) => (
+                                        <form
+                                          key={color}
+                                          action={setActivityPinColorAction.bind(
+                                            null,
+                                            tripId,
+                                            activity.id,
+                                            color,
+                                            activity.updatedAt.toISOString(),
+                                          )}
+                                        >
+                                          <SubmitButton
+                                            aria-label={`Set pin colour ${PIN_COLOR_NAMES[color]}`}
+                                            className={`h-8 w-8 rounded-full border-2 ${
+                                              activity.pinColor === color
+                                                ? 'border-foreground'
+                                                : 'border-border'
+                                            }`}
+                                            style={{ background: color }}
+                                          >
+                                            {null}
+                                          </SubmitButton>
+                                        </form>
+                                      ))}
+                                      <form
+                                        action={setActivityPinColorAction.bind(
+                                          null,
+                                          tripId,
+                                          activity.id,
+                                          null,
+                                          activity.updatedAt.toISOString(),
+                                        )}
+                                      >
+                                        <SubmitButton
+                                          pendingLabel="Clearing…"
+                                          className="min-h-8 px-1 text-xs text-muted-fg underline"
+                                        >
+                                          Default
+                                        </SubmitButton>
+                                      </form>
+                                    </div>
+                                  </div>
+                                  {/* #6: a divider separates the destructive item
+                                      from the rest so a mis-tap can't land on it. */}
+                                  <form
+                                    action={deleteActivityAction.bind(
+                                      null,
+                                      tripId,
+                                      activity.id,
+                                    )}
+                                    className="mt-1 border-t border-border pt-1"
+                                  >
+                                    <ConfirmSubmitButton
+                                      confirm="Delete this activity?"
+                                      pendingLabel="Deleting…"
+                                      doneMessage="Activity deleted"
+                                      className={`${MENU_ITEM} text-danger`}
+                                    >
+                                      Delete
+                                    </ConfirmSubmitButton>
+                                  </form>
+                                </RowMenu>
+                              </div>
+                            </ActivityRowFrame>
+                            {showTransitLeg && (
+                              // Keyed on BOTH endpoints so reordering or deleting an
+                              // activity remounts this leg. Without it React keeps the
+                              // component (the Fragment's key and the position are
+                              // unchanged) and useActionState holds the journeys
+                              // fetched for the previous destination — a real route,
+                              // shown against the wrong leg.
+                              <TransitLeg
+                                key={`${activity.id}-${nextActivity.id}`}
+                                tripId={tripId}
+                                from={{
+                                  activityId: activity.id,
+                                  lat: activity.lat!,
+                                  lng: activity.lng!,
+                                }}
+                                to={{
+                                  activityId: nextActivity.id,
+                                  lat: nextActivity.lat!,
+                                  lng: nextActivity.lng!,
+                                }}
+                                toLabel={nextActivity.title}
+                              />
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              </DayTimingProvider>
+            );
+          })}
+        </NowProvider>
       </div>
-    </SelectionProvider>
+
+      {/* No loading fallback: this line is pure attribution, not content —
+          nothing is lost by it simply appearing once weather resolves. */}
+      <Suspense fallback={null}>
+        <WeatherAttribution weatherPromise={weatherPromise} />
+      </Suspense>
+    </div>
   );
 }

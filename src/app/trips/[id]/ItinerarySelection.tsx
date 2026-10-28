@@ -92,7 +92,7 @@ export function ActivityRowFrame({
   return (
     <li
       aria-current={isSelected ? 'true' : undefined}
-      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 rounded-lg border p-4 ${
+      className={`flex items-start gap-2 sm:gap-3 rounded-lg border p-3 sm:p-4 ${
         isSelected ? 'border-accent' : 'border-border'
       }`}
     >

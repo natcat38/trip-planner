@@ -218,11 +218,14 @@ test.describe('mobile viewport (375px) has no horizontal scroll', () => {
     // TRIP-UX-9: header and row controls reach 44px.
     const signOutBox = await signOut.boundingBox();
     expect(signOutBox?.height).toBeGreaterThanOrEqual(44);
-    const deleteBox = await page
-      .getByRole('button', { name: 'Delete' })
+    // TRIP-UX-10: Delete lives behind the row's "more actions" button now;
+    // that button and the vote button are the row's controls.
+    const moreBox = await page
+      .getByRole('button', { name: /^More actions/ })
       .first()
       .boundingBox();
-    expect(deleteBox?.height).toBeGreaterThanOrEqual(44);
+    expect(moreBox?.height).toBeGreaterThanOrEqual(44);
+    expect(moreBox?.width).toBeGreaterThanOrEqual(44);
 
     // TRIP-UX-16: email and theme select leave the header on phones; the
     // theme control is reachable from Settings instead.

@@ -5,6 +5,7 @@
  */
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { StatusToast } from '@/components/StatusToast';
 import { OfflineReady } from './OfflineReady';
 import './globals.css';
 
@@ -105,6 +106,7 @@ export default function RootLayout({
         </a>
         <OfflineReady />
         {children}
+        <StatusToast />
       </body>
     </html>
   );

@@ -4,7 +4,6 @@ import { getBudgetSummary } from '@/server/budget';
 import { listExpenses } from '@/server/expenses';
 import { addExpenseAction, deleteExpenseAction } from './actions';
 import { ExpenseForm } from './ExpenseForm';
-import { Card } from '@/components/Card';
 
 export function budgetBannerText(
   spentMinor: number,
@@ -112,12 +111,29 @@ export function CategoryShareBar({
   );
 }
 
-export async function BudgetPanel({ tripId }: { tripId: string }) {
-  const [summary, expenses] = await Promise.all([
-    getBudgetSummary(tripId),
-    listExpenses(tripId),
-  ]);
+type BudgetFigures = {
+  isOverBudget: boolean;
+  remainingMinor: number;
+  spentMinor: number;
+  budgetMinor: number;
+  baseCurrency: string;
+};
 
+// The budget as one slim, collapsed summary bar (TRIP-UX-1, TRIP-UX-5): the
+// departure-board figure, "spent of planned", and a "Breakdown" control, with
+// everything else behind it. One component for the signed-in side column and
+// the public shared view, so the two cannot drift. The layout switches on the
+// bar's own width (a container query, not the viewport): one row when it has
+// room, stacked in the 26rem side column and on a phone.
+export function BudgetDetails({
+  summary,
+  open,
+  children,
+}: {
+  summary: BudgetFigures;
+  open?: boolean;
+  children: React.ReactNode;
+}) {
   // Display-only: how far over/under budget, as a magnitude for the large
   // departure-board figure. summary.remainingMinor (budgetMinor - spentMinor)
   // is already computed, untouched, in src/server/budget.ts — this just picks
@@ -126,36 +142,69 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
   const figureLabel = summary.isOverBudget ? 'over budget' : 'remaining';
 
   return (
-    <Card as="section" className="mb-10">
-      <h2 className="text-lg font-medium text-foreground mb-2">Budget</h2>
-
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
-        <span
-          className={`inline-flex items-baseline rounded-full px-4 py-1.5 font-mono tabular-nums text-4xl font-semibold ${
-            summary.isOverBudget
-              ? 'bg-danger text-danger-fg'
-              : 'bg-positive text-positive-fg'
-          }`}
-        >
-          {formatMoney(figureMinor, summary.baseCurrency)}
+    <details
+      open={open}
+      className="group @container rounded-lg border border-border bg-surface-raised"
+    >
+      <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 [&::-webkit-details-marker]:hidden">
+        <h2 className="text-15 font-medium text-foreground">Budget</h2>
+        <span className="ml-auto inline-flex items-center gap-1 text-sm text-muted-fg @md:order-last">
+          Breakdown
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-transform group-open:rotate-180"
+          >
+            <path d="M5 7.5 10 12.5 15 7.5" />
+          </svg>
         </span>
-        <span className="text-sm text-muted-fg">{figureLabel}</span>
-      </div>
+        <span className="basis-full @md:hidden" aria-hidden="true" />
+        <span className="flex items-baseline gap-2">
+          <span
+            className={`inline-flex items-baseline rounded-full px-3 py-0.5 font-mono tabular-nums text-xl font-semibold ${
+              summary.isOverBudget
+                ? 'bg-danger text-danger-fg'
+                : 'bg-positive text-positive-fg'
+            }`}
+          >
+            {formatMoney(figureMinor, summary.baseCurrency)}
+          </span>
+          <span className="text-sm text-muted-fg">{figureLabel}</span>
+        </span>
+        <span
+          className={
+            summary.isOverBudget
+              ? 'text-danger text-sm'
+              : 'text-zinc-700 dark:text-zinc-300 text-sm'
+          }
+        >
+          {budgetBannerText(
+            summary.spentMinor,
+            summary.budgetMinor,
+            summary.baseCurrency,
+          )}
+        </span>
+      </summary>
+      <div className="border-t border-border px-4 pb-4">{children}</div>
+    </details>
+  );
+}
 
-      <p
-        className={
-          summary.isOverBudget
-            ? 'text-danger text-sm'
-            : 'text-zinc-700 dark:text-zinc-300 text-sm'
-        }
-      >
-        {budgetBannerText(
-          summary.spentMinor,
-          summary.budgetMinor,
-          summary.baseCurrency,
-        )}
-      </p>
+export async function BudgetPanel({ tripId }: { tripId: string }) {
+  const [summary, expenses] = await Promise.all([
+    getBudgetSummary(tripId),
+    listExpenses(tripId),
+  ]);
 
+  return (
+    <BudgetDetails summary={summary} open={summary.unconvertedItems.length > 0}>
       {Object.keys(summary.byCategory).length > 0 && (
         <CategoryShareBar
           byCategory={summary.byCategory}
@@ -206,7 +255,8 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
                   <ConfirmSubmitButton
                     confirm="Delete this expense?"
                     pendingLabel="Deleting…"
-                    className="text-danger underline"
+                    doneMessage="Expense deleted"
+                    className="touch-target text-danger underline"
                   >
                     Delete
                   </ConfirmSubmitButton>
@@ -215,8 +265,17 @@ export async function BudgetPanel({ tripId }: { tripId: string }) {
             ))}
           </ul>
         )}
-        <ExpenseForm action={addExpenseAction.bind(null, tripId)} />
+        {/* TRIP-UX-5: the add-expense fields stay out of sight until asked
+            for, instead of four inputs on every visit. */}
+        <details className="rounded-lg border border-dashed border-border p-3">
+          <summary className="cursor-pointer py-2.5 text-sm font-medium text-foreground sm:py-0.5">
+            Add expense
+          </summary>
+          <div className="mt-3">
+            <ExpenseForm action={addExpenseAction.bind(null, tripId)} />
+          </div>
+        </details>
       </div>
-    </Card>
+    </BudgetDetails>
   );
 }

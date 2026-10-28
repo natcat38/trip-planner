@@ -9,10 +9,7 @@ import type {
   listSharedExpenses,
 } from '@/server/sharing';
 import { ThemeToggle } from '@/app/ThemeToggle';
-import {
-  budgetBannerText,
-  CategoryShareBar,
-} from '@/app/trips/[id]/BudgetPanel';
+import { BudgetDetails, CategoryShareBar } from '@/app/trips/[id]/BudgetPanel';
 import { DuplicateCopyForm } from './DuplicateCopyForm';
 import { SharedTripBody, type DayChip } from './SharedTripBody';
 
@@ -113,65 +110,11 @@ export function SharedTripView({
             opens by default only when an item could not be converted, since
             then the headline number comes with a caveat the visitor should
             see. */}
-        <details
-          open={budget.unconvertedItems.length > 0}
-          className="group mb-6 rounded-lg border border-border bg-surface-raised"
-        >
-          <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 [&::-webkit-details-marker]:hidden">
-            <h2 className="text-15 font-medium text-foreground">Budget</h2>
-            <span className="ml-auto inline-flex items-center gap-1 text-sm text-muted-fg sm:order-last">
-              Breakdown
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 20 20"
-                width="14"
-                height="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="transition-transform group-open:rotate-180"
-              >
-                <path d="M5 7.5 10 12.5 15 7.5" />
-              </svg>
-            </span>
-            <span className="basis-full sm:hidden" aria-hidden="true" />
-            {/* Same departure-board treatment as BudgetPanel.tsx, at summary
-                size. */}
-            <span className="flex items-baseline gap-2">
-              <span
-                className={`inline-flex items-baseline rounded-full px-3 py-0.5 font-mono tabular-nums text-xl font-semibold ${
-                  budget.isOverBudget
-                    ? 'bg-danger text-danger-fg'
-                    : 'bg-positive text-positive-fg'
-                }`}
-              >
-                {formatMoney(
-                  Math.abs(budget.remainingMinor),
-                  budget.baseCurrency,
-                )}
-              </span>
-              <span className="text-sm text-muted-fg">
-                {budget.isOverBudget ? 'over budget' : 'remaining'}
-              </span>
-            </span>
-            <span
-              className={
-                budget.isOverBudget
-                  ? 'text-danger text-sm'
-                  : 'text-zinc-700 dark:text-zinc-300 text-sm'
-              }
-            >
-              {budgetBannerText(
-                budget.spentMinor,
-                budget.budgetMinor,
-                budget.baseCurrency,
-              )}
-            </span>
-          </summary>
-
-          <div className="border-t border-border px-4 pb-4">
+        <div className="mb-6">
+          <BudgetDetails
+            summary={budget}
+            open={budget.unconvertedItems.length > 0}
+          >
             {Object.keys(budget.byCategory).length > 0 && (
               <CategoryShareBar
                 byCategory={budget.byCategory}
@@ -212,8 +155,8 @@ export function SharedTripView({
                 ))}
               </ul>
             )}
-          </div>
-        </details>
+          </BudgetDetails>
+        </div>
 
         {/* Read-only view: no pin selection, so no handler to pass — and a
             Server Component cannot pass one to a Client Component anyway. */}

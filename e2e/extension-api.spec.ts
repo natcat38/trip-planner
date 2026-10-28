@@ -237,8 +237,11 @@ test.describe('extension API', () => {
       await route.continue();
     });
 
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Generate a new token' }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Generate a new token' })
+      .click();
     await expect(page.getByRole('button', { name: 'Working…' })).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Revoking…' }),
@@ -248,8 +251,11 @@ test.describe('extension API', () => {
       page.getByRole('button', { name: 'Working…' }),
     ).not.toBeVisible();
 
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Revoke' }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Revoke' })
+      .click();
     await expect(page.getByRole('button', { name: 'Revoking…' })).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Working…' }),
@@ -262,11 +268,13 @@ test.describe('extension API', () => {
     request,
   }) => {
     const token = await generateToken(page);
-    // Revoke is now behind a native confirm (ConfirmSubmitButton); Playwright
-    // auto-dismisses dialogs by default, which would silently turn this click
-    // into a no-op, so accept it explicitly.
-    page.once('dialog', (dialog) => dialog.accept());
+    // Revoke is behind a confirm dialog (ConfirmSubmitButton): the click only
+    // opens it, so confirm explicitly.
     await page.getByRole('button', { name: /revoke/i }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: /revoke/i })
+      .click();
     await expect(page.getByText(/no token yet/i)).toBeVisible();
 
     const list = await request.get('/api/extension/trips', {
@@ -283,8 +291,12 @@ test.describe('extension API', () => {
     // the submit — without this, a confirm that doesn't cancel would be worse
     // than no confirm at all, and nothing else in the suite would catch it.
     const token = await generateToken(page);
-    page.once('dialog', (dialog) => dialog.dismiss());
     await page.getByRole('button', { name: /revoke/i }).click();
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Cancel' })
+      .click();
+    await expect(page.getByRole('alertdialog')).toBeHidden();
 
     // The dismissed confirm means the form never submitted — the "copy this
     // now" screen (and the token's own value) is still exactly as generateToken
