@@ -6,7 +6,6 @@
  * @packageDocumentation
  */
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   currentUserId,
@@ -24,6 +23,9 @@ import { BudgetPanel } from './BudgetPanel';
 import { Attachments } from './Attachments';
 import { Checklist } from './Checklist';
 import { ItineraryDays } from './ItineraryDays';
+import { SelectedMap, SelectionProvider } from './ItinerarySelection';
+import { TripBreadcrumb, TripTabs } from './TripNav';
+import { TripLayout } from './TripLayout';
 import { SharingPanel } from './SharingPanel';
 
 export async function generateMetadata({
@@ -91,81 +93,69 @@ export default async function TripItineraryPage({
       return Object.fromEntries(weather);
     })();
 
+  const pins = days
+    .flatMap((day) => day.activities)
+    .filter((activity) => activity.lat != null && activity.lng != null)
+    .map((activity) => ({
+      id: activity.id,
+      lat: activity.lat!,
+      lng: activity.lng!,
+      title: activity.title,
+      color: activity.pinColor,
+    }));
+
   return (
     <div className="flex flex-col flex-1 bg-surface">
       <main
         id="main"
         tabIndex={-1}
-        // Wider than the old max-w-3xl (768px): the two-pane layout
-        // ItineraryDays.tsx builds at lg (sticky map pane growing beyond its
-        // old h-80) needs the room. Below lg this is still a single column
-        // — a wider max-w has no effect until the viewport itself is wide
-        // enough to reach it, so B11's <=375px no-horizontal-scroll
-        // guarantee for BudgetPanel/SharingPanel/etc. is unaffected.
-        className="flex-1 w-full max-w-6xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
+        // Wide enough for the two-column layout TripLayout builds at lg
+        // (itinerary beside the budget, sharing and a sticky map). Below lg
+        // it is a single column, so B11's <=375px no-horizontal-scroll
+        // guarantee is unaffected.
+        className="flex-1 w-full max-w-6xl mx-auto py-4 px-4 sm:py-8 sm:px-8"
       >
-        <div className="flex flex-wrap items-baseline justify-between gap-y-2 mb-8">
-          <h1 className="text-4xl font-semibold text-foreground">
-            {trip.name}
-          </h1>
-          <nav aria-label="Trip actions" className="flex flex-wrap gap-x-4">
-            <Link
-              href="/trips"
-              className="touch-target text-sm text-muted-fg underline"
-            >
-              Back to trips
-            </Link>
-            <Link
-              href={`/trips/${trip.id}/places`}
-              className="touch-target text-sm text-muted-fg underline"
-            >
-              Places
-            </Link>
-            <Link
-              href={`/trips/${trip.id}/print`}
-              className="touch-target text-sm text-muted-fg underline"
-            >
-              Export PDF
-            </Link>
-            <Link
-              href={`/trips/${trip.id}/calendar.ics`}
-              className="touch-target text-sm text-muted-fg underline"
-            >
-              Add to Calendar
-            </Link>
-            <Link
-              href={`/trips/${trip.id}/edit`}
-              className="touch-target text-sm text-muted-fg underline"
-            >
-              Edit trip
-            </Link>
-          </nav>
-        </div>
+        <TripBreadcrumb tripName={trip.name} />
+        <h1 className="mb-3 text-4xl font-semibold text-foreground">
+          {trip.name}
+        </h1>
+        <TripTabs tripId={trip.id} current="itinerary" />
 
-        <BudgetPanel tripId={trip.id} />
-
-        {isOwner && shareStatus && (
-          <SharingPanel
-            tripId={trip.id}
-            status={shareStatus}
-            updatedAt={trip.updatedAt.toISOString()}
+        {/* The one client boundary shared by the map and the day rail:
+            picking a row or a pin selects the other. */}
+        <SelectionProvider>
+          <TripLayout
+            budget={<BudgetPanel tripId={trip.id} />}
+            map={<SelectedMap pins={pins} />}
+            days={
+              <ItineraryDays
+                tripId={trip.id}
+                days={days}
+                weatherPromise={weatherPromise}
+                votes={votes}
+              />
+            }
+            sharing={
+              isOwner && shareStatus ? (
+                <SharingPanel
+                  tripId={trip.id}
+                  status={shareStatus}
+                  updatedAt={trip.updatedAt.toISOString()}
+                />
+              ) : undefined
+            }
+            extras={
+              <>
+                <Checklist tripId={trip.id} items={checklist} />
+                <Attachments
+                  tripId={trip.id}
+                  attachments={attachments}
+                  usage={attachmentUsage}
+                />
+              </>
+            }
           />
-        )}
-
-        <ItineraryDays
-          tripId={trip.id}
-          days={days}
-          weatherPromise={weatherPromise}
-          votes={votes}
-        />
-
-        <Checklist tripId={trip.id} items={checklist} />
-
-        <Attachments
-          tripId={trip.id}
-          attachments={attachments}
-          usage={attachmentUsage}
-        />
+        </SelectionProvider>
       </main>
     </div>
   );

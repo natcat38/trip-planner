@@ -31,6 +31,7 @@ import { DayPlanner } from './DayPlanner';
 import { GuideSummary } from './GuideSummary';
 import { PlaceRow } from './PlaceRow';
 import { Card } from '@/components/Card';
+import { TripBreadcrumb, TripTabs } from '../TripNav';
 import { ExternalLink } from '@/components/ExternalLink';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
@@ -295,17 +296,11 @@ export default async function PlacesPage({
         tabIndex={-1}
         className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
       >
-        <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-4xl font-semibold text-foreground">
-            Places — {trip.name}
-          </h1>
-          <Link
-            href={`/trips/${trip.id}`}
-            className="text-sm text-muted-fg underline"
-          >
-            Back to itinerary
-          </Link>
-        </div>
+        <TripBreadcrumb tripName={trip.name} />
+        <h1 className="mb-3 text-4xl font-semibold text-foreground">
+          Places — {trip.name}
+        </h1>
+        <TripTabs tripId={trip.id} current="places" />
 
         <Suspense fallback={<GuideSkeleton />}>
           <GuidePanelAsync

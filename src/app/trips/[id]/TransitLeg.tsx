@@ -56,116 +56,142 @@ export function TransitLeg({
   );
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-sm">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-muted-fg">Getting there</span>
-        <ExternalLink
-          href={googleMapsTransitUrl(from, to, toLabel)}
-          rel="noopener noreferrer"
-          className="text-foreground underline"
-        >
-          Google Maps
-        </ExternalLink>
-        <ExternalLink
-          href={appleMapsTransitUrl(from, to, toLabel)}
-          rel="noopener noreferrer"
-          className="text-foreground underline"
-        >
-          Apple Maps
-        </ExternalLink>
-        <form action={formAction}>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
+    // TRIP-UX-10: one quiet line between two rows ("Getting there", with a
+    // chevron) instead of a 58px box on every gap; the map links and "Find
+    // transit" open on tap. Nothing is fetched by opening it (ADR-0010).
+    <li className="text-sm">
+      <details className="group">
+        <summary className="touch-target flex cursor-pointer list-none items-center gap-1 px-4 py-1 text-muted-fg [&::-webkit-details-marker]:hidden sm:min-h-8">
+          Getting there
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-transform group-open:rotate-180"
           >
-            {isPending ? 'Finding transit…' : 'Find transit'}
-          </button>
-        </form>
-      </div>
+            <path d="M5 7.5 10 12.5 15 7.5" />
+          </svg>
+        </summary>
+        <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border px-4 py-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <ExternalLink
+              href={googleMapsTransitUrl(from, to, toLabel)}
+              rel="noopener noreferrer"
+              className="text-foreground underline"
+            >
+              Google Maps
+            </ExternalLink>
+            <ExternalLink
+              href={appleMapsTransitUrl(from, to, toLabel)}
+              rel="noopener noreferrer"
+              className="text-foreground underline"
+            >
+              Apple Maps
+            </ExternalLink>
+            <form action={formAction}>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-fg hover:opacity-90 disabled:opacity-50"
+              >
+                {isPending ? 'Finding transit…' : 'Find transit'}
+              </button>
+            </form>
+          </div>
 
-      {/* Mounted unconditionally (not `{x && <div aria-live>}`) so the live
+          {/* Mounted unconditionally (not `{x && <div aria-live>}`) so the live
           region exists in the DOM before its content changes — a screen
           reader only announces updates to a region it already knows about. */}
-      <div aria-live="polite" aria-busy={isPending}>
-        {isPending && (
-          <p className="text-zinc-500 dark:text-zinc-400">Asking Transitous…</p>
-        )}
-
-        {!isPending && state.journeys !== undefined && (
-          <div className="flex flex-col gap-2">
-            {state.journeys === null && (
+          <div aria-live="polite" aria-busy={isPending}>
+            {isPending && (
               <p className="text-zinc-500 dark:text-zinc-400">
-                Couldn&apos;t reach transit routing just now — try the map links
-                above instead.
+                Asking Transitous…
               </p>
             )}
 
-            {state.journeys !== null && state.journeys.length === 0 && (
-              <p className="text-zinc-500 dark:text-zinc-400">
-                No transit route found in Transitous&apos;s data for this leg.
-                Coverage is per-operator, not per-city — this doesn&apos;t mean
-                there&apos;s no way to get there, just that it isn&apos;t in the
-                data. Try the map links above.
-              </p>
-            )}
+            {!isPending && state.journeys !== undefined && (
+              <div className="flex flex-col gap-2">
+                {state.journeys === null && (
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Couldn&apos;t reach transit routing just now — try the map
+                    links above instead.
+                  </p>
+                )}
 
-            {state.journeys !== null && state.journeys.length > 0 && (
-              <ul className="flex flex-col gap-2">
-                {state.journeys.map((journey, i) => (
-                  <li
-                    key={i}
-                    className="rounded border border-border px-3 py-2"
-                  >
-                    <details>
-                      <summary className="cursor-pointer text-foreground">
-                        {minutes(journey.durationSeconds)} · {journey.transfers}{' '}
-                        {journey.transfers === 1 ? 'transfer' : 'transfers'}
-                      </summary>
-                      <ul className="mt-2 flex flex-col gap-1 text-muted-fg">
-                        {journey.legs.map((leg, j) => (
-                          <li key={j}>
-                            {leg.mode}: {leg.from} → {leg.to} (
-                            {minutes(leg.durationSeconds)})
-                            {[leg.line, leg.headsign, leg.agency].some(
-                              Boolean,
-                            ) &&
-                              ` — ${[leg.line, leg.headsign, leg.agency]
-                                .filter(Boolean)
-                                .join(', ')}`}
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
-                  </li>
-                ))}
-              </ul>
-            )}
+                {state.journeys !== null && state.journeys.length === 0 && (
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    No transit route found in Transitous&apos;s data for this
+                    leg. Coverage is per-operator, not per-city — this
+                    doesn&apos;t mean there&apos;s no way to get there, just
+                    that it isn&apos;t in the data. Try the map links above.
+                  </p>
+                )}
 
-            {state.journeys !== null && (
-              <p className="text-xs text-muted-fg">
-                Transit data via{' '}
-                <ExternalLink
-                  href="https://transitous.org/sources/"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  Transitous
-                </ExternalLink>{' '}
-                and{' '}
-                <ExternalLink
-                  href="https://www.openstreetmap.org/copyright"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  OpenStreetMap
-                </ExternalLink>
-                .
-              </p>
+                {state.journeys !== null && state.journeys.length > 0 && (
+                  <ul className="flex flex-col gap-2">
+                    {state.journeys.map((journey, i) => (
+                      <li
+                        key={i}
+                        className="rounded border border-border px-3 py-2"
+                      >
+                        <details>
+                          <summary className="cursor-pointer text-foreground">
+                            {minutes(journey.durationSeconds)} ·{' '}
+                            {journey.transfers}{' '}
+                            {journey.transfers === 1 ? 'transfer' : 'transfers'}
+                          </summary>
+                          <ul className="mt-2 flex flex-col gap-1 text-muted-fg">
+                            {journey.legs.map((leg, j) => (
+                              <li key={j}>
+                                {leg.mode}: {leg.from} → {leg.to} (
+                                {minutes(leg.durationSeconds)})
+                                {[leg.line, leg.headsign, leg.agency].some(
+                                  Boolean,
+                                ) &&
+                                  ` — ${[leg.line, leg.headsign, leg.agency]
+                                    .filter(Boolean)
+                                    .join(', ')}`}
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {state.journeys !== null && (
+                  <p className="text-xs text-muted-fg">
+                    Transit data via{' '}
+                    <ExternalLink
+                      href="https://transitous.org/sources/"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      Transitous
+                    </ExternalLink>{' '}
+                    and{' '}
+                    <ExternalLink
+                      href="https://www.openstreetmap.org/copyright"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      OpenStreetMap
+                    </ExternalLink>
+                    .
+                  </p>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      </details>
     </li>
   );
 }

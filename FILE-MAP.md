@@ -19,7 +19,7 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/settings` | 6 | The Settings route (Phase 3 M3, ADR-0011): the signed-in user's own BYOK AI key — Groq or OpenRouter, pasted in and stored encrypted server-side (src/server/aiSettings.ts). |
 | `src/app/shared/[token]` | 6 | The public share-link route: a fully anonymous, session-less read-only view of a trip's itinerary and budget, reached only by its `shareToken`. |
 | `src/app/trips` | 6 | The trips list route: the signed-in user's trips overview and create/edit entry points (`new/`, `[id]/edit/`) for the Trip aggregate itself. |
-| `src/app/trips/[id]` | 15 | The single-trip route: itinerary days/activities and the multi-currency budget roll-up for one trip, every page here reached only via `requireTripAccess(tripId)` so a trip's nested resources can't be accessed by their own id alone. |
+| `src/app/trips/[id]` | 20 | The single-trip route: itinerary days/activities and the multi-currency budget roll-up for one trip, every page here reached only via `requireTripAccess(tripId)` so a trip's nested resources can't be accessed by their own id alone. |
 | `src/app/trips/[id]/activities/[activityId]/edit` | 1 | The activity edit route: loads one itinerary activity scoped to its trip via `requireActivity(tripId, activityId)` and pre-fills the shared ActivityForm, including its optional minor-units cost/currency fields. |
 | `src/app/trips/[id]/attachments/[attachmentId]` | 1 | Downloads one trip attachment. |
 | `src/app/trips/[id]/calendar.ics` | 1 | The .ics calendar export for one trip: every activity across all of the trip's days as an RFC 5545 VEVENT, downloadable/subscribable into any calendar app. |
@@ -27,8 +27,8 @@ block — an orientation gap, not an omission by the generator.
 | `src/app/trips/[id]/places` | 6 | The Places route (Phase 3 M1): a destination research and saved-places tray for one trip, reached only via `requireTripAccess(tripId)` like the rest of `src/app/trips/[id]/*`. |
 | `src/app/trips/[id]/print` | 2 | The print/export view: a light-mode-only (regardless of OS theme — printed output should stay ink-friendly), nav-free rendering of a trip's itinerary and budget summary, reached only via requireTripAccess. |
 | `src/app/trips/new` | 1 | The trip creation route: renders the shared TripForm bound to `createTripAction`, the entry point for starting a new Trip aggregate. |
-| `src/components` | 9 | The universal `rounded-lg border p-5` container — the panel wrapper that appears, byte-for-byte identical, around most of a trip page's sections (Budget, Sharing, Places, the settings panels, the shared-trip view). |
-| `src/lib` | 18 | Byte-size formatting, shared by the attachment server module and its client component. |
+| `src/components` | 11 | The universal `rounded-lg border p-5` container — the panel wrapper that appears, byte-for-byte identical, around most of a trip page's sections (Budget, Sharing, Places, the settings panels, the shared-trip view). |
+| `src/lib` | 19 | A one-way channel from any client component to the page's single status line (`StatusToast`, mounted in the root layout). |
 | `src/lib/ai` | 1 | BYOK AI layer: talks to the user's own Groq or OpenRouter API key over their shared OpenAI-compatible surface (`POST {base}/chat/completions`, `GET {base}/models`, `Authorization: Bearer {key}`) — see docs/adr/0009-gemini-free-tier-unusable-eea.md for why these two providers and not a Gemini-direct or app-held-key design. |
 | `src/lib/dayPlan` | 1 | Algorithmic day-plan candidate generation — the keyless path for Phase 3 M4. |
 | `src/lib/research` | 6 | Free, keyless destination-research data sources — currently OpenStreetMap via the Overpass API. |
@@ -36,4 +36,4 @@ block — an orientation gap, not an omission by the generator.
 | `e2e` | 1 | Canonical e2e sign-in: create a real User + Session row and hand the browser the authjs session cookie. |
 | `prisma` | 1 | Prisma schema and demo seed data: `schema.prisma` defines the Trip/Day/ Activity/Expense models, this script populates the public Fukuoka demo trip for `npm run db:seed` (local Postgres container, or prod by pointing DATABASE_URL at Neon) and prints its /shared/<token> link. |
 
-25 source directories, 117 files, 0 without a declared purpose.
+25 source directories, 125 files, 0 without a declared purpose.

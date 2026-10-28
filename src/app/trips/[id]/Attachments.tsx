@@ -47,7 +47,7 @@ export function Attachments({
   );
 
   return (
-    <details className="mb-8 rounded-lg border border-border p-4">
+    <details className="rounded-lg border border-border p-4">
       <summary className="cursor-pointer text-sm font-medium text-foreground">
         Attachments{attachments.length > 0 ? ` (${attachments.length})` : ''}
       </summary>
@@ -82,6 +82,7 @@ export function Attachments({
                 <ConfirmSubmitButton
                   confirm="Delete this file? It cannot be recovered."
                   pendingLabel="Deleting…"
+                  doneMessage="File deleted"
                   className="text-sm text-danger underline"
                 >
                   Delete

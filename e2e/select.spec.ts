@@ -52,10 +52,12 @@ test.describe('ActivityForm category select', () => {
   }) => {
     await page.goto(`/trips/${tripId}`);
 
+    // TRIP-UX-11: one "Add activity" button per day opens the form (the form
+    // is not mounted until then).
+    await page.getByRole('button', { name: 'Add activity' }).click();
     const addSection = page
-      .locator('details')
-      .filter({ hasText: 'Add activity' });
-    await addSection.locator('summary').click();
+      .locator('form')
+      .filter({ has: page.getByLabel('Title') });
 
     await addSection.getByLabel('Title').fill('Ride the bullet train');
     // CATEGORIES[0] ('Food') is the form's default — selecting a different

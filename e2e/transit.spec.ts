@@ -90,8 +90,11 @@ test.describe('transit leg, signed in', () => {
     const response = await page.goto(`/trips/${tripId}`);
     expect(response?.ok()).toBe(true);
 
+    // TRIP-UX-10: the leg is one "Getting there" line until opened.
     const transitLeg = page.getByText('Getting there');
     await expect(transitLeg).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Google Maps' })).toBeHidden();
+    await transitLeg.click();
 
     const googleLink = page.getByRole('link', { name: 'Google Maps' });
     const appleLink = page.getByRole('link', { name: 'Apple Maps' });

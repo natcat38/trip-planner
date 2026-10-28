@@ -96,7 +96,11 @@ test.describe('offline', () => {
         page.getByRole('heading', { name: 'Offline E2E Trip' }),
       ).toBeVisible();
       await expect(page.getByText('Nanzoin reclining Buddha')).toBeVisible();
-      await expect(page.getByRole('status')).toContainText(/offline/i);
+      // The page has two status regions now (this banner and the StatusToast
+      // acknowledgment line), so pick the banner by its text.
+      await expect(
+        page.getByRole('status').filter({ hasText: /offline/i }),
+      ).toBeVisible();
       // Map tiles are deliberately not cached (ADR-0015) — the map area has to
       // say so rather than render an empty grey square.
       await expect(page.getByText(/map needs a connection/i)).toBeVisible();
