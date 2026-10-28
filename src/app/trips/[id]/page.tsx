@@ -23,7 +23,7 @@ import { BudgetPanel } from './BudgetPanel';
 import { Attachments } from './Attachments';
 import { Checklist } from './Checklist';
 import { ItineraryDays } from './ItineraryDays';
-import { SelectedMap, SelectionProvider } from './ItinerarySelection';
+import { SelectedMap } from './ItinerarySelection';
 import { TripBreadcrumb, TripTabs } from './TripNav';
 import { TripLayout } from './TripLayout';
 import { SharingPanel } from './SharingPanel';
@@ -123,39 +123,38 @@ export default async function TripItineraryPage({
 
         {/* The one client boundary shared by the map and the day rail:
             picking a row or a pin selects the other. */}
-        <SelectionProvider>
-          <TripLayout
-            budget={<BudgetPanel tripId={trip.id} />}
-            map={<SelectedMap pins={pins} />}
-            days={
-              <ItineraryDays
+
+        <TripLayout
+          budget={<BudgetPanel tripId={trip.id} />}
+          map={<SelectedMap pins={pins} />}
+          days={
+            <ItineraryDays
+              tripId={trip.id}
+              days={days}
+              weatherPromise={weatherPromise}
+              votes={votes}
+            />
+          }
+          sharing={
+            isOwner && shareStatus ? (
+              <SharingPanel
                 tripId={trip.id}
-                days={days}
-                weatherPromise={weatherPromise}
-                votes={votes}
+                status={shareStatus}
+                updatedAt={trip.updatedAt.toISOString()}
               />
-            }
-            sharing={
-              isOwner && shareStatus ? (
-                <SharingPanel
-                  tripId={trip.id}
-                  status={shareStatus}
-                  updatedAt={trip.updatedAt.toISOString()}
-                />
-              ) : undefined
-            }
-            extras={
-              <>
-                <Checklist tripId={trip.id} items={checklist} />
-                <Attachments
-                  tripId={trip.id}
-                  attachments={attachments}
-                  usage={attachmentUsage}
-                />
-              </>
-            }
-          />
-        </SelectionProvider>
+            ) : undefined
+          }
+          extras={
+            <>
+              <Checklist tripId={trip.id} items={checklist} />
+              <Attachments
+                tripId={trip.id}
+                attachments={attachments}
+                usage={attachmentUsage}
+              />
+            </>
+          }
+        />
       </main>
     </div>
   );

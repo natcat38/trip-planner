@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Where a trip page's parts sit (TRIP-UX-5, decision D2): the itinerary is the
  * page, the rest is arranged around it.
@@ -11,9 +13,18 @@
  *
  * The parts are slots, not duplicated markup: each is rendered once and only
  * moved by the grid, so there is one set of forms and one tab order.
+ *
+ * This is a client component that owns the map/row selection provider, on
+ * purpose. With the provider in page.tsx and this layout as a server
+ * component inside it, a server action's result (a vote, an added activity, a
+ * delete) was received but not committed in a production build, so the
+ * button stayed on "Saving…" until some other state update happened.
+ * Bisected on `next start`; `next dev` did not show it. The slots are still
+ * server-rendered nodes passed in as props.
  * @packageDocumentation
  */
 import type { ReactNode } from 'react';
+import { SelectionProvider } from './ItinerarySelection';
 
 export function TripLayout({
   budget,
@@ -35,22 +46,24 @@ export function TripLayout({
     // sticky child has room to travel), extras. The itinerary spans the
     // first three. `min-w-0` on the left column stops a long place name from
     // widening it past its track.
-    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr_auto] lg:gap-x-8 lg:gap-y-4">
-      <div className="lg:col-start-2 lg:row-start-1">{budget}</div>
-      <div className="lg:col-start-2 lg:row-start-3">
-        {/* top-20 clears the sticky header (about 53px) and the offline
+    <SelectionProvider>
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr_auto] lg:gap-x-8 lg:gap-y-4">
+        <div className="lg:col-start-2 lg:row-start-1">{budget}</div>
+        <div className="lg:col-start-2 lg:row-start-3">
+          {/* top-20 clears the sticky header (about 53px) and the offline
             banner's space. */}
-        <div className="lg:sticky lg:top-20">{map}</div>
+          <div className="lg:sticky lg:top-20">{map}</div>
+        </div>
+        <div className="min-w-0 lg:col-start-1 lg:row-span-3 lg:row-start-1">
+          {days}
+        </div>
+        {sharing && (
+          <div className="lg:col-start-2 lg:row-start-2">{sharing}</div>
+        )}
+        <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-4">
+          {extras}
+        </div>
       </div>
-      <div className="min-w-0 lg:col-start-1 lg:row-span-3 lg:row-start-1">
-        {days}
-      </div>
-      {sharing && (
-        <div className="lg:col-start-2 lg:row-start-2">{sharing}</div>
-      )}
-      <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-4">
-        {extras}
-      </div>
-    </div>
+    </SelectionProvider>
   );
 }
