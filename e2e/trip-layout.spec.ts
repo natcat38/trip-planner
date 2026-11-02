@@ -50,10 +50,9 @@ test.describe('trip page layout', () => {
     await expect(
       page.getByRole('navigation', { name: 'Breadcrumb' }),
     ).toContainText('Layout E2E Trip');
-    await expect(page.getByRole('link', { name: 'Itinerary' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    await expect(
+      page.getByRole('link', { name: 'Itinerary', exact: true }),
+    ).toHaveAttribute('aria-current', 'page');
     await expect(
       page.getByRole('link', { name: 'Places' }),
     ).not.toHaveAttribute('aria-current', 'page');
