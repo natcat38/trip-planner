@@ -12,6 +12,7 @@ import { listTrips } from '@/server/trips';
 import { listPendingInvites } from '@/server/sharing';
 import { InvitesBanner } from './InvitesBanner';
 import { duplicateTripAction } from './actions';
+import { PAGE_SHELL } from '@/components/pageShell';
 
 // Departure status for the trip card badge. Trip.startDate/endDate are
 // stored as UTC-midnight calendar days (same convention formatDay/
@@ -47,7 +48,7 @@ function departureStatus(
 }
 
 export const metadata: Metadata = {
-  title: 'Your trips · Trip Planner',
+  title: 'Your trips',
 };
 
 export default async function TripsPage() {
@@ -59,11 +60,7 @@ export default async function TripsPage() {
 
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <InvitesBanner invites={invites} />
 
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">

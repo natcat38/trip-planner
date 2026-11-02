@@ -16,9 +16,10 @@ import { getExtensionTokenStatus } from '@/server/extensionToken';
 import { AiKeyPanel } from './AiKeyPanel';
 import { ExtensionTokenPanel } from './ExtensionTokenPanel';
 import { Card } from '@/components/Card';
+import { PAGE_SHELL } from '@/components/pageShell';
 
 export const metadata: Metadata = {
-  title: 'Settings · Trip Planner',
+  title: 'Settings',
 };
 
 export default async function SettingsPage() {
@@ -29,11 +30,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Settings</h1>
           <nav aria-label="Settings actions">

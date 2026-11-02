@@ -1,8 +1,9 @@
-import Link from 'next/link';
 import { signOut } from '@/auth';
 import { ThemeToggle } from '@/app/ThemeToggle';
 import { currentUserIdentity } from '@/server/auth-scope';
+import { HeaderRow } from './HeaderRow';
 import { SignOutButton } from './SignOutButton';
+import { Wordmark } from './Wordmark';
 
 // AppHeader only renders on authed routes (trips/settings layouts, both
 // behind src/proxy.ts), so a session is guaranteed here — currentUserIdentity
@@ -27,14 +28,10 @@ export async function AppHeader() {
     // globals.css gives <html> a matching scroll-padding-top so the skip
     // link's #main jump and keyboard focus never land under this bar.
     <header className="sticky top-[var(--offline-banner-h,0px)] z-40 w-full border-b border-border bg-surface print:hidden">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-1 sm:px-8 sm:py-3">
+      <HeaderRow>
         <div className="flex min-w-0 items-center gap-3">
-          <Link
-            href="/trips"
-            className="touch-target shrink-0 text-sm font-medium text-foreground underline"
-          >
-            Trip Planner
-          </Link>
+          {/* G3 A: the text wordmark (Geist, accent colour), not an underlined link. */}
+          <Wordmark href="/trips" />
           {/* TRIP-UX-16: below sm the email truncated to "demo@..." and
               fought the theme select for width; it moves to Settings. */}
           <span className="hidden min-w-0 truncate text-sm text-muted-fg sm:inline">
@@ -49,7 +46,7 @@ export async function AppHeader() {
           </div>
           <SignOutButton action={doSignOut} />
         </div>
-      </div>
+      </HeaderRow>
     </header>
   );
 }

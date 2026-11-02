@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HEADER_WIDTH, PAGE_SHELL } from '@/components/pageShell';
 import { Wordmark } from '@/components/Wordmark';
 import { dayAnchorId } from '@/lib/dayAnchor';
 import { formatMoney } from '@/lib/money';
@@ -64,7 +65,9 @@ export function SharedTripView({
           TODO(Natalie): a "View a sample trip" / "Plan your own trip" call to
           action belongs in this row once the copy is decided. */}
       <header className="w-full border-b border-border print:hidden">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-1 sm:px-8 sm:py-3">
+        <div
+          className={`mx-auto flex w-full ${HEADER_WIDTH.wide} items-center justify-between gap-3 px-4 py-1 sm:px-8 sm:py-3`}
+        >
           <div className="flex min-w-0 items-center gap-3">
             <Wordmark />
             <span className="hidden rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-fg sm:inline-flex">
@@ -79,7 +82,7 @@ export function SharedTripView({
         tabIndex={-1}
         // Same width as the signed-in trip page (max-w-6xl) so the two-pane
         // layout below has the room the map pane needs.
-        className="flex-1 w-full max-w-6xl mx-auto py-6 px-4 sm:py-10 sm:px-8"
+        className={PAGE_SHELL.shared}
       >
         {/* Cover header (ADR-0019 M10 C6): trip name, destinations, date
             range, and day count — every field here already comes from

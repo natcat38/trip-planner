@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+import { PAGE_SHELL } from '@/components/pageShell';
+
 function Block({ className }: { className: string }) {
   return <div className={`animate-pulse rounded bg-border ${className}`} />;
 }
@@ -14,11 +16,7 @@ function Block({ className }: { className: string }) {
 export default function TripsLoading() {
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <div className="flex flex-wrap items-center justify-between gap-y-2 mb-8">
           <Block className="h-10 w-48" />
           <div className="flex items-center gap-4">

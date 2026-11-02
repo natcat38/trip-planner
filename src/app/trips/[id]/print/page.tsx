@@ -104,7 +104,7 @@ export async function generateMetadata({
   const { id } = await params;
   try {
     const trip = await requireTripAccess(id);
-    return { title: `Print — ${trip.name} · Trip Planner` };
+    return { title: `Print — ${trip.name}` };
   } catch {
     return {};
   }

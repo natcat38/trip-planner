@@ -16,6 +16,7 @@ import {
 import { deleteTripAction, updateTripAction } from '../../actions';
 import { TripForm } from '../../TripForm';
 import { DeleteTripSection } from './DeleteTripSection';
+import { PAGE_SHELL } from '@/components/pageShell';
 
 export async function generateMetadata({
   params,
@@ -25,7 +26,7 @@ export async function generateMetadata({
   const { id } = await params;
   try {
     const trip = await requireTripAccess(id);
-    return { title: `Edit ${trip.name} · Trip Planner` };
+    return { title: `Edit ${trip.name}` };
   } catch {
     return {};
   }
@@ -63,11 +64,7 @@ export default async function EditTripPage({
 
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-4xl font-semibold text-foreground">Edit trip</h1>
           <Link

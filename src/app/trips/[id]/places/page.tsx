@@ -33,6 +33,7 @@ import { PlaceRow } from './PlaceRow';
 import { Card } from '@/components/Card';
 import { TripBreadcrumb, TripTabs } from '../TripNav';
 import { ExternalLink } from '@/components/ExternalLink';
+import { PAGE_SHELL } from '@/components/pageShell';
 
 // Vercel Hobby's 10s default is a real risk given observed Overpass 504s and
 // retries (see knowledge/integrations/research-sources.md).
@@ -222,7 +223,7 @@ export async function generateMetadata({
   const { id } = await params;
   try {
     const trip = await requireTripAccess(id);
-    return { title: `Places — ${trip.name} · Trip Planner` };
+    return { title: `Places — ${trip.name}` };
   } catch {
     return {};
   }
@@ -291,11 +292,7 @@ export default async function PlacesPage({
 
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 sm:py-16 sm:px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <TripBreadcrumb tripName={trip.name} />
         <h1 className="mb-3 text-4xl font-semibold text-foreground">
           Places — {trip.name}
