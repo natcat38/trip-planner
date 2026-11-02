@@ -7,19 +7,16 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createTripAction } from '../actions';
 import { TripForm } from '../TripForm';
+import { PAGE_SHELL } from '@/components/pageShell';
 
 export const metadata: Metadata = {
-  title: 'Create a trip · Trip Planner',
+  title: 'Create a trip',
 };
 
 export default function NewTripPage() {
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <div className="flex items-baseline justify-between mb-8">
           <h1 className="text-4xl font-semibold text-foreground">
             Create a trip

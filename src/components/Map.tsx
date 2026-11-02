@@ -192,16 +192,16 @@ export function Map({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, pinsKey]);
 
-  // Same height class on every return path (placeholders included) so the
-  // pane doesn't jump in size as pins/offline/token state changes. Grows
-  // beyond the old flat h-80 only at lg, where the two-pane trip-detail
-  // layout (ItineraryDays.tsx) gives the sticky right-hand pane the room —
-  // below lg it's still h-80, unchanged from before this task.
+  // TRIP-UX-13: the empty and no-token states are a short note (min-h-24),
+  // not a map-sized dashed box: with nothing to plot there is no map to keep
+  // from jumping, and a 36rem box pushed the next action half a screen down.
+  // The map itself and the offline note (pins exist, the map returns on
+  // reconnect) keep the same height class so the pane does not change size
+  // when connectivity does. The height grows beyond h-80 only at lg, where
+  // the two-pane trip layout gives the sticky right-hand pane the room.
   if (pins.length === 0) {
     return (
-      <div
-        className={`${heightClass} flex items-center justify-center rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400`}
-      >
+      <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
         No geocoded places yet — add a place to an activity to see it on the
         map.
       </div>
@@ -220,9 +220,7 @@ export function Map({
 
   if (!hasToken) {
     return (
-      <div
-        className={`${heightClass} flex items-center justify-center rounded-lg border border-dashed border-border p-8 text-center text-sm text-zinc-500 dark:text-zinc-400`}
-      >
+      <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
         Map unavailable — no Mapbox token configured.
       </div>
     );

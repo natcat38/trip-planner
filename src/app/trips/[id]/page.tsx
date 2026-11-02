@@ -22,6 +22,7 @@ import { listVotesForTrip } from '@/server/votes';
 import { BudgetPanel } from './BudgetPanel';
 import { Attachments } from './Attachments';
 import { Checklist } from './Checklist';
+import { PAGE_SHELL } from '@/components/pageShell';
 import { ItineraryDays } from './ItineraryDays';
 import { SelectedMap } from './ItinerarySelection';
 import { TripBreadcrumb, TripTabs } from './TripNav';
@@ -36,7 +37,7 @@ export async function generateMetadata({
   const { id } = await params;
   try {
     const trip = await requireTripAccess(id);
-    return { title: `${trip.name} · Trip Planner` };
+    return { title: trip.name };
   } catch {
     return {};
   }
@@ -113,8 +114,17 @@ export default async function TripItineraryPage({
         // (itinerary beside the budget, sharing and a sticky map). Below lg
         // it is a single column, so B11's <=375px no-horizontal-scroll
         // guarantee is unaffected.
-        className="flex-1 w-full max-w-6xl mx-auto py-4 px-4 sm:py-8 sm:px-8"
+        className={PAGE_SHELL.wide}
       >
+        {/* TRIP-UX-18: the page's real content is the itinerary; the budget
+            summary, sharing and map come first in the DOM, so a keyboard user
+            gets a way past them (next to the layout's "Skip to content"). */}
+        <a
+          href="#itinerary"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-surface-raised focus:p-2"
+        >
+          Skip to itinerary
+        </a>
         <TripBreadcrumb tripName={trip.name} />
         <h1 className="mb-3 text-4xl font-semibold text-foreground">
           {trip.name}

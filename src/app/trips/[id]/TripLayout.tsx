@@ -24,6 +24,7 @@
  * @packageDocumentation
  */
 import type { ReactNode } from 'react';
+import { TRIP_GRID } from '@/components/pageShell';
 import { SelectionProvider } from './ItinerarySelection';
 
 export function TripLayout({
@@ -47,7 +48,7 @@ export function TripLayout({
     // first three. `min-w-0` on the left column stops a long place name from
     // widening it past its track.
     <SelectionProvider>
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr_auto] lg:gap-x-8 lg:gap-y-4">
+      <div className={TRIP_GRID}>
         <div className="lg:col-start-2 lg:row-start-1">{budget}</div>
         <div className="lg:col-start-2 lg:row-start-3">
           {/* top-20 clears the sticky header (about 53px) and the offline

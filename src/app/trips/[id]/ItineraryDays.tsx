@@ -201,7 +201,7 @@ export function ItineraryDays({
     // stop marker. The map beside it, and the selection state the two
     // share, live in trips/[id]/page.tsx's TripLayout. `min-w-0` keeps a
     // long activity/place name from forcing the column wider than its pane.
-    <div className="relative min-w-0">
+    <div id="itinerary" tabIndex={-1} className="relative min-w-0">
       <div
         aria-hidden
         className="absolute left-[7px] top-2 bottom-2 w-px bg-border"

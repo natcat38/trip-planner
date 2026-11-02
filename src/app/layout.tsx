@@ -6,6 +6,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { StatusToast } from '@/components/StatusToast';
+import { SITE_DESCRIPTION, SITE_NAME, siteOrigin } from '@/lib/siteMeta';
 import { OfflineReady } from './OfflineReady';
 import './globals.css';
 
@@ -42,9 +43,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Trip Planner',
-  description:
-    'Plan a multi-city trip: day-by-day itinerary, multi-currency budget, and maps.',
+  // Pages set a bare title ("Your trips"); the template adds the product
+  // name once, so no page repeats it (TRIP-UX-19).
+  title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  // Absolute base for the og:image and twitter:image URLs.
+  metadataBase: siteOrigin(),
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
   // `src/app/manifest.ts` is linked automatically by Next's file convention;
   // this block is the iOS half, which reads its own meta tags rather than the
   // manifest. Worth the three lines: a phone on a foreign network is the

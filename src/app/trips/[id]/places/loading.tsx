@@ -9,6 +9,7 @@
  */
 
 import { Card } from '@/components/Card';
+import { PAGE_SHELL } from '@/components/pageShell';
 
 function Block({ className }: { className: string }) {
   return <div className={`animate-pulse rounded bg-border ${className}`} />;
@@ -17,11 +18,7 @@ function Block({ className }: { className: string }) {
 export default function PlacesLoading() {
   return (
     <div className="flex flex-col flex-1 bg-surface">
-      <main
-        id="main"
-        tabIndex={-1}
-        className="flex-1 w-full max-w-3xl mx-auto py-16 px-8"
-      >
+      <main id="main" tabIndex={-1} className={PAGE_SHELL.narrow}>
         <div className="flex items-baseline justify-between mb-8">
           <Block className="h-8 w-64" />
           <Block className="h-4 w-32" />
