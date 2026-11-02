@@ -24,3 +24,4 @@ for a curated subset with more context.
 | [0017](0017-browser-extension-token-auth.md) | The browser extension authenticates with a token, and geocodes server-side |
 | [0018](0018-shared-trips-listing-and-phase-4-dispositions.md) | Shared trips are listable, and two Phase 3 open items stay closed |
 | [0019](0019-visual-design-direction.md) | Visual design direction — "departure board" |
+| [0020](0020-two-pane-trip-pages-and-text-wordmark.md) | Two-pane trip pages and a text-wordmark identity |
