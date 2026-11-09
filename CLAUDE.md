@@ -34,8 +34,9 @@ One-time account-side setup (Vercel/Neon projects, secrets): `docs/deploy-setup.
 - **Authorization:** nested resources (Day/Activity/Expense) only via
   `requireTripAccess(tripId)` (owner or accepted collaborator), never by their own id alone.
   Deleting a trip and managing its sharing use `requireTripOwner(tripId)`.
-- **Public share route:** `/shared/[token]` is the ONLY route with no auth gate
-  (`src/proxy.ts` matches `/trips/:path*` only). Anything it returns is world-readable —
+- **Public share route:** `/shared/[token]` is the only route with no auth gate that reads
+  trip data (`src/proxy.ts` matches `/trips` and `/settings` only; `/`, `/signin` and `/offline`
+  are public too but read no data, ADR-0021). Anything it returns is world-readable —
   strip owner/token fields in `src/server/sharing.ts`, never at the component layer.
 - **Concurrency:** mutations carry `updatedAt`, reject stale writes (ADR-0003).
 - **Secrets:** `.env` (gitignored) / Vercel env only. `.env.example` = names only.

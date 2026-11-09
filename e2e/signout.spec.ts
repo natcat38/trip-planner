@@ -14,5 +14,5 @@ test('signed-in user can sign out and loses access', async ({
   await page.waitForURL('/');
   await page.goto('/trips');
   // proxy.ts guards /trips — an unauthenticated visit is redirected to sign-in.
-  await expect(page).toHaveURL(/\/api\/auth\/signin/);
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
 });

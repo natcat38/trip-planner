@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { ExternalLink } from '@/components/ExternalLink';
+import { SAMPLE_TRIP_PATH } from '@/lib/siteMeta';
 
 const FEATURES = [
   {
@@ -58,8 +59,16 @@ export default function Home() {
           >
             Go to my trips
           </Link>
+          {/* Secondary: look before signing in (owner decision 2026-11-09,
+              ADR-0021). The demo trip is a public read-only share link. */}
+          <Link
+            href={SAMPLE_TRIP_PATH}
+            className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground hover:bg-surface-raised"
+          >
+            View a sample trip
+          </Link>
           <span className="text-sm text-zinc-500 dark:text-zinc-400">
-            You’ll be asked to sign in first.
+            My trips asks you to sign in first.
           </span>
         </div>
 

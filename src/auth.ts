@@ -14,4 +14,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: 'database' },
   providers: [Google, GitHub],
+  // The branded page (ADR-0021); errors from a provider round trip land on
+  // it too, as ?error=<code>.
+  pages: { signIn: '/signin' },
 });

@@ -10,7 +10,7 @@ test('the print page redirects to sign-in when signed out', async ({
   page,
 }) => {
   const response = await page.goto('/trips/nonexistent-id/print');
-  await expect(page).toHaveURL(/\/api\/auth\/signin/);
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
   expect(response?.ok()).toBe(true);
 });
 

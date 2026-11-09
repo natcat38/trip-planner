@@ -148,7 +148,7 @@ test.describe('attachments', () => {
     );
 
     // src/proxy.ts matches /trips/:path*, so this never reaches the handler.
-    await expect(page).toHaveURL(/\/api\/auth\/signin/);
+    await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
     expect(await response!.text()).not.toContain('flight-confirmation');
   });
 });
