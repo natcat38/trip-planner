@@ -60,10 +60,10 @@ export function SharedTripView({
     <div className="flex flex-col flex-1 bg-surface">
       {/* No AppHeader — this route is the one other unauthenticated page
           (src/proxy.ts doesn't match /shared/*), so it gets its own slim
-          header: the product name linking home, a read-only badge (from sm;
-          on a phone it sits under the trip title), and the theme control.
-          TODO(Natalie): a "View a sample trip" / "Plan your own trip" call to
-          action belongs in this row once the copy is decided. */}
+          header: the product name linking home, a read-only badge and a
+          "Plan your own trip" link (owner decision 2026-11-09, ADR-0021) from
+          sm (on a phone both sit under the trip title, where the header row
+          has no room for them), and the theme control. */}
       <header className="w-full border-b border-border print:hidden">
         <div
           className={`mx-auto flex w-full ${HEADER_WIDTH.wide} items-center justify-between gap-3 px-4 py-1 sm:px-8 sm:py-3`}
@@ -74,7 +74,15 @@ export function SharedTripView({
               Read-only shared view
             </span>
           </div>
-          <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/trips"
+              className="touch-target hidden rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90 sm:inline-flex"
+            >
+              Plan your own trip
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main
@@ -104,9 +112,17 @@ export function SharedTripView({
           · <span className="font-mono tabular-nums">{days.length}</span>{' '}
           {days.length === 1 ? 'day' : 'days'}
         </p>
-        <p className="mb-5 inline-flex rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-fg sm:hidden print:hidden">
-          Read-only shared view
-        </p>
+        <div className="mb-5 flex flex-wrap items-center gap-3 sm:hidden print:hidden">
+          <p className="inline-flex rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-fg">
+            Read-only shared view
+          </p>
+          <Link
+            href="/trips"
+            className="touch-target rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg hover:opacity-90"
+          >
+            Plan your own trip
+          </Link>
+        </div>
 
         {/* TRIP-UX-1: the budget is one slim summary bar; the breakdown
             (categories, unconverted items, expense list) is behind it. It

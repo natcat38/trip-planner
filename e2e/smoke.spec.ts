@@ -31,7 +31,7 @@ test('the landing page links into the app', async ({ page }) => {
 
   // /trips is auth-gated, so a signed-out visitor lands on sign-in — the point
   // is that the link goes into the app rather than nowhere.
-  await expect(page).toHaveURL(/\/api\/auth\/signin|\/trips/);
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=|\/trips/);
 });
 
 // B10: the skip link must be the very first focusable thing in the body (so
@@ -51,4 +51,31 @@ test('the skip link is reachable on the first Tab and moves focus to #main', asy
 
   await page.keyboard.press('Enter');
   await expect(page.locator('#main')).toBeFocused();
+});
+
+test('the landing page offers a sample trip that needs no sign-in', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('link', { name: 'View a sample trip' }),
+  ).toHaveAttribute('href', /^\/shared\//);
+});
+
+// ADR-0021: the branded sign-in page replaces Auth.js's default one.
+test('a signed-out visit to /trips lands on the branded sign-in page', async ({
+  page,
+}) => {
+  await page.goto('/trips');
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=%2Ftrips/);
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Continue with Google' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Continue with GitHub' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: /view a sample trip, no sign-in/i }),
+  ).toHaveAttribute('href', /^\/shared\//);
 });

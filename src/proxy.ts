@@ -4,8 +4,13 @@ import { auth } from './auth';
 // Next.js 16 renamed middleware.ts -> proxy.ts (middleware file convention deprecated).
 export const proxy = auth((req) => {
   if (!req.auth) {
-    const signInUrl = new URL('/api/auth/signin', req.nextUrl.origin);
-    signInUrl.searchParams.set('callbackUrl', req.nextUrl.href);
+    // The branded page (ADR-0021). A bare path, not the full URL: the page
+    // accepts only same-site paths as callbackUrl.
+    const signInUrl = new URL('/signin', req.nextUrl.origin);
+    signInUrl.searchParams.set(
+      'callbackUrl',
+      `${req.nextUrl.pathname}${req.nextUrl.search}`,
+    );
     return NextResponse.redirect(signInUrl);
   }
 });

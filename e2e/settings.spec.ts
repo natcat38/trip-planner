@@ -12,7 +12,7 @@ test('the settings page redirects to sign-in when signed out', async ({
   page,
 }) => {
   const response = await page.goto('/settings');
-  await expect(page).toHaveURL(/\/api\/auth\/signin/);
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
   expect(response?.ok()).toBe(true);
 });
 
@@ -42,7 +42,7 @@ test.describe('settings, signed in', () => {
     page,
   }) => {
     await page.goto('/settings');
-    await expect(page).not.toHaveURL(/\/api\/auth\/signin/);
+    await expect(page).not.toHaveURL(/\/signin\?callbackUrl=/);
 
     const field = page.locator('input[type="password"]').first();
     await expect(field).toBeVisible();
@@ -62,7 +62,7 @@ test.describe('settings, signed in', () => {
     // the manageExtensionTokenAction server action and its crypto, which is
     // this panel's own action-layer concern, not this a11y task's.
     await page.goto('/settings');
-    await expect(page).not.toHaveURL(/\/api\/auth\/signin/);
+    await expect(page).not.toHaveURL(/\/signin\?callbackUrl=/);
 
     const liveRegion = page.locator('[aria-live="polite"]');
     await expect(liveRegion).toHaveCount(1);

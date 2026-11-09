@@ -11,7 +11,7 @@ test('the places page redirects to sign-in when signed out', async ({
   page,
 }) => {
   const response = await page.goto('/trips/nonexistent-id/places');
-  await expect(page).toHaveURL(/\/api\/auth\/signin/);
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
   expect(response?.ok()).toBe(true);
 });
 

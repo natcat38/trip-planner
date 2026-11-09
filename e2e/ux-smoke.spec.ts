@@ -40,7 +40,7 @@ test.describe('ux-smoke', () => {
   }) => {
     const response = await page.goto('/trips');
     // proxy.ts guards /trips (see e2e/signout.spec.ts / sharing.spec.ts).
-    await expect(page).toHaveURL(/\/api\/auth\/signin/);
+    await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
     expect(response?.ok()).toBe(true);
 
     // src/auth.ts configures exactly these two providers.

@@ -27,8 +27,10 @@ signed out.
 
 To see the rest, run it locally — see [Running it](#running-it) below.
 
-(The same trip URL and share token are hardcoded in `package.json`'s `test:e2e:prod` script —
-update both together if the demo trip is ever reseeded or the token rotated.)
+(The same share token lives in three places: this link, `SAMPLE_TRIP_PATH` in
+`src/lib/siteMeta.ts` (the landing and sign-in pages link to it), and `package.json`'s
+`test:e2e:prod` script. Update all three together if the demo trip is ever reseeded or the token
+rotated.)
 
 ## Architecture
 

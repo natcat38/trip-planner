@@ -178,7 +178,7 @@ test.describe('offline', () => {
       // End the session the way an expiry or a sign-out would.
       await db.session.deleteMany({ where: { userId: user.id } });
       await page.goto(`/trips/${trip.id}`);
-      await expect(page).toHaveURL(/\/api\/auth\/signin/);
+      await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
 
       expect(
         await page.evaluate(

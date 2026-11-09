@@ -153,7 +153,7 @@ test.describe('sharing', () => {
     page,
   }) => {
     const response = await page.goto('/trips');
-    await expect(page).toHaveURL(/\/api\/auth\/signin/);
+    await expect(page).toHaveURL(/\/signin\?callbackUrl=/);
     expect(response?.ok()).toBe(true);
   });
 
