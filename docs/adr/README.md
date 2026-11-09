@@ -25,3 +25,5 @@ for a curated subset with more context.
 | [0018](0018-shared-trips-listing-and-phase-4-dispositions.md) | Shared trips are listable, and two Phase 3 open items stay closed |
 | [0019](0019-visual-design-direction.md) | Visual design direction — "departure board" |
 | [0020](0020-two-pane-trip-pages-and-text-wordmark.md) | Two-pane trip pages and a text-wordmark identity |
+| [0021](0021-sample-trip-ctas-and-branded-sign-in.md) | Sample-trip calls to action and a branded sign-in page |
+| [0022](0022-verify-production-deploy.md) | CI waits for production to serve the commit it deployed |

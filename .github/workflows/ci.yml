@@ -80,3 +80,19 @@ jobs:
         run: npx prisma migrate deploy
       - name: Trigger Vercel deploy
         run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+      # ADR-0022: the hook only queues a build. Wait until production serves
+      # this commit (or a later one, since the hook builds main's head), so a
+      # failed Vercel build turns this job red instead of failing silently.
+      - name: Wait for production to serve this commit
+        run: |
+          git fetch -q --unshallow origin main
+          for i in $(seq 1 40); do
+            LIVE=$(curl -fsSL https://trip-planner-cyan-five.vercel.app/ | grep -oE 'name="build-sha" content="[0-9a-f]{40}"' | grep -oE '[0-9a-f]{40}' || true)
+            if [ -n "$LIVE" ] && git fetch -q origin main && git merge-base --is-ancestor "$GITHUB_SHA" "$LIVE" 2>/dev/null; then
+              echo "Production is on $LIVE" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Production still serves ${LIVE:-unknown} after 10 minutes; check the Vercel build log (ADR-0022)"
+          exit 1
