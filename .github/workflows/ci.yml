@@ -38,7 +38,7 @@ jobs:
       ENCRYPTION_KEY: Y2ktdGVzdC1ub3QtYS1yZWFsLXNlY3JldGNpLXRlc3Q=
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
@@ -69,7 +69,7 @@ jobs:
       DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
