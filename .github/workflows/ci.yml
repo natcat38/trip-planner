@@ -37,7 +37,7 @@ jobs:
       # key through real Postgres.
       ENCRYPTION_KEY: Y2ktdGVzdC1ub3QtYS1yZWFsLXNlY3JldGNpLXRlc3Q=
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
@@ -68,7 +68,7 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
