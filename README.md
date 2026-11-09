@@ -144,11 +144,14 @@ Two rules the code holds to throughout:
   only on read (`src/lib/money.ts`, `src/lib/fx.ts`).
 - **Nested resources are never addressed by their own id alone.** Days, activities, and
   expenses are always reached through an access check on their trip
-  (`src/server/auth-scope.ts`). There are exactly three gates: `requireTripAccess` (owner or
+  (`src/server/auth-scope.ts`). There are three trip gates: `requireTripAccess` (owner or
   accepted collaborator) for reads and edits and `requireTripOwner` (owner only) for deleting
   a trip and managing its sharing, both in `auth-scope.ts`, plus `requireShareToken` for the
   public link, kept private to `src/server/sharing.ts` so nothing else can reach a trip by
-  token. The share route is the only one with no session at all, so it strips `userId` and
+  token. Two more checks sit beside them: the extension-token check
+  (`identifyByExtensionToken` in `src/server/extensionToken.ts`, followed by
+  `requireTripAccessForUser` in `auth-scope.ts`) and the own-invite check
+  (`requireOwnPendingInvite` in `src/server/sharing.ts`). The share route is the only one with no session at all, so it strips `userId` and
   `shareToken` from its payload rather than trusting callers not to leak them. The browser
   extension's API routes (`/api/extension/*`) are a second no-session surface, authenticated
   instead by a per-user bearer token (ADR-0017). Both no-session write paths are rate-limited

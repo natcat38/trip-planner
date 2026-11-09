@@ -15,6 +15,7 @@ import {
   toMinorUnits,
 } from '../lib/money';
 import { searchPlaces as searchOsmPlaces } from '../lib/research/overpass';
+import { parseHttpUrl } from '../lib/webUrl';
 import { ForbiddenOrNotFoundError, requireTripAccess } from './auth-scope';
 import { optimisticUpdate, ValidationError } from './errors';
 import { createActivity } from './itinerary';
@@ -89,25 +90,42 @@ function validatePlaceCost(input: {
   }
 }
 
+// Stored websites are rendered as links, so only http(s) may be saved (a
+// `javascript:` URL here would be stored XSS). A value with no scheme gets
+// https:// prepended. Text the user typed is rejected when it fails; a value
+// copied from an OpenStreetMap tag (`lenient`) becomes null instead, so one
+// malformed tag can't stop the place from saving.
+function resolveWebsite(raw: string | undefined, lenient: boolean) {
+  if (!raw) return null;
+  const result = parseHttpUrl(raw, { assumeHttps: true });
+  if (result.ok) return result.url;
+  if (lenient) return null;
+  throw new ValidationError(
+    result.reason === 'scheme'
+      ? 'The website must start with http:// or https://.'
+      : 'Enter a valid website address.',
+  );
+}
+
 // Fields the OSM search result itself supplies. Deliberately excludes
 // notes/costMinor/costCurrency — those are edited later via updatePlace, and
 // the OSM save form never sends them, so including them here would silently
 // blank out notes/cost on every re-save of an already-annotated place (see
 // the upsert's update branch below).
-function resolveOsmFields(input: PlaceFields) {
+function resolveOsmFields(input: PlaceFields, lenientWebsite = false) {
   return {
     name: input.name,
     category: input.category,
     cuisine: input.cuisine || null,
     openingHours: input.openingHours || null,
-    website: input.website || null,
+    website: resolveWebsite(input.website, lenientWebsite),
     phone: input.phone || null,
   };
 }
 
-function resolvePlaceFields(input: PlaceFields) {
+function resolvePlaceFields(input: PlaceFields, lenientWebsite = false) {
   return {
-    ...resolveOsmFields(input),
+    ...resolveOsmFields(input, lenientWebsite),
     notes: input.notes || null,
     // validatePlaceCost already rejects a costAmount with no/invalid
     // costCurrency, so a present costAmount always has a usable currency here.
@@ -129,7 +147,7 @@ export async function savePlace(tripId: string, input: SavePlaceInput) {
     sourceId: input.sourceId ?? null,
     lat: input.lat,
     lng: input.lng,
-    ...resolvePlaceFields(input),
+    ...resolvePlaceFields(input, input.source === 'osm'),
   };
 
   // @@unique([tripId, source, sourceId]) exists specifically so re-saving the
@@ -153,7 +171,7 @@ export async function savePlace(tripId: string, input: SavePlaceInput) {
       update: {
         lat: input.lat,
         lng: input.lng,
-        ...resolveOsmFields(input),
+        ...resolveOsmFields(input, input.source === 'osm'),
       },
     });
   }

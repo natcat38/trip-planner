@@ -3,6 +3,7 @@
 The UX audit, its owner decisions and fix log, moved here from a local working folder so the record
 lives with the code. Screenshot names in the findings refer to the original audit folder, which is
 not kept; key before/after shots are in `ux-audit-2026-10/` beside this file.
+The public-repo audit of the same period is in [`public-repo-audit-2026-10.md`](public-repo-audit-2026-10.md).
 
 Audited at origin/main `c2e80d3`. Live shared trip plus the signed-in app run locally from a detached worktree (production build, seeded "Fukuoka in Autumn" trip, a session row created for the seed user `demo@example.com`; worktree, server and throwaway Postgres container removed afterwards). No edits, issues or PRs. No open issue covers any finding below (the only open issue, #56, is an e2e flake).
 
