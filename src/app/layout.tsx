@@ -65,6 +65,9 @@ export const metadata: Metadata = {
   // manifest. Worth the three lines: a phone on a foreign network is the
   // whole reason the offline layer exists.
   appleWebApp: { capable: true, title: 'Trips', statusBarStyle: 'default' },
+  // CI's deploy job polls production for this tag to confirm the hook-built
+  // deploy actually went live (ADR-0022). Vercel sets the SHA at build time.
+  other: { 'build-sha': process.env.VERCEL_GIT_COMMIT_SHA ?? 'local' },
 };
 
 export const viewport: Viewport = {
