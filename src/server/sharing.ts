@@ -29,7 +29,7 @@ import {
   RateLimitError,
   ValidationError,
 } from './errors';
-import { summarizeBudget, type BudgetSummary } from './budget';
+import { summarizeBudget, type BudgetSummary } from '../lib/budgetSummary';
 import { checkRateLimit } from './rateLimit';
 
 // Anyone holding a share link can trigger duplicateSharedTrip's 100+-create

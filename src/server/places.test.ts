@@ -282,6 +282,80 @@ describe('savePlace', () => {
   });
 });
 
+describe('place website scheme check', () => {
+  const base = { name: 'X', lat: 0, lng: 0, category: 'Food' };
+
+  it.each(['javascript:alert(1)', 'data:text/html,hi'])(
+    'rejects a manual %s website and saves nothing',
+    async (website) => {
+      vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+      await expect(
+        savePlace('trip-1', { ...base, source: 'manual', website }),
+      ).rejects.toThrow(ValidationError);
+      expect(db.place.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it('prepends https:// to a manual website with no scheme', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    await savePlace('trip-1', {
+      ...base,
+      source: 'manual',
+      website: 'www.example.com',
+    });
+    expect(db.place.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ website: 'https://www.example.com/' }),
+    });
+  });
+
+  it('turns a bad OSM website into null instead of failing the save', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    await savePlace('trip-1', {
+      ...base,
+      source: 'osm',
+      sourceId: 'node/9',
+      website: 'javascript:alert(1)',
+    });
+    expect(db.place.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ website: null }),
+        update: expect.objectContaining({ website: null }),
+      }),
+    );
+  });
+
+  it('normalises a schemeless OSM website', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    await savePlace('trip-1', {
+      ...base,
+      source: 'osm',
+      sourceId: 'node/9',
+      website: 'www.example.com',
+    });
+    expect(db.place.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          website: 'https://www.example.com/',
+        }),
+      }),
+    );
+  });
+
+  it('rejects a non-http website on update', async () => {
+    vi.mocked(requireTripAccess).mockResolvedValue(trip as never);
+    vi.mocked(db.place.findFirst).mockResolvedValue(savedPlace as never);
+    await expect(
+      updatePlace('trip-1', 'place-1', {
+        name: 'X',
+        category: 'Food',
+        website: 'javascript:alert(1)',
+        updatedAt: new Date(),
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.place.updateMany).not.toHaveBeenCalled();
+  });
+});
+
 describe('updatePlace', () => {
   const updatedAt = new Date('2026-08-01T00:00:00.000Z');
 

@@ -31,7 +31,7 @@ vi.mock('../lib/db', () => ({
     },
   },
 }));
-vi.mock('./budget', () => ({ summarizeBudget: vi.fn() }));
+vi.mock('../lib/budgetSummary', () => ({ summarizeBudget: vi.fn() }));
 
 const tripUpdatedAt = new Date('2026-01-01T00:00:00.000Z');
 const trip = {
@@ -314,7 +314,7 @@ import {
   listSharedExpenses,
 } from './sharing';
 import { InvalidShareLinkError } from './errors';
-import { summarizeBudget } from './budget';
+import { summarizeBudget } from '../lib/budgetSummary';
 
 const sharedTrip = {
   id: 'trip-1',

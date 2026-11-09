@@ -15,6 +15,7 @@
 import { DEFAULT_CATEGORY, isCategory } from '../lib/categories';
 import { db } from '../lib/db';
 import { geocode } from '../lib/geocode';
+import { parseHttpUrl } from '../lib/webUrl';
 import { requireTripAccessForUser, tripAccessWhere } from './auth-scope';
 import { ValidationError } from './errors';
 import {
@@ -59,16 +60,13 @@ export interface SaveFromPageInput {
 // `javascript:` or `data:` here would be a stored-XSS vector dressed up as a
 // bookmark.
 function normaliseUrl(raw: string): string {
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    throw new ValidationError('That page URL is not valid.');
-  }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new ValidationError('Only http and https pages can be saved.');
-  }
-  return parsed.toString();
+  const result = parseHttpUrl(raw);
+  if (result.ok) return result.url;
+  throw new ValidationError(
+    result.reason === 'scheme'
+      ? 'Only http and https pages can be saved.'
+      : 'That page URL is not valid.',
+  );
 }
 
 export async function savePlaceFromPage(
