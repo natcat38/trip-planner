@@ -15,7 +15,7 @@ starter).
 
 ## Seeing it
 
-**[Live demo — a shared trip, no sign-in needed](https://trip-planner-cyan-five.vercel.app/shared/YzdiQTCwe_2LuWzMswg4YWTNDGEOwcMQ)**
+**[Live demo — a shared trip, no sign-in needed](https://trip-planner-cyan-five.vercel.app/shared/KreydBF-JDYtmcQUXXGFg4vPXH34xih9)**
 — a real trip on the production deployment, rendered through the public share route: the
 day-by-day itinerary, the synced map, and a budget mixing GBP and JPY rolled up into the trip's
 base currency. It is genuinely read-only — no edit or delete controls exist on that page, and
