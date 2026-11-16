@@ -145,7 +145,7 @@ pre-existing attachment-upload flake, see [[project_attachment_upload_e2e_flake]
 Vercel dashboard Node.js Version → 24.x (belt-and-braces, `engines.node` wins); done 2026-09-30,
 production build log confirmed Node 24.
 
-**2026-11-16 — Next 16.2.11 → 16.4.6, React 19.2.4 → 19.2.8** (spike step 4, pulled forward).
+**2026-11-16 — Next 16.2.11 → 16.4.6, React 19.2.4 → 19.2.8** (spike step 2, done ahead of Vitest 5 and ESLint 10).
 Cause: CI's `quality` job failed on add-activity e2e tests (`select.spec.ts:50`,
 `trip-layout.spec.ts:102`), three retries in a row. Diagnosis, reproduced locally against a
 production build: the Server Action returns 200 in about 20 ms with the new activity in its

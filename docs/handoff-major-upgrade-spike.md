@@ -20,12 +20,12 @@ breaking the three invariants that have bitten this repo before:
 
 | Package | Current | Latest | Kind |
 |---|---|---|---|
-| next + eslint-config-next | 16.4.6 (done 2026-11-16) | 16.4.6 | done, see step 4 |
+| next + eslint-config-next | 16.4.6 (done 2026-11-16) | 16.4.6 | done, see step 2 |
 | react / react-dom | 19.2.8 (done 2026-11-16) | 19.2.8 | done with the Next PR |
 | typescript | 5.9.3 | 7.0.2 | major (6 was skipped upstream) |
 | eslint | 9.39.5 | 10.10.0 | major |
-| vitest + @vitest/coverage-v8 | 4.1.10 | 5.0.0 | major (4.1.11 patch available first) |
-| prisma / @prisma/client / @prisma/adapter-pg | 7.10.0 | 8.0.0-rc.13 | major, still RC — wait for GA |
+| vitest + @vitest/coverage-v8 | 4.1.12 | 5.0.0 | major |
+| prisma / @prisma/client / @prisma/adapter-pg | 7.10.1 | 8.0.0-rc.34 | major, still RC — wait for GA |
 | @types/node | 24.x | 26.x | tracks the Node 24 engine; bump only with a Node bump |
 | next-auth | 5.0.0-beta.32 | (4.24 "latest" is older) | intentionally on the v5 beta; check for a newer beta only |
 
@@ -35,22 +35,23 @@ originally planned 22 (EOL 2027-04) to avoid a second forced bump. Step 1 below 
 
 ## Order and per-step recipe
 
-Do them in this order; each is one branch + PR. Stop and report at the first red step.
+Steps 1 and 2 are done, in the order they happened. Do the open steps (3 to 6) in order; each is
+one branch + PR. Stop and report at the first red step.
 
 1. **Node 24** (done 2026-09-24) — `engines.node`, both `node-version` lines in `ci.yml`,
    `okf.yml`, `Dockerfile.dev` base image, Vercel project Node setting (dashboard, owner-side — see
    `docs/deploy-setup.md`). Gate: full local gate + CI green + a Vercel preview build.
-2. **Vitest 5** (+ coverage-v8 5) — read the v5 migration notes via context7 first. Watch
-   `vitest.config.ts` coverage thresholds and `vitest.setup.ts` (`PG_POOL_MAX`, dotenv).
-3. **ESLint 10** — flat config already in `eslint.config.mjs`; check `eslint-config-next`
-   supports 10 before starting (may need to pair with step 4).
-4. **Next 16.4.6 + React 19.2.8** (done 2026-11-16, pulled ahead of steps 2 and 3 because
-   Next 16.2 had a client bug that stalled Server Action results and was failing CI; see
+2. **Next 16.4.6 + React 19.2.8** (done 2026-11-16, outside the planned order: Next 16.2 had a
+   client bug that stalled Server Action results and was failing CI; see
    `memory/project_phase_status.md`) — `AGENTS.md` drift notes apply (`proxy.ts`, not middleware).
-   Gate must include `npx next build` and the full Playwright suite; `e2e/extension-api.spec.ts`
+   Gate included `npx next build` and the full Playwright suite; `e2e/extension-api.spec.ts`
    is the canary for streaming/Suspense regressions.
-5. **TypeScript 7** — expect new strictness errors; fix, don't loosen `tsconfig.json`.
-6. **Prisma 8** — only once GA. Re-verify CJS output and that `prisma.config.ts` still
+3. **Vitest 5** (+ coverage-v8 5), open — read the v5 migration notes via context7 first. Watch
+   `vitest.config.ts` coverage thresholds and `vitest.setup.ts` (`PG_POOL_MAX`, dotenv).
+4. **ESLint 10**, open — flat config already in `eslint.config.mjs`; `eslint-config-next` 16.4.6
+   accepts `eslint >=9`, so it no longer needs to pair with a Next bump.
+5. **TypeScript 7**, open — expect new strictness errors; fix, don't loosen `tsconfig.json`.
+6. **Prisma 8**, open — only once GA. Re-verify CJS output and that `prisma.config.ts` still
    drives the generator; `npx prisma migrate deploy` against a throwaway Postgres 16 container.
 
 Per step:
