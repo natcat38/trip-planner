@@ -20,8 +20,8 @@ breaking the three invariants that have bitten this repo before:
 
 | Package | Current | Latest | Kind |
 |---|---|---|---|
-| next + eslint-config-next | 16.2.11 | 16.3.4 | minor, but Next minors ship breaking-ish changes; treat as major |
-| react / react-dom | 19.2.4 | 19.2.8 | patch — fold into the Next PR |
+| next + eslint-config-next | 16.4.6 (done 2026-11-16) | 16.4.6 | done, see step 4 |
+| react / react-dom | 19.2.8 (done 2026-11-16) | 19.2.8 | done with the Next PR |
 | typescript | 5.9.3 | 7.0.2 | major (6 was skipped upstream) |
 | eslint | 9.39.5 | 10.10.0 | major |
 | vitest + @vitest/coverage-v8 | 4.1.10 | 5.0.0 | major (4.1.11 patch available first) |
@@ -44,7 +44,9 @@ Do them in this order; each is one branch + PR. Stop and report at the first red
    `vitest.config.ts` coverage thresholds and `vitest.setup.ts` (`PG_POOL_MAX`, dotenv).
 3. **ESLint 10** — flat config already in `eslint.config.mjs`; check `eslint-config-next`
    supports 10 before starting (may need to pair with step 4).
-4. **Next 16.3 + React 19.2.8** — `AGENTS.md` drift notes apply (`proxy.ts`, not middleware).
+4. **Next 16.4.6 + React 19.2.8** (done 2026-11-16, pulled ahead of steps 2 and 3 because
+   Next 16.2 had a client bug that stalled Server Action results and was failing CI; see
+   `memory/project_phase_status.md`) — `AGENTS.md` drift notes apply (`proxy.ts`, not middleware).
    Gate must include `npx next build` and the full Playwright suite; `e2e/extension-api.spec.ts`
    is the canary for streaming/Suspense regressions.
 5. **TypeScript 7** — expect new strictness errors; fix, don't loosen `tsconfig.json`.
