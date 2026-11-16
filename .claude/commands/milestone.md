@@ -1,13 +1,13 @@
 Run the milestone loop for the trip-planner repo.
 
 1. ORIENT
-   - Read everything in docs/ (including docs/adr/) and knowledge/ before touching
-     anything else. Read CLAUDE.md.
+   - Read ROADMAP.md and CLAUDE.md, then the docs CLAUDE.md names. Read an ADR or
+     knowledge/ entry when the milestone touches its subject.
    - Summarize current state in a few lines: what's implemented, what's stubbed,
      what's just documented intent.
 
 2. PLAN
-   - Identify the next unimplemented milestone from docs/. If it's ambiguous which one
+   - Take the next milestone from ROADMAP.md "Next up". If it's ambiguous which one
      is next, ask me instead of guessing.
    - Write a numbered implementation plan: files/modules to touch, any Prisma schema
      changes, new API routes or components, and how it fits the Vercel + Neon +
