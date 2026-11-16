@@ -144,3 +144,19 @@ the dev laptop already ran 24.16). Vercel preview build green. The one red CI ru
 pre-existing attachment-upload flake, see [[project_attachment_upload_e2e_flake]]. Owner-side:
 Vercel dashboard Node.js Version → 24.x (belt-and-braces, `engines.node` wins); done 2026-09-30,
 production build log confirmed Node 24.
+
+**2026-11-16 — Next 16.2.11 → 16.4.6, React 19.2.4 → 19.2.8** (spike step 4, pulled forward).
+Cause: CI's `quality` job failed on add-activity e2e tests (`select.spec.ts:50`,
+`trip-layout.spec.ts:102`), three retries in a row. Diagnosis, reproduced locally against a
+production build: the Server Action returns 200 in about 20 ms with the new activity in its
+payload and the row is in Postgres, but the browser does not re-render. The form stays on
+"Saving…" until an unrelated render happens, which on the trip page is the 60s `setInterval` in
+`DayTiming.tsx` (recovery measured at 60.6s). Ruled out by experiment: the service worker
+(still failed with service workers blocked), a discarded router action (logged Next's action
+queue: not discarded), the streamed weather promise (still failed with it awaited), and a
+load-timing race (same rate after `networkidle`). Failure rate of an instrumented copy of the
+test: 42/60 on Next 16.2.12, 0/60 on 16.4.6. The exact upstream commit was not identified.
+This was user-facing, not test-only: a real save could show "Saving…" for up to a minute.
+The older "post-mutation assertion" flakes that led to `retries: 2` in `playwright.config.ts`,
+and possibly [[project_attachment_upload_e2e_flake]], fit the same signature; not re-verified.
+Gate: tsc, lint, prettier, file-map, 583 unit tests, full Playwright suite (65 passed, 0 retries).

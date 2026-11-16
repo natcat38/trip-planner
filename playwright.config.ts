@@ -20,12 +20,15 @@ export default defineConfig({
   // round-trip is what these assertions are for.
   expect: { timeout: 20_000 },
   timeout: 90_000,
-  // CI-only, and not a way to make a broken test pass: the same suite is
-  // green locally across repeated full runs at both worker counts and with
-  // or without the Mapbox tokens CI lacks, while CI has failed a DIFFERENT
-  // post-mutation assertion each run — the signature of a slow, contended
-  // runner rather than a broken feature. Playwright still reports a retried
-  // test as flaky, so a genuine failure stays visible instead of hiding.
+  // CI-only. History: until 2026-11-16 CI failed a DIFFERENT post-mutation
+  // assertion each run, which was read as a slow runner. It was a real bug
+  // in Next 16.2's client: after a Server Action that revalidates, the page
+  // sometimes did not re-render until something else triggered a render
+  // (here, the 60s clock in DayTiming.tsx), so the form sat on "Saving…".
+  // Fixed by Next 16.4.6 (60/60 passes on the test that failed 42/60 before).
+  // Retries stay as a guard for the two-core runner. Playwright reports a
+  // retried test as flaky: treat a recurring flaky test as a bug to
+  // diagnose, not as noise.
   retries: process.env.CI ? 2 : 0,
   // Only boot a local server when no remote target was given — against a
   // real deployment there's nothing local to build/start.
