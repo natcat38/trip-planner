@@ -13,7 +13,7 @@ export const SITE_DESCRIPTION =
 // The public demo trip (a read-only shared link on production), linked from the
 // landing page and the sign-in page so a visitor can look before signing in.
 // The same token also appears in README.md and package.json's test:e2e:prod.
-export const SAMPLE_TRIP_PATH = '/shared/YzdiQTCwe_2LuWzMswg4YWTNDGEOwcMQ';
+export const SAMPLE_TRIP_PATH = '/shared/KreydBF-JDYtmcQUXXGFg4vPXH34xih9';
 
 // Absolute origin for og:image and twitter:image, which crawlers require.
 // Vercel exposes the production host (no scheme) at build and run time; a
